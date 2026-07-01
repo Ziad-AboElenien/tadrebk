@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { logout } from '@/store/authSlice';
 import { setUser, updateUser } from '@/store/userSlice';
+import { getUserImgUrl } from '@/types/user';
 import { profileSchema, type ProfileFormData } from '@/features/auth/schemas/auth.schemas';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -33,15 +34,18 @@ export default function StudentProfilePage() {
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
-  const [resumeUrl, setResumeUrl] = useState<string | null>((user as any)?.resume || null);
+  const [resumeUrl, setResumeUrl] = useState<string | null>(getUserImgUrl((user as any)?.resume));
   const profileRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const resumeRef = useRef<HTMLInputElement>(null);
 
   const {
-    register, handleSubmit, reset,
+    register, handleSubmit, reset, control,
     formState: { errors },
   } = useForm<ProfileFormData>({ resolver: zodResolver(profileSchema) });
+
+  const { fields: expFields, append: appendExp, remove: removeExp } = useFieldArray({ control, name: 'experience' });
+  const { fields: eduFields, append: appendEdu, remove: removeEdu } = useFieldArray({ control, name: 'education' });
 
   useEffect(() => {
     if (user) {
@@ -55,6 +59,8 @@ export default function StudentProfilePage() {
         dateOfBirth: user.dateOfBirth ? user.dateOfBirth.slice(0, 10) : '',
         gender: (user.gender as 'male' | 'female' | '') || '',
         skills: user.skills?.join(', ') || '',
+        experience: user.experience || [],
+        education: user.education || [],
       });
     }
   }, [user, reset]);
@@ -73,6 +79,8 @@ export default function StudentProfilePage() {
         dateOfBirth: data.dateOfBirth || undefined,
         gender: data.gender || undefined,
         skills: data.skills ? data.skills.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
+        experience: data.experience?.filter((e) => e.company && e.title) || undefined,
+        education: data.education?.filter((e) => e.institution) || undefined,
       });
       dispatch(setUser(updated));
       setEditing(false);
@@ -140,8 +148,8 @@ export default function StudentProfilePage() {
 
         {/* Cover */}
         <div className="relative h-48 sm:h-56 md:h-64 rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20">
-          {user.coverPicture ? (
-            <img src={user.coverPicture} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+          {getUserImgUrl(user.coverPicture) ? (
+            <img src={getUserImgUrl(user.coverPicture)!} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10" />
           )}
@@ -159,9 +167,9 @@ export default function StudentProfilePage() {
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div className="flex items-end gap-4">
               <div className="relative shrink-0">
-                {user.profilePicture ? (
+                {getUserImgUrl(user.profilePicture) ? (
                   <div className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-white shadow-xl">
-                    <img src={user.profilePicture} alt={displayName} className="w-full h-full object-cover" />
+                    <img src={getUserImgUrl(user.profilePicture)!} alt={displayName} className="w-full h-full object-cover" />
                   </div>
                 ) : (
                   <div className="w-32 h-32 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center ring-4 ring-white shadow-xl">
@@ -214,6 +222,55 @@ export default function StudentProfilePage() {
               <Input label="Date of birth" type="date" error={errors.dateOfBirth?.message} {...register('dateOfBirth')} />
             </div>
             <Input label="Skills (comma-separated)" error={errors.skills?.message} {...register('skills')} placeholder="e.g. JavaScript, Python, Public Speaking" />
+
+            {/* Experience */}
+            <div className="border-t border-gray-100 pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-dark text-sm flex items-center gap-2"><i className="fas fa-briefcase text-primary" />Experience</h3>
+                <Button type="button" variant="ghost" size="sm" onClick={() => appendExp({ company: '', title: '', description: '', startDate: '', endDate: '' })}>
+                  <i className="fas fa-plus text-xs" /> Add
+                </Button>
+              </div>
+              {expFields.map((field, i) => (
+                <div key={field.id} className="mb-4 p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-3 relative">
+                  <button type="button" onClick={() => removeExp(i)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-sm"><i className="fas fa-times" /></button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input {...register(`experience.${i}.company`)} placeholder="Company name" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
+                    <input {...register(`experience.${i}.title`)} placeholder="Job title" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
+                  </div>
+                  <textarea {...register(`experience.${i}.description`)} rows={2} placeholder="Brief description..." className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200 resize-y" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input {...register(`experience.${i}.startDate`)} type="date" placeholder="Start date" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
+                    <input {...register(`experience.${i}.endDate`)} type="date" placeholder="End date" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Education */}
+            <div className="border-t border-gray-100 pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-dark text-sm flex items-center gap-2"><i className="fas fa-graduation-cap text-primary" />Education</h3>
+                <Button type="button" variant="ghost" size="sm" onClick={() => appendEdu({ institution: '', degree: '', field: '', startDate: '', endDate: '' })}>
+                  <i className="fas fa-plus text-xs" /> Add
+                </Button>
+              </div>
+              {eduFields.map((field, i) => (
+                <div key={field.id} className="mb-4 p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-3 relative">
+                  <button type="button" onClick={() => removeEdu(i)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-sm"><i className="fas fa-times" /></button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input {...register(`education.${i}.institution`)} placeholder="Institution name" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
+                    <input {...register(`education.${i}.degree`)} placeholder="Degree (e.g. Bachelor's)" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
+                  </div>
+                  <input {...register(`education.${i}.field`)} placeholder="Field of study (e.g. Computer Science)" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input {...register(`education.${i}.startDate`)} type="date" placeholder="Start date" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
+                    <input {...register(`education.${i}.endDate`)} type="date" placeholder="End date" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <div className="flex gap-4 pt-4 border-t border-gray-100">
               <Button loading={saving} type="submit">Save changes</Button>
               <Button variant="outline" type="button" onClick={() => { setEditing(false); reset(); }}>Cancel</Button>
