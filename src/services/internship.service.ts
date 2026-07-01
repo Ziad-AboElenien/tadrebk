@@ -16,7 +16,7 @@ interface UpdateInternshipPayload extends Partial<CreateInternshipPayload> {
 
 interface ListInternshipsParams {
   type?: 'full-time' | 'part-time';
-  location?: 'on-site' | 'remote' | 'hybrid';
+  location?: string;
   companyId?: string;
   title?: string;
   closed?: boolean;
