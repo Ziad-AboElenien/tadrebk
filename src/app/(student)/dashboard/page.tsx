@@ -148,9 +148,9 @@ export default function StudentDashboardPage() {
                 <Link href="/profile" className="pb-1 text-sm font-semibold text-emerald-500 hover:underline">Edit Profile</Link>
               </div>
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-5">
-                <div><p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Major</p><p className="mt-1 text-sm font-bold text-gray-900">{education?.field || 'Not specified'}</p></div>
-                <div><p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Graduation</p><p className="mt-1 text-sm font-bold text-gray-900">{education?.endDate ? `Class of ${new Date(education.endDate).getFullYear()}` : 'Not specified'}</p></div>
-                <div><p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Email</p><p className="mt-1 text-sm font-bold text-gray-900 truncate">{user?.email || '—'}</p></div>
+                <div className="min-w-0"><p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Major</p><p className="mt-1 text-sm font-bold text-gray-900 truncate">{education?.field || 'Not specified'}</p></div>
+                <div className="min-w-0"><p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Graduation</p><p className="mt-1 text-sm font-bold text-gray-900 truncate">{education?.endDate ? `Class of ${new Date(education.endDate).getFullYear()}` : 'Not specified'}</p></div>
+                <div className="min-w-0"><p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Email</p><p className="mt-1 text-sm font-bold text-gray-900 truncate">{user?.email || '—'}</p></div>
               </div>
             </div>
           </div>
