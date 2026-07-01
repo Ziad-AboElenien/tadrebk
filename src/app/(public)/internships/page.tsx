@@ -8,6 +8,7 @@ import type { Company } from '@/types/company';
 import { getImgUrl } from '@/types/company';
 import Spinner from '@/components/ui/Spinner';
 import { internshipService } from '@/services/internship.service';
+import { companyService } from '@/services/company.service';
 import { useAppSelector } from '@/store/store';
 import { toast } from 'react-toastify';
 
@@ -57,6 +58,19 @@ function InternshipsContent() {
   const [locationInput, setLocationInput] = useState(searchParams.get('location') || '');
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
+  // Company cache
+  const [companyMap, setCompanyMap] = useState<Record<string, Company>>({});
+
+  useEffect(() => {
+    companyService.listCompanies({ limit: 100 })
+      .then((res) => {
+        const map: Record<string, Company> = {};
+        res.companies.forEach((c) => { map[c._id] = c; });
+        setCompanyMap(map);
+      })
+      .catch(() => {});
+  }, []);
+
   // Filters for API
   const [filters, setFilters] = useState({
     title: searchParams.get('title') || '',
@@ -96,9 +110,9 @@ function InternshipsContent() {
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    setFilters({ title: query, type: filters.type, location: filters.location });
+    setFilters({ title: query, type: filters.type, location: (locationInput || filters.location) as '' | 'on-site' | 'remote' | 'hybrid' });
     setPage(1);
-  }, [query, filters.type, filters.location]);
+  }, [query, filters.type, filters.location, locationInput]);
 
   const handleFilterChange = useCallback((key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -163,6 +177,7 @@ function InternshipsContent() {
   function companyFromInternship(internship: Internship): Company | null {
     if (internship.company) return internship.company as Company;
     if (typeof internship.companyId === 'object' && internship.companyId) return internship.companyId as Company;
+    if (typeof internship.companyId === 'string' && companyMap[internship.companyId]) return companyMap[internship.companyId];
     return null;
   }
 
@@ -186,7 +201,7 @@ function InternshipsContent() {
             <input
               value={locationInput}
               onChange={(e) => setLocationInput(e.target.value)}
-              placeholder="Anywhere in Egypt"
+              placeholder="Remote, On-site, or Hybrid"
               className="w-full bg-transparent text-sm text-gray-700 outline-none"
               style={{ outline: 'none', boxShadow: 'none' }}
             />
@@ -405,13 +420,13 @@ function InternshipsContent() {
               { label: 'Data', count: 15, icon: 'fa-chart-bar' },
               { label: 'HR', count: 13, icon: 'fa-users' },
             ].map((cat) => (
-              <Link key={cat.label} href={`/internships?title=${encodeURIComponent(cat.label)}`}>
+              <button key={cat.label} onClick={() => { setFilters((prev) => ({ ...prev, title: cat.label })); setPage(1); setQuery(cat.label); }}>
                 <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-5 text-center shadow-sm transition hover:shadow-md cursor-pointer">
                   <span className="text-emerald-500"><i className={`fas ${cat.icon} text-2xl`} /></span>
                   <span className="text-sm font-bold text-gray-900">{cat.label}</span>
                   <span className="text-xs text-gray-400">{cat.count} Roles</span>
                 </div>
-              </Link>
+              </button>
             ))}
           </div>
         </section>
