@@ -115,25 +115,25 @@ export default function PublicCompanyProfilePage() {
 
           <div className="flex flex-wrap gap-5 mt-5 text-sm text-gray-500">
             {company.companyEmail && (
-              <span className="flex items-center gap-1.5">
-                <i className="fas fa-envelope text-gray-300 text-xs" /> {company.companyEmail}
+              <span className="flex items-center gap-1.5 max-w-full">
+                <i className="fas fa-envelope text-gray-300 text-xs shrink-0" /> <span className="break-all">{company.companyEmail}</span>
               </span>
             )}
             {company.address && (
-              <span className="flex items-center gap-1.5">
-                <i className="fas fa-location-dot text-gray-300 text-xs" /> {company.address}
+              <span className="flex items-center gap-1.5 max-w-full">
+                <i className="fas fa-location-dot text-gray-300 text-xs shrink-0" /> <span className="break-all">{company.address}</span>
               </span>
             )}
             {company.numberOfEmployees && (
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
                 <i className="fas fa-users text-gray-300 text-xs" /> {company.numberOfEmployees} employees
               </span>
             )}
-            <span className="flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5 whitespace-nowrap">
               <i className="fas fa-briefcase text-gray-300 text-xs" /> {totalInternships} open position{totalInternships !== 1 ? 's' : ''}
             </span>
             {company.createdAt && (
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
                 <i className="fas fa-calendar text-gray-300 text-xs" /> Joined {formatDate(company.createdAt)}
               </span>
             )}
@@ -146,7 +146,7 @@ export default function PublicCompanyProfilePage() {
             <i className="fas fa-building text-primary text-base" /> About
           </h2>
           {company.description ? (
-            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{company.description}</p>
+            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap break-words">{company.description}</p>
           ) : (
             <p className="text-gray-400 italic">No description provided.</p>
           )}
