@@ -126,7 +126,7 @@ export function useGoogleAuth() {
 
     google.accounts.id.prompt((notification: any) => {
       if (notification.isNotDisplayed()) {
-        toast.warning('Google One Tap did not appear. Check that the OAuth consent screen is configured in Google Cloud Console (APIs & Services > OAuth consent screen). If it is, try using a different browser or disabling third-party cookie blockers.');
+        toast.warning('Google One Tap did not appear. Make sure the OAuth consent screen is set up in Google Cloud Console under the correct project (project ID: 915703608928). Add https://tadrebk.vercel.app and http://localhost:3000 to Authorized JavaScript origins.');
       }
     });
   }, [handleGoogleCredential, scriptLoaded]);
