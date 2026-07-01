@@ -11,6 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://tadrebk.vercel.app'),
   title: {
     default: 'Tadrebk — Find Internships in Egypt',
     template: '%s | Tadrebk',
@@ -23,7 +24,6 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://tadrebk.com',
     siteName: 'Tadrebk',
     title: 'Tadrebk — Find Internships in Egypt',
     description:
