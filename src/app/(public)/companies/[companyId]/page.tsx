@@ -84,20 +84,20 @@ export default function PublicCompanyProfilePage() {
 
         {/* Avatar + header */}
         <div className="relative px-4 sm:px-6 -mt-14 mb-8">
-          <div className="flex items-end gap-4 flex-wrap">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-3 sm:gap-4">
             {logoUrl ? (
-              <div className="w-28 h-28 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl shrink-0 bg-white">
+              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl shrink-0 bg-white">
                 <img src={logoUrl} alt={company.name} className="w-full h-full object-contain p-2" />
               </div>
             ) : (
-              <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center ring-4 ring-white shadow-xl shrink-0">
-                <span className="text-4xl font-bold text-white select-none">
+              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center ring-4 ring-white shadow-xl shrink-0">
+                <span className="text-3xl sm:text-4xl font-bold text-white select-none">
                   {company.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                 </span>
               </div>
             )}
-            <div className="pb-1">
-              <h1 className="text-2xl sm:text-3xl font-black text-dark">{company.name}</h1>
+            <div className="text-center sm:text-left pb-1">
+              <h1 className="text-xl sm:text-3xl font-black text-dark">{company.name}</h1>
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 {company.industry && (
                   <span className="px-3 py-1 bg-emerald-50 text-primary text-sm font-semibold rounded-full border border-emerald-100">
