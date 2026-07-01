@@ -63,26 +63,39 @@ export default function FilterSidebar({
   );
 
   return (
-    <div className="w-full md:w-64 p-4 bg-slate-50 rounded-lg border border-slate-200">
-      <h2 className="font-bold text-lg text-slate-900 mb-4">Filters</h2>
+    <div className="w-full md:w-64 p-6 bg-white rounded-2xl border border-gray-50 shadow-sm">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="font-bold text-lg text-dark flex items-center gap-2">
+          <i className="fas fa-sliders-h text-sm text-gray-300" />
+          Filters
+        </h2>
+        {(filters.title || filters.type || filters.location || filters.closed) && (
+          <button onClick={onReset} className="text-xs text-emerald-500 hover:text-emerald-600 font-semibold transition-colors">
+            Reset
+          </button>
+        )}
+      </div>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {/* Title Search */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
             Search
           </label>
-          <Input
-            placeholder="Internship title..."
-            value={filters.title || ''}
-            onChange={handleTitleChange}
-            className="w-full"
-          />
+          <div className="relative">
+            <i className="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 text-sm" />
+            <Input
+              placeholder="Internship title..."
+              value={filters.title || ''}
+              onChange={handleTitleChange}
+              className="w-full pl-9"
+            />
+          </div>
         </div>
 
         {/* Working Time */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
             Working Time
           </label>
           <Select
@@ -98,7 +111,7 @@ export default function FilterSidebar({
 
         {/* Location */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
             Location
           </label>
           <Select
@@ -115,7 +128,7 @@ export default function FilterSidebar({
 
         {/* Status */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
             Status
           </label>
           <Select
@@ -130,12 +143,12 @@ export default function FilterSidebar({
         </div>
       </div>
 
-      {/* Reset Button */}
       <Button
-        variant="outline"
+        variant="primary"
         className="w-full mt-6"
         onClick={onReset}
       >
+        <i className="fas fa-rotate-right text-xs mr-2" />
         Reset Filters
       </Button>
     </div>

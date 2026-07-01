@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import Providers from './providers';
 
 const inter = Inter({
@@ -47,14 +48,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable} data-scroll-behavior="smooth">
-      <head>
-        {/* Font Awesome 6 CDN */}
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-          crossOrigin="anonymous"
-        />
-      </head>
+      <head />
       <body className="min-h-screen flex flex-col antialiased">
         <Providers>{children}</Providers>
       </body>

@@ -16,6 +16,7 @@ export default function ConfirmEmailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [otpError, setOtpError] = useState('');
 
   useEffect(() => {
     const stored = localStorage.getItem(LS_PENDING_EMAIL) || '';
@@ -32,13 +33,14 @@ export default function ConfirmEmailPage() {
 
   async function handleConfirm() {
     if (otp.length < 6) {
-      toast.error('Please enter the 6-digit OTP');
+      setOtpError('Please enter the 6-digit OTP');
       return;
     }
+    setOtpError('');
     setIsSubmitting(true);
     try {
       await authService.confirmEmail({ email, otp });
-      toast.success('Email confirmed! Welcome to Tadrebk 🎉');
+      toast.success('Email confirmed! Welcome to Tadrebk!');
       localStorage.removeItem(LS_PENDING_EMAIL);
 
       // Route based on intended role
@@ -91,8 +93,9 @@ export default function ConfirmEmailPage() {
         <OTPInput
           length={6}
           value={otp}
-          onChange={setOtp}
+          onChange={(v) => { setOtp(v); setOtpError(''); }}
           disabled={isSubmitting}
+          error={otpError}
         />
       </div>
 

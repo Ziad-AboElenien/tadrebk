@@ -11,6 +11,8 @@ interface UpdateUserPayload {
   dateOfBirth?: string;
   gender?: 'male' | 'female' | 'other';
   address?: string;
+  profilePicture?: string;
+  coverPicture?: string;
   education?: any[];
   experience?: any[];
 }
@@ -62,6 +64,23 @@ export const userService = {
 
     const { data } = await api.post<UploadResponse>(
       `/user/upload/coverPicture`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    return data.data.url;
+  },
+
+  async uploadResume(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const { data } = await api.post<UploadResponse>(
+      `/user/upload/resume`,
       formData,
       {
         headers: {

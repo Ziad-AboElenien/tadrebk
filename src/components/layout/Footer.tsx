@@ -91,7 +91,7 @@ export default function Footer() {
             © {year} Tadrebk. All rights reserved. Built for students in Egypt.
           </p>
           <p className="text-gray-300 text-xs">
-            🇪🇬 Made with ❤️ in Egypt
+            <i className="fas fa-heart text-red-400 mx-1" /> Made with <i className="fas fa-heart text-red-400 mx-1" /> in Egypt
           </p>
         </div>
       </div>
