@@ -1,3 +1,5 @@
+import type { Company } from './company';
+
 // Matches actual Swagger API schema
 export type InternshipLocation = 'on-site' | 'remote' | 'hybrid';
 export type InternshipType = 'full-time' | 'part-time';
@@ -10,7 +12,7 @@ export interface Internship {
   workingTime?: InternshipType;
   softSkills?: string[];
   technicalSkills?: string[];
-  companyId: string;
+  companyId: string | Company;
   addedBy?: string;    // API returns addedBy
   updatedBy?: string;  // API returns updatedBy
   closed: boolean;     // API uses "closed" not "isClosed"
@@ -24,6 +26,13 @@ export interface Internship {
     industry?: string;
     address?: string;
   };
+}
+
+/** Extract the company _id from an Internship's companyId field (string or populated object) */
+export function getCompanyIdFromInternship(internship: Internship): string | null {
+  if (typeof internship.companyId === 'string' && internship.companyId) return internship.companyId;
+  if (internship.companyId && typeof internship.companyId === 'object' && internship.companyId._id) return internship.companyId._id;
+  return null;
 }
 
 export interface CreateInternshipRequest {

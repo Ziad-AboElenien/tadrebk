@@ -71,7 +71,7 @@ export default function CompanyProfilePage() {
             description="The company you're looking for doesn't exist or has been removed."
             action={
               <Link href="/internships">
-                <Button variant="default">Back to Internships</Button>
+                <Button variant="outline">Back to Internships</Button>
               </Link>
             }
           />

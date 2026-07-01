@@ -19,7 +19,7 @@ const sizeMap = {
 };
 
 export default function Avatar({
-  src,
+  src: _src,
   name = '?',
   size = 'md',
   className = '',
@@ -33,6 +33,8 @@ export default function Avatar({
     .join('')
     .toUpperCase()
     .slice(0, 2);
+
+  const src = typeof _src === 'string' ? _src.trim() || null : null;
 
   if (src) {
     return (

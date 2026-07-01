@@ -86,13 +86,21 @@ function clearAuthStorage() {
 // ─── Error message helper ───────────────────────────────────────────────────
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    const msg = error.response?.data?.message;
+    const data = error.response?.data as any;
+    const msg = data?.message || data?.errMsg || data?.msg;
     if (Array.isArray(msg)) return msg.join(', ');
     if (typeof msg === 'string') return msg;
     return error.message;
   }
   if (error instanceof Error) return error.message;
   return 'Something went wrong. Please try again.';
+}
+
+export function getErrorUrl(error: unknown): string | null {
+  if (axios.isAxiosError(error) && error.config?.url) {
+    return `${error.config.baseURL || ''}${error.config.url}`;
+  }
+  return null;
 }
 
 export default api;

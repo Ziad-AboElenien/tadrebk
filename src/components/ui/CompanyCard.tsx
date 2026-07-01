@@ -76,7 +76,7 @@ export default function CompanyCard({
         </div>
 
         <div className="text-xs text-slate-500">
-          📍 {company.address}
+          <i className="fas fa-map-marker-alt mr-1" />{company.address}
         </div>
       </div>
     </Link>

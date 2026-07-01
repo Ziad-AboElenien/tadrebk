@@ -30,6 +30,7 @@ export interface User {
   address?: string;
   dateOfBirth?: string;
   gender?: 'male' | 'female';
+  resume?: string;
   skills?: string[];
   education?: Education[];
   experience?: Experience[];
@@ -46,6 +47,8 @@ export interface UpdateUserRequest {
   address?: string;
   dateOfBirth?: string;
   gender?: 'male' | 'female';
+  profilePicture?: string;
+  coverPicture?: string;
   skills?: string[];
   education?: Education[];
   experience?: Experience[];

@@ -1,4 +1,4 @@
-import api from '@/lib/axios';
+import axios from 'axios';
 import type {
   SignupRequest,
   SignupResponse,
@@ -15,6 +15,14 @@ import type {
   GoogleAuthRequest,
 } from '@/types/auth';
 
+// ─── Axios Instance ───────────────────────────────────────────
+const api = axios.create({
+  baseURL: 'https://tadreebak-e285.onbelmo.uk/api/v1',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 // ─── Signup (no role field per API spec) ─────────────────────
 export async function signup(data: SignupRequest): Promise<SignupResponse> {
   const res = await api.post<SignupResponse>('/auth/signup', {
@@ -25,19 +33,20 @@ export async function signup(data: SignupRequest): Promise<SignupResponse> {
     confirmPassword: data.confirmPassword,
     ...(data.phone ? { phone: data.phone } : {}),
   });
+  console.log('Signup response:', res); // Log the response data
   return res.data;
 }
 
 // ─── Login ───────────────────────────────────────────────────
-export async function login(data: LoginRequest): Promise<LoginResponse> {
+export async function login(data: LoginRequest) {
   const res = await api.post<LoginResponse>('/auth/login', data);
-  return res.data;
+  return res.data.data;
 }
 
 // ─── Google Auth ─────────────────────────────────────────────
-export async function googleAuth(data: GoogleAuthRequest): Promise<LoginResponse> {
+export async function googleAuth(data: GoogleAuthRequest) {
   const res = await api.post<LoginResponse>('/auth/google', data);
-  return res.data;
+  return res.data.data;
 }
 
 // ─── Confirm Email (OTP) ─────────────────────────────────────

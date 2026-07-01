@@ -9,6 +9,7 @@ import { clearUser } from '@/store/userSlice';
 import { clearCompany } from '@/store/companySlice';
 import * as authService from '@/features/auth/server/auth.service';
 import Avatar from '@/components/ui/Avatar';
+import { getImgUrl } from '@/types/company';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -20,8 +21,10 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const handler = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handler);
     return () => window.removeEventListener('scroll', handler);
@@ -38,7 +41,7 @@ export default function Navbar() {
     router.push('/');
   }
 
-  const dashboardHref = role === 'company' ? '/company/dashboard' : '/dashboard';
+  const dashboardHref = role === 'company' ? '/company/dashboard' : role === 'admin' ? '/admin/dashboard' : '/dashboard';
   const displayName = role === 'company'
     ? currentCompany?.name
     : `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim();
@@ -62,8 +65,8 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-8">
           {[
             { href: '/internships', label: 'Internships' },
-            { href: '/#how-it-works', label: 'How it works' },
-            { href: '/#for-companies', label: 'For Companies' },
+            { href: '/how-it-works', label: 'How it works' },
+            { href: '/companies', label: 'For Companies' },
           ].map((link) => (
             <Link
               key={link.href}
@@ -82,7 +85,7 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="hidden md:flex items-center gap-3">
-          {isAuthenticated ? (
+          {isAuthenticated && mounted ? (
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen((o) => !o)}
@@ -94,8 +97,8 @@ export default function Navbar() {
                 <Avatar
                   src={
                     role === 'company'
-                      ? currentCompany?.logo
-                      : currentUser?.profilePicture
+                      ? (getImgUrl(currentCompany?.logo) ?? null)
+                      : (currentUser?.profilePicture || null)
                   }
                   name={displayName || 'User'}
                   size="sm"
@@ -116,15 +119,45 @@ export default function Navbar() {
                     <i className="fas fa-th-large w-4 text-center text-gray-400" />
                     Dashboard
                   </Link>
+                  {role === 'admin' && (
+                    <>
+                      <Link
+                        href="/profile"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                      >
+                        <i className="fas fa-user w-4 text-center text-gray-400" />
+                        My Profile
+                      </Link>
+                      <Link
+                        href="/change-password"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                      >
+                        <i className="fas fa-key w-4 text-center text-gray-400" />
+                        Change Password
+                      </Link>
+                    </>
+                  )}
                   {role === 'student' && (
-                    <Link
-                      href="/profile"
-                      onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                    >
-                      <i className="fas fa-user w-4 text-center text-gray-400" />
-                      My Profile
-                    </Link>
+                    <>
+                      <Link
+                        href="/profile"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                      >
+                        <i className="fas fa-user w-4 text-center text-gray-400" />
+                        My Profile
+                      </Link>
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                      >
+                        <i className="fas fa-paper-plane w-4 text-center text-gray-400" />
+                        My Applications
+                      </Link>
+                    </>
                   )}
                   {role === 'company' && (
                     <Link
@@ -183,8 +216,8 @@ export default function Navbar() {
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 px-4 py-4 flex flex-col gap-2">
           <Link href="/internships" onClick={() => setMenuOpen(false)} className="py-2 text-sm font-semibold text-gray-600">Internships</Link>
-          <Link href="/#how-it-works" onClick={() => setMenuOpen(false)} className="py-2 text-sm font-semibold text-gray-600">How it works</Link>
-          {isAuthenticated ? (
+          <Link href="/how-it-works" onClick={() => setMenuOpen(false)} className="py-2 text-sm font-semibold text-gray-600">How it works</Link>
+          {isAuthenticated && mounted ? (
             <>
               <Link href={dashboardHref} onClick={() => setMenuOpen(false)} className="py-2 text-sm font-semibold text-primary">Dashboard</Link>
               <button onClick={handleLogout} className="py-2 text-sm font-semibold text-red-500 text-left">Sign out</button>

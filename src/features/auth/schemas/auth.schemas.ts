@@ -95,12 +95,10 @@ export const companyOnboardingSchema = z.object({
 export const internshipSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
-  location: z.enum(['on-site', 'remote', 'hybrid'], {
-    errorMap: () => ({ message: 'Please select a location type' }),
-  }),
-  workingTime: z.enum(['full-time', 'part-time']).optional(),
-  softSkills: z.array(z.string()).optional().default([]),
-  technicalSkills: z.array(z.string()).optional().default([]),
+  location: z.enum(['on-site', 'remote', 'hybrid'], 'Please select a location type'),
+  workingTime: z.enum(['full-time', 'part-time']),
+  softSkills: z.array(z.string()).default([]),
+  technicalSkills: z.array(z.string()).default([]),
 });
 
 // ─── Exported Types ───────────────────────────────────────────
@@ -113,3 +111,28 @@ export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export type ChangeEmailFormData = z.infer<typeof changeEmailSchema>;
 export type CompanyOnboardingFormData = z.infer<typeof companyOnboardingSchema>;
 export type InternshipFormData = z.infer<typeof internshipSchema>;
+
+// ─── Profile Form (student) ────────────────────────────────────
+export const profileSchema = z.object({
+  firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+  phone: z.string().optional(),
+  bio: z.string().optional(),
+  headline: z.string().optional(),
+  address: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  gender: z.enum(['male', 'female']).optional().or(z.literal('')),
+  skills: z.string().optional(),
+});
+export type ProfileFormData = z.infer<typeof profileSchema>;
+
+// ─── Company Settings Form ──────────────────────────────────────
+export const companySettingsSchema = z.object({
+  name: z.string().min(2, 'Company name must be at least 2 characters'),
+  description: z.string().optional(),
+  industry: z.string().min(1, 'Please select an industry'),
+  address: z.string().optional(),
+  companyEmail: z.string().email('Invalid email').optional().or(z.literal('')),
+  numberOfEmployees: z.string().optional(),
+});
+export type CompanySettingsFormData = z.infer<typeof companySettingsSchema>;

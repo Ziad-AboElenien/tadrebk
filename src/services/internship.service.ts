@@ -10,7 +10,9 @@ interface CreateInternshipPayload {
   technicalSkills: string[];
 }
 
-interface UpdateInternshipPayload extends Partial<CreateInternshipPayload> {}
+interface UpdateInternshipPayload extends Partial<CreateInternshipPayload> {
+  closed?: boolean;
+}
 
 interface ListInternshipsParams {
   type?: 'full-time' | 'part-time';

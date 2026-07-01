@@ -3,7 +3,7 @@
 // A user becomes a "company user" when they create a Company via POST /company/
 // We store the intended role in localStorage ONLY to guide the post-signup flow.
 
-export type UserRole = 'student' | 'company';
+export type UserRole = 'student' | 'company' | 'admin';
 
 export interface AuthTokens {
   accessToken: string;
