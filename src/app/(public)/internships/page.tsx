@@ -110,9 +110,12 @@ function InternshipsContent() {
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    setFilters({ title: query, type: filters.type, location: (locationInput || filters.location) as '' | 'on-site' | 'remote' | 'hybrid' });
+    const validLocations = ['on-site', 'remote', 'hybrid'] as const;
+    const loc = locationInput.toLowerCase();
+    const location = validLocations.includes(loc as any) ? loc : '';
+    setFilters({ title: query, type: filters.type, location: location as '' | 'on-site' | 'remote' | 'hybrid' });
     setPage(1);
-  }, [query, filters.type, filters.location, locationInput]);
+  }, [query, filters.type, locationInput]);
 
   const handleFilterChange = useCallback((key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
