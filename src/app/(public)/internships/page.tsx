@@ -75,7 +75,7 @@ function InternshipsContent() {
   const [filters, setFilters] = useState({
     title: searchParams.get('title') || '',
     type: (searchParams.get('type') || '') as '' | 'full-time' | 'part-time',
-    location: (searchParams.get('location') || '') as '' | 'on-site' | 'remote' | 'hybrid',
+    location: (searchParams.get('location') || '') as string,
   });
 
   // Load saved state
@@ -112,10 +112,10 @@ function InternshipsContent() {
     e.preventDefault();
     const validLocations = ['on-site', 'remote', 'hybrid'] as const;
     const loc = locationInput.toLowerCase();
-    const location = validLocations.includes(loc as any) ? loc : '';
-    setFilters({ title: query, type: filters.type, location: location as '' | 'on-site' | 'remote' | 'hybrid' });
+    const isLocationType = validLocations.includes(loc as any);
+    setFilters((prev) => ({ ...prev, title: query, location: isLocationType ? loc : 'on-site' }));
     setPage(1);
-  }, [query, filters.type, locationInput]);
+  }, [query, locationInput]);
 
   const handleFilterChange = useCallback((key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -204,7 +204,7 @@ function InternshipsContent() {
             <input
               value={locationInput}
               onChange={(e) => setLocationInput(e.target.value)}
-              placeholder="Remote, On-site, or Hybrid"
+              placeholder="Search by city (e.g. Cairo)"
               className="w-full bg-transparent text-sm text-gray-700 outline-none"
               style={{ outline: 'none', boxShadow: 'none' }}
             />
