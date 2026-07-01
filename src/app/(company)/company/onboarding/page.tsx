@@ -28,6 +28,7 @@ export default function CompanyOnboardingPage() {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<CompanyOnboardingFormData>({
     resolver: zodResolver(companyOnboardingSchema),
@@ -108,6 +109,7 @@ export default function CompanyOnboardingPage() {
             value: i.value,
             label: i.label,
           }))}
+          value={watch('industry')}
           error={errors.industry?.message}
           {...register('industry')}
         />
