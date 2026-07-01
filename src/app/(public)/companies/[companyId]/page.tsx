@@ -62,7 +62,8 @@ export default function PublicCompanyProfilePage() {
     );
   }
 
-  const logoUrl = getImgUrl(company.logo);
+  const [logoUrl] = useState(() => getImgUrl(company.logo));
+  const [logoError, setLogoError] = useState(false);
   const coverUrl = getImgUrl(company.coverPicture);
 
   return (
@@ -85,15 +86,13 @@ export default function PublicCompanyProfilePage() {
         {/* Avatar + header */}
         <div className="relative px-4 sm:px-6 -mt-14 mb-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-3 sm:gap-4">
-            {logoUrl ? (
+            {logoUrl && !logoError ? (
               <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl shrink-0 bg-white">
-                <img src={logoUrl} alt={company.name} className="w-full h-full object-contain p-2" />
+                <img src={logoUrl} alt="" className="w-full h-full object-contain p-2" onError={() => setLogoError(true)} />
               </div>
             ) : (
               <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center ring-4 ring-white shadow-xl shrink-0">
-                <span className="text-3xl sm:text-4xl font-bold text-white select-none">
-                  {company.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                </span>
+                <i className="fas fa-building text-2xl sm:text-3xl text-white" />
               </div>
             )}
             <div className="text-center sm:text-left pb-1">

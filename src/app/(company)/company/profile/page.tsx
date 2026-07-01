@@ -19,6 +19,7 @@ function formatDate(dateStr?: string): string {
 export default function CompanyProfilePage() {
   const c = useAppSelector((s) => s.company.currentCompany);
   const [totalInternships, setTotalInternships] = useState(0);
+  const [logoError, setLogoError] = useState(false);
 
   useEffect(() => {
     if (c?._id) {
@@ -61,16 +62,14 @@ export default function CompanyProfilePage() {
         {/* Avatar + header */}
         <div className="relative px-4 sm:px-6 -mt-14 mb-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div className="flex items-end gap-4">
-              {logoUrl ? (
+            <div className="flex items-end gap-4 mt-3">
+              {logoUrl && !logoError ? (
                 <div className="w-28 h-28 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl shrink-0 bg-white">
-                  <img src={logoUrl} alt={c.name} className="w-full h-full object-contain p-2" />
+                  <img src={logoUrl} alt="" className="w-full h-full object-contain p-2" onError={() => setLogoError(true)} />
                 </div>
               ) : (
                 <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center ring-4 ring-white shadow-xl shrink-0">
-                  <span className="text-4xl font-bold text-white select-none">
-                    {c.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                  </span>
+                  <i className="fas fa-building text-3xl text-white" />
                 </div>
               )}
               <div className="pb-1">
