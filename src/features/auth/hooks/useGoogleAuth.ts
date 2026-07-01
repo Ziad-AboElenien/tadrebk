@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import * as authService from '@/features/auth/server/auth.service';
@@ -31,6 +31,7 @@ export function useGoogleAuth() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const initialized = useRef(false);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
 
   useEffect(() => {
     if (initialized.current || !GOOGLE_CLIENT_ID) return;
@@ -39,13 +40,15 @@ export function useGoogleAuth() {
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.defer = true;
+    script.onload = () => setScriptLoaded(true);
+    script.onerror = () => {
+      toast.error('Failed to load Google Identity Services. Please refresh and try again.');
+    };
     document.body.appendChild(script);
 
     initialized.current = true;
 
-    return () => {
-      // Cleanup not strictly needed; keep script loaded
-    };
+    return () => {};
   }, []);
 
   const handleGoogleCredential = useCallback(
@@ -58,7 +61,6 @@ export function useGoogleAuth() {
 
         const user = await userService.getUserProfile(userId);
 
-        // Check if JWT says admin, OR user profile has admin role
         if (decoded?.role === 'admin' || (user as any).role === 'admin') {
           dispatch(setTokens({ tokens, userId, role: 'admin' }));
           dispatch(setUser(user));
@@ -105,7 +107,11 @@ export function useGoogleAuth() {
       return;
     }
 
-    // Use the Google Identity Services API
+    if (!scriptLoaded) {
+      toast.info('Google services are still loading. Please wait a moment and try again.');
+      return;
+    }
+
     const google = (window as any).google;
     if (!google?.accounts?.id) {
       toast.error('Google Identity Services failed to load. Please refresh and try again.');
@@ -115,10 +121,15 @@ export function useGoogleAuth() {
     google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
       callback: handleGoogleCredential,
+      cancel_on_tap_outside: false,
     });
 
-    google.accounts.id.prompt(); // One Tap UX
-  }, [handleGoogleCredential]);
+    google.accounts.id.prompt((notification: any) => {
+      if (notification.isNotDisplayed()) {
+        toast.warning('Google One Tap did not appear. Check that the OAuth consent screen is configured in Google Cloud Console (APIs & Services > OAuth consent screen). If it is, try using a different browser or disabling third-party cookie blockers.');
+      }
+    });
+  }, [handleGoogleCredential, scriptLoaded]);
 
-  return { signInWithGoogle, enabled: !!GOOGLE_CLIENT_ID };
+  return { signInWithGoogle, enabled: !!GOOGLE_CLIENT_ID, scriptLoaded };
 }

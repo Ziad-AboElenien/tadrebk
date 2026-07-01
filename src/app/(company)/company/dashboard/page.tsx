@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAppSelector } from '@/store/store';
 import { internshipService } from '@/services/internship.service';
 import { Internship } from '@/types/internship';
+import { getImgUrl } from '@/types/company';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
@@ -20,6 +21,7 @@ export default function CompanyDashboardPage() {
   const [tab, setTab] = useState<Tab>('active');
   const [deleting, setDeleting] = useState<string | null>(null);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!company?._id) { setLoading(false); return; }
@@ -97,9 +99,15 @@ export default function CompanyDashboardPage() {
       <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 mb-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white font-bold text-lg">
-              {company.name.substring(0, 2).toUpperCase()}
-            </div>
+            {getImgUrl(company.logo) && !logoError ? (
+              <div className="w-14 h-14 rounded-xl overflow-hidden bg-white ring-2 ring-gray-100 shrink-0">
+                <img src={getImgUrl(company.logo)!} alt="" className="w-full h-full object-contain p-1.5" onError={() => setLogoError(true)} />
+              </div>
+            ) : (
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shrink-0">
+                <i className="fas fa-building text-white text-lg" />
+              </div>
+            )}
             <div>
               <h1 className="text-xl sm:text-2xl font-black text-dark">{company.name}</h1>
               <p className="text-sm text-gray-500">{company.industry} &middot; {company.companyEmail}</p>
