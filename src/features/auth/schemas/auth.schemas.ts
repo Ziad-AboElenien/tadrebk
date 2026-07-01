@@ -123,6 +123,20 @@ export const profileSchema = z.object({
   dateOfBirth: z.string().optional(),
   gender: z.enum(['male', 'female']).optional().or(z.literal('')),
   skills: z.string().optional(),
+  experience: z.array(z.object({
+    company: z.string().min(1, 'Company is required'),
+    title: z.string().min(1, 'Title is required'),
+    description: z.string().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+  })).optional(),
+  education: z.array(z.object({
+    institution: z.string().min(1, 'Institution is required'),
+    degree: z.string().optional(),
+    field: z.string().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+  })).optional(),
 });
 export type ProfileFormData = z.infer<typeof profileSchema>;
 

@@ -191,7 +191,7 @@ export default function CompanyDashboardPage() {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Link href={`/company/internships/${intern._id}/applications`}>
                       <Button variant="ghost" size="sm">
                         <i className="fas fa-users text-xs" />

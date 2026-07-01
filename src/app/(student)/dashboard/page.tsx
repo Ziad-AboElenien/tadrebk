@@ -6,6 +6,11 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { logout } from '@/store/authSlice';
 import { applicationService, Application } from '@/services/application.service';
+import { internshipService } from '@/services/internship.service';
+import { Internship } from '@/types/internship';
+import { getCompanyIdFromInternship } from '@/types/internship';
+import { getImgUrl } from '@/types/company';
+import { getUserImgUrl } from '@/types/user';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
@@ -16,7 +21,6 @@ import { toast } from 'react-toastify';
 
 const LS_SAVED = 'tadrebk_saved_internships';
 
-interface SavedItem { id: string; title: string; companyName: string; location: string; }
 type FilterStatus = 'all' | 'pending' | 'accepted' | 'rejected';
 
 export default function StudentDashboardPage() {
@@ -26,7 +30,8 @@ export default function StudentDashboardPage() {
   const userId = useAppSelector((s) => s.auth.userId);
 
   // Saved internships
-  const [savedInternships, setSavedInternships] = useState<SavedItem[]>([]);
+  const [savedInternships, setSavedInternships] = useState<Internship[]>([]);
+  const [loadingSaved, setLoadingSaved] = useState(true);
 
   // Resume
   const [uploadingResume, setUploadingResume] = useState(false);
@@ -42,12 +47,18 @@ export default function StudentDashboardPage() {
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const raw = JSON.parse(localStorage.getItem(LS_SAVED) || '[]');
-      if (raw.length > 0 && typeof raw[0] === 'object') {
-        setSavedInternships(raw);
-      }
-    } catch { /* ignore */ }
+    (async () => {
+      try {
+        const ids: string[] = JSON.parse(localStorage.getItem(LS_SAVED) || '[]');
+        if (ids.length > 0) {
+          const results = await Promise.allSettled(ids.map((id) => internshipService.getInternshipById(id)));
+          const internships: Internship[] = [];
+          results.forEach((r) => { if (r.status === 'fulfilled') internships.push(r.value); });
+          setSavedInternships(internships);
+        }
+      } catch { /* ignore */ }
+      finally { setLoadingSaved(false); }
+    })();
   }, []);
 
   const fetchApplications = useCallback(async () => {
@@ -124,9 +135,9 @@ export default function StudentDashboardPage() {
             <div className="h-20 bg-gradient-to-r from-emerald-400 to-emerald-600" />
             <div className="px-6 pb-6">
               <div className="-mt-10 flex flex-wrap items-end justify-between gap-4">
-                <div className="flex items-end gap-4">
+                <div className="flex items-end gap-4 flex-wrap">
                   <div className="relative h-20 w-20 flex-shrink-0 rounded-2xl border-4 border-white bg-gray-900 overflow-hidden flex items-center justify-center text-white text-2xl font-bold">
-                    {user?.profilePicture ? <img src={user.profilePicture} alt="" className="w-full h-full object-cover" /> : displayName.charAt(0).toUpperCase()}
+                    {getUserImgUrl(user?.profilePicture) ? <img src={getUserImgUrl(user.profilePicture)!} alt="" className="w-full h-full object-cover" /> : displayName.charAt(0).toUpperCase()}
                     <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
                   </div>
                   <div className="pb-1">
@@ -136,7 +147,7 @@ export default function StudentDashboardPage() {
                 </div>
                 <Link href="/profile" className="pb-1 text-sm font-semibold text-emerald-500 hover:underline">Edit Profile</Link>
               </div>
-              <div className="mt-6 grid grid-cols-3 gap-4 border-t border-gray-100 pt-5">
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-5">
                 <div><p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Major</p><p className="mt-1 text-sm font-bold text-gray-900">{education?.field || 'Not specified'}</p></div>
                 <div><p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Graduation</p><p className="mt-1 text-sm font-bold text-gray-900">{education?.endDate ? `Class of ${new Date(education.endDate).getFullYear()}` : 'Not specified'}</p></div>
                 <div><p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Email</p><p className="mt-1 text-sm font-bold text-gray-900 truncate">{user?.email || '—'}</p></div>
@@ -210,65 +221,116 @@ export default function StudentDashboardPage() {
           ) : (
             <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
               <div className="divide-y divide-gray-50">
-                {applications.map((app) => (
+                {applications.map((app) => {
+                  const internId = typeof app.internshipId === 'string' ? app.internshipId : app.internshipId._id;
+                  const intern = typeof app.internshipId === 'object' ? app.internshipId : null;
+                  const title = intern?.title || 'Internship';
+                  const location = intern?.location || '';
+                  const workingTime = intern?.workingTime || '';
+                  const companyName = (intern as any)?.companyId?.name || '';
+                  const companyLogo = (intern as any)?.companyId?.logo;
+                  const logoUrl = typeof companyLogo === 'string' ? companyLogo : companyLogo?.secure_url || '';
+                  return (
                   <div key={app._id} className="p-6 sm:p-8">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white font-bold shrink-0 text-sm">
-                          {app.internship?.title?.[0]?.toUpperCase() || '?'}
-                        </div>
-                        <div className="min-w-0">
-                          <Link
-                            href={`/internships/${app.internshipId}`}
-                            className="font-semibold text-dark hover:text-emerald-600 transition-colors truncate block"
-                          >
-                            {app.internship?.title || 'Internship'}
-                          </Link>
-                          <p className="text-sm text-gray-500 truncate">
-                            {app.internship?.location && (
-                              <span className="mr-3"><i className="fas fa-location-dot text-xs mr-1" />{app.internship.location}</span>
-                            )}
-                            {app.internship?.workingTime && (
-                              <span>{app.internship.workingTime}</span>
-                            )}
-                          </p>
-                        </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white font-bold shrink-0 text-lg">
+                        {title?.[0]?.toUpperCase() || '?'}
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant={
-                          app.status === 'accepted' ? 'success' : app.status === 'rejected' ? 'danger' : 'warning'
-                        }>
-                          {app.status}
-                        </Badge>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <Link
+                              href={`/internships/${internId}`}
+                              className="font-bold text-dark hover:text-primary transition-colors truncate block text-lg"
+                            >
+                              {title}
+                            </Link>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-gray-500">
+                              {companyName && (
+                                <span className="flex items-center gap-1">
+                                  {logoUrl && <img src={logoUrl} alt="" className="w-4 h-4 rounded object-contain" />}
+                                  {companyName}
+                                </span>
+                              )}
+                              {location && (
+                                <span className="flex items-center gap-1">
+                                  <i className="fas fa-location-dot text-xs text-gray-300" /> {location}
+                                </span>
+                              )}
+                              {workingTime && (
+                                <span className="flex items-center gap-1">
+                                  <i className="fas fa-clock text-xs text-gray-300" /> {workingTime}
+                                </span>
+                              )}
+                            </div>
+                          </div>
 
-                        {app.status === 'pending' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            loading={cancellingId === app._id}
-                            onClick={() => handleCancel(app.companyId, app.internshipId, app._id)}
-                            className="border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300"
-                          >
-                            Cancel
-                          </Button>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge variant={
+                              app.status === 'accepted' ? 'success' : app.status === 'rejected' ? 'danger' : 'warning'
+                            }>
+                              {app.status}
+                            </Badge>
+
+                            {app.status === 'pending' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                loading={cancellingId === app._id}
+                                onClick={() => handleCancel(app.companyId, internId, app._id)}
+                                className="border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300"
+                              >
+                                Cancel
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+
+                        {app.coverLetter && (
+                          <div className="mt-4 bg-gray-50 rounded-xl p-4">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cover Letter</p>
+                            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{app.coverLetter}</p>
+                          </div>
                         )}
+
+                        {app.resume?.secure_url && (
+                          <a
+                            href={app.resume.secure_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-red-500 hover:text-red-600 transition-colors"
+                          >
+                            <i className="fas fa-file-pdf text-xs" /> View Resume
+                          </a>
+                        )}
+
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs text-gray-400">
+                          {app.createdAt && (
+                            <span>
+                              Applied {new Date(app.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric', month: 'long', day: 'numeric',
+                              })}
+                            </span>
+                          )}
+                          {app.updatedAt && app.updatedAt !== app.createdAt && (
+                            <span>
+                              Updated {new Date(app.updatedAt).toLocaleDateString('en-US', {
+                                year: 'numeric', month: 'long', day: 'numeric',
+                              })}
+                            </span>
+                          )}
+                          {app.reviewedBy && (
+                            <span className="flex items-center gap-1">
+                              <i className="fas fa-check-circle text-xs" /> Reviewed
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-
-                    {app.coverLetter && (
-                      <p className="text-sm text-gray-600 mt-3 line-clamp-2">{app.coverLetter}</p>
-                    )}
-
-                    {app.createdAt && (
-                      <p className="text-xs text-gray-400 mt-3">
-                        Applied {new Date(app.createdAt).toLocaleDateString('en-US', {
-                          year: 'numeric', month: 'long', day: 'numeric',
-                        })}
-                      </p>
-                    )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -281,29 +343,60 @@ export default function StudentDashboardPage() {
         </div>
 
         {/* Saved internships */}
-        {savedCount > 0 && (
+        {savedInternships.length > 0 && (
           <section className="mb-10">
             <div className="mb-5 flex items-center justify-between">
               <div><h2 className="text-xl font-extrabold text-gray-900">Saved Internships</h2><p className="text-sm text-gray-400">Roles you&apos;ve bookmarked for later.</p></div>
+              <Link href="/internships" className="text-sm font-semibold text-primary hover:underline">Browse All</Link>
             </div>
+            {loadingSaved ? (
+              <div className="flex justify-center py-10"><Spinner /></div>
+            ) : (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {savedInternships.map((item) => (
-                <Link key={item.id} href={`/internships/${item.id}`}>
-                  <div className="rounded-2xl bg-white p-5 shadow-sm hover:shadow-md transition cursor-pointer">
+              {savedInternships.map((intern) => {
+                const cid = getCompanyIdFromInternship(intern);
+                const companyObj = typeof intern.companyId === 'object' ? (intern.companyId as any) : null;
+                const companyName = companyObj?.name || '';
+                const logoUrl = companyObj ? getImgUrl(companyObj.logo) : null;
+                return (
+                <Link key={intern._id} href={`/internships/${intern._id}`}>
+                  <div className="rounded-2xl bg-white p-5 shadow-sm hover:shadow-md transition cursor-pointer h-full flex flex-col">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400"><i className="fas fa-building" /></div>
-                      <div className="min-w-0"><p className="text-sm font-bold text-gray-900 truncate">{item.title}</p><p className="text-xs text-gray-400">{item.companyName || 'Saved'}</p></div>
-                    </div>
-                    {item.location && (
-                      <div className="mt-4 flex flex-wrap items-center gap-2">
-                        <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-500"><i className="fas fa-map-marker-alt text-xs" />{item.location}</span>
+                      {logoUrl ? (
+                        <img src={logoUrl} alt="" className="w-10 h-10 rounded-xl object-contain border border-gray-100" />
+                      ) : (
+                        <div className="w-10 h-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                          {intern.title[0]?.toUpperCase() || '?'}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-gray-900 truncate">{intern.title}</p>
+                        <p className="text-xs text-gray-400 truncate">{companyName || 'Internship'}</p>
                       </div>
-                    )}
-                    <div className="mt-4 w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white shadow-sm text-center">View Details</div>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {intern.location && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-500">
+                          <i className="fas fa-map-marker-alt text-xs" />{intern.location === 'on-site' ? 'On-site' : intern.location === 'remote' ? 'Remote' : 'Hybrid'}
+                        </span>
+                      )}
+                      {intern.workingTime && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-500">
+                          <i className="fas fa-clock text-xs" />{intern.workingTime}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-auto pt-4">
+                      <span className="block w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-white shadow-sm text-center hover:bg-primary-dark transition">
+                        View Details
+                      </span>
+                    </div>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
+            )}
           </section>
         )}
       </main>

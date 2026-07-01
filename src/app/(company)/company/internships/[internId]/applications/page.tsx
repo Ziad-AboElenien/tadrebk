@@ -118,66 +118,100 @@ export default function InternshipApplicationsPage() {
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
-            {filtered.map((app) => (
+            {filtered.map((app) => {
+              const s = app.studentId;
+              const profilePic = s?.profilePicture?.secure_url;
+              const studentId = s?._id;
+              return (
               <div key={app._id} className="p-6 sm:p-8">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white font-bold shrink-0 text-sm">
-                      {app.user
-                        ? `${app.user.firstName[0]}${app.user.lastName[0]}`.toUpperCase()
-                        : '?'}
+                <div className="flex items-start gap-4">
+                  <Link
+                    href={`/company/applicants/${studentId || '#'}`}
+                    className="shrink-0"
+                  >
+                    {profilePic ? (
+                      <img
+                        src={profilePic}
+                        alt={`${s.firstName} ${s.lastName}`}
+                        className="w-14 h-14 rounded-full object-cover border-2 border-gray-100"
+                      />
+                    ) : (
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white font-bold">
+                        {s ? `${s.firstName[0]}${s.lastName[0]}`.toUpperCase() : '?'}
+                      </div>
+                    )}
+                  </Link>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <Link
+                          href={`/company/applicants/${studentId || '#'}`}
+                          className="font-semibold text-dark hover:text-primary transition-colors truncate block text-lg"
+                        >
+                          {s ? `${s.firstName} ${s.lastName}` : 'Unknown User'}
+                        </Link>
+                        <p className="text-sm text-gray-500">{s?.email || ''}</p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        <Badge variant={
+                          app.status === 'accepted' ? 'success' : app.status === 'rejected' ? 'danger' : 'warning'
+                        }>
+                          {app.status}
+                        </Badge>
+
+                        {app.status === 'pending' && (
+                          <>
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              loading={reviewingId === app._id}
+                              onClick={() => handleReview(app._id, 'accepted')}
+                            >
+                              Accept
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              loading={reviewingId === app._id}
+                              onClick={() => handleReview(app._id, 'rejected')}
+                              className="border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300"
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        )}
+
+                        <Link href={`/company/applicants/${studentId || '#'}`}>
+                          <Button variant="ghost" size="sm">
+                            <i className="fas fa-external-link-alt text-xs" />
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-dark truncate">
-                        {app.user ? `${app.user.firstName} ${app.user.lastName}` : 'Unknown User'}
+
+                    {app.coverLetter && (
+                      <div className="mt-3 bg-gray-50 rounded-xl p-4">
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cover Letter</p>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                          {app.coverLetter}
+                        </p>
+                      </div>
+                    )}
+
+                    {app.createdAt && (
+                      <p className="text-xs text-gray-400 mt-3">
+                        Applied {new Date(app.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric', month: 'long', day: 'numeric',
+                        })}
                       </p>
-                      <p className="text-sm text-gray-500 truncate">{app.user?.email}</p>
-                      {app.coverLetter && (
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{app.coverLetter}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant={
-                      app.status === 'accepted' ? 'success' : app.status === 'rejected' ? 'danger' : 'warning'
-                    }>
-                      {app.status}
-                    </Badge>
-
-                    {app.status === 'pending' && (
-                      <>
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          loading={reviewingId === app._id}
-                          onClick={() => handleReview(app._id, 'accepted')}
-                        >
-                          Accept
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          loading={reviewingId === app._id}
-                          onClick={() => handleReview(app._id, 'rejected')}
-                          className="border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300"
-                        >
-                          Reject
-                        </Button>
-                      </>
                     )}
                   </div>
                 </div>
-
-                {app.createdAt && (
-                  <p className="text-xs text-gray-400 mt-3">
-                    Applied {new Date(app.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric', month: 'long', day: 'numeric',
-                    })}
-                  </p>
-                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

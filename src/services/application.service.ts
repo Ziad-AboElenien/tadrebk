@@ -1,27 +1,37 @@
 import api from '@/lib/axios';
 
+export interface PopulatedInternship {
+  _id: string;
+  title: string;
+  location: string;
+  workingTime: string;
+}
+
 export interface Application {
   _id: string;
-  userId: string;
-  internshipId: string;
-  companyId: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  coverLetter?: string;
-  createdAt: string;
-  updatedAt?: string;
-  user?: {
+  studentId: {
     _id: string;
     firstName: string;
     lastName: string;
     email: string;
-    profilePicture?: string;
+    profilePicture?: {
+      public_id: string;
+      secure_url: string;
+      _id: string;
+    };
   };
-  internship?: {
+  internshipId: string | PopulatedInternship;
+  companyId: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  coverLetter?: string;
+  resume?: {
+    public_id: string;
+    secure_url: string;
     _id: string;
-    title: string;
-    location: string;
-    workingTime: string;
   };
+  createdAt: string;
+  updatedAt?: string;
+  reviewedBy?: string;
 }
 
 interface ApplicationListResponse {

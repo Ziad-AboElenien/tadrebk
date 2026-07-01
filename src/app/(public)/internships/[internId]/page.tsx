@@ -121,29 +121,17 @@ export default function InternshipDetailsPage() {
     setApplying(true);
     try {
       const cid = getCompanyIdFromInternship(internship);
-      console.log('[Apply Debug] companyId:', cid);
-      console.log('[Apply Debug] internId:', internId);
-      console.log('[Apply Debug] coverLetter:', coverLetter);
-      console.log('[Apply Debug] request URL:', `/company/${cid}/internships/${internId}/applications`);
       if (!cid) {
         toast.error('Company information not available for this internship');
         setApplying(false);
         setShowApplyModal(false);
         return;
       }
-      console.log('[Apply Debug] companyId:', cid);
-      console.log('[Apply Debug] internId:', internId);
-      console.log('[Apply Debug] coverLetter:', coverLetter);
-      console.log('[Apply Debug] request URL:', `/company/${cid}/internships/${internId}/applications`);
       await applicationService.apply(cid, internId, { coverLetter: coverLetter || undefined });
       toast.success('Application submitted!');
       setShowApplyModal(false);
     } catch (err: any) {
       const msg = getErrorMessage(err);
-      console.log('[Apply Debug] error:', err);
-      console.log('[Apply Debug] error response full:', JSON.stringify((err as any)?.response?.data));
-      console.log('[Apply Debug] error status:', (err as any)?.response?.status);
-      console.log('[Apply Debug] error headers:', JSON.stringify((err as any)?.response?.headers));
       if (msg.includes('already applied')) {
         toast.info('You already applied to this internship');
       } else if (msg.includes('resume') || msg.includes('CV')) {
@@ -217,10 +205,10 @@ export default function InternshipDetailsPage() {
                 <h1 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">{internship.title}</h1>
                 <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-400">
                   {company && (
-                    <span className="flex items-center gap-1.5 font-semibold text-gray-600">
+                    <Link href={`/companies/${company._id}`} className="flex items-center gap-1.5 font-semibold text-gray-600 hover:text-primary transition-colors">
                       <i className="fas fa-briefcase text-xs" />
                       {company.name}
-                    </span>
+                    </Link>
                   )}
                   <span className="flex items-center gap-1.5">
                     <i className="fas fa-users text-xs" />
