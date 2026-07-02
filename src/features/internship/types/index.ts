@@ -1,4 +1,4 @@
-import type { Company } from './company';
+import type { Company } from '@/features/company/types';
 
 // Matches actual Swagger API schema
 export type InternshipLocation = 'on-site' | 'remote' | 'hybrid';

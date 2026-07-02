@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { Internship, InternshipsFilters } from '@/types/internship';
+import type { Internship, InternshipsFilters } from '@/features/internship/types';
 
 interface InternshipState {
   list: Internship[];

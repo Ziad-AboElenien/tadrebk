@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '@/lib/axios';
 import type {
   SignupRequest,
   SignupResponse,
@@ -13,15 +13,7 @@ import type {
   ChangeEmailRequest,
   ConfirmChangeEmailRequest,
   GoogleAuthRequest,
-} from '@/types/auth';
-
-// ─── Axios Instance ───────────────────────────────────────────
-const api = axios.create({
-  baseURL: 'https://tadreebak-e285.onbelmo.uk/api/v1',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+} from '@/features/auth/types';
 
 // ─── Signup (no role field per API spec) ─────────────────────
 export async function signup(data: SignupRequest): Promise<SignupResponse> {

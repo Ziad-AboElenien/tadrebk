@@ -1,4 +1,4 @@
-import { UserRole } from '@/types/auth';
+import { UserRole } from '@/features/auth/types';
 
 // ============================================================
 // IMPORTANT: There is NO role field in /auth/signup API.
