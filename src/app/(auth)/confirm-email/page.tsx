@@ -88,6 +88,16 @@ export default function ConfirmEmailPage() {
         {email || 'your email address'}
       </p>
 
+      <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 p-4 text-left">
+        <p className="text-xs font-semibold text-amber-800 flex items-center gap-1.5">
+          <i className="fas fa-exclamation-triangle text-amber-500" />
+          Email delivery notice
+        </p>
+        <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+          In some cases, the email may not trigger a notification. Please check your spam folder in case the email was filtered.
+        </p>
+      </div>
+
       {/* OTP Input */}
       <div className="mb-8">
         <OTPInput
