@@ -11,6 +11,7 @@ import { Internship } from '@/types/internship';
 import { getCompanyIdFromInternship } from '@/types/internship';
 import { getImgUrl } from '@/types/company';
 import { getUserImgUrl } from '@/types/user';
+import { getFileProxyUrl } from '@/lib/file-proxy';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
@@ -296,7 +297,7 @@ export default function StudentDashboardPage() {
 
                         {app.resume?.secure_url && (
                           <a
-                            href={app.resume.secure_url}
+                            href={getFileProxyUrl(app.resume.secure_url)!}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-red-500 hover:text-red-600 transition-colors"
