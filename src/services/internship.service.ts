@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { Internship } from '@/types/internship';
+import { Internship } from '@/features/internship/types';
 
 interface CreateInternshipPayload {
   title: string;

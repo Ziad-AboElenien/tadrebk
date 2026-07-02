@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Company } from '@/types/company';
+import { Company } from '@/features/company/types';
 import Badge from './Badge';
 
 interface CompanyCardProps {

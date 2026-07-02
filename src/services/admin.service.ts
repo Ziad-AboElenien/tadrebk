@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { Company } from '@/types/company';
+import { Company } from '@/features/company/types';
 
 interface CompanyListResponse {
   data: {

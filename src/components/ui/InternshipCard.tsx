@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Internship } from '@/types/internship';
-import type { Company } from '@/types/company';
-import { getImgUrl } from '@/types/company';
+import { Internship } from '@/features/internship/types';
+import type { Company } from '@/features/company/types';
+import { getImgUrl } from '@/features/company/types';
 import Badge from './Badge';
 import Button from './Button';
 import { useState, useEffect, useCallback } from 'react';

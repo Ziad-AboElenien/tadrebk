@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { User } from '@/types/user';
+import { User } from '@/features/student/types';
 
 interface UpdateUserPayload {
   firstName?: string;

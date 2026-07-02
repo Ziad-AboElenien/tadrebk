@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { Company } from '@/types/company';
+import type { Company } from '@/features/company/types';
 import { LS_COMPANY_ID } from '@/lib/constants';
 
 interface CompanyState {

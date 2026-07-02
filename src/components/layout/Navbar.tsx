@@ -9,8 +9,8 @@ import { clearUser } from '@/store/userSlice';
 import { clearCompany } from '@/store/companySlice';
 import * as authService from '@/features/auth/server/auth.service';
 import Avatar from '@/components/ui/Avatar';
-import { getImgUrl } from '@/types/company';
-import { getUserImgUrl } from '@/types/user';
+import { getImgUrl } from '@/features/company/types';
+import { getUserImgUrl } from '@/features/student/types';
 
 export default function Navbar() {
   const pathname = usePathname();

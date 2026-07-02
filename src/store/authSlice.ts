@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { AuthTokens, UserRole } from '@/types/auth';
+import type { AuthTokens, UserRole } from '@/features/auth/types';
 import {
   LS_ACCESS_TOKEN,
   LS_REFRESH_TOKEN,
