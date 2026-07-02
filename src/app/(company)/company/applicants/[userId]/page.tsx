@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { userService } from '@/services/user.service';
 import { User, getUserImgUrl } from '@/types/user';
+import { getFileProxyUrl } from '@/lib/file-proxy';
 import Spinner from '@/components/ui/Spinner';
 import Button from '@/components/ui/Button';
 import { getErrorMessage } from '@/lib/axios';
@@ -181,7 +182,7 @@ export default function ApplicantProfilePage() {
           <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
             <h2 className="font-bold text-dark text-lg mb-4 flex items-center gap-2"><i className="fas fa-file-pdf text-primary text-base" />Resume</h2>
             <a
-              href={getUserImgUrl(user.resume)!}
+              href={getFileProxyUrl(user.resume)!}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-3 rounded-xl bg-red-50 p-4 hover:bg-red-100 transition-colors"

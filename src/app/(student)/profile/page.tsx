@@ -9,6 +9,7 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import { logout } from '@/store/authSlice';
 import { setUser, updateUser } from '@/store/userSlice';
 import { getUserImgUrl } from '@/types/user';
+import { getFileProxyUrl } from '@/lib/file-proxy';
 import { profileSchema, type ProfileFormData } from '@/features/auth/schemas/auth.schemas';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -337,7 +338,7 @@ export default function StudentProfilePage() {
                 <div className="mt-4 flex items-center gap-3 rounded-xl bg-gray-50 p-3">
                   <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-500"><i className="fas fa-file-pdf" /></span>
                   <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-gray-900 truncate">Resume uploaded</p><p className="text-xs text-gray-400">Ready for employers</p></div>
-                  <a href={resumeUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-500 hover:text-emerald-600"><i className="fas fa-external-link-alt" /></a>
+                  <a href={getFileProxyUrl(resumeUrl) ?? ''} target="_blank" rel="noopener noreferrer" className="text-emerald-500 hover:text-emerald-600"><i className="fas fa-external-link-alt" /></a>
                 </div>
               )}
             </div>
