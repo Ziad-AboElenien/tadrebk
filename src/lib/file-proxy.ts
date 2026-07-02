@@ -10,5 +10,5 @@ export function getFileProxyUrl(
   const url = typeof file === 'string' ? file : file.secure_url;
   if (!url) return null;
   if (url.startsWith(API_BASE_URL)) return url;
-  return url;
+  return `${API_BASE_URL}/file-proxy/resume.pdf?url=${encodeURIComponent(url)}`;
 }
