@@ -13,6 +13,7 @@ interface UpdateUserPayload {
   address?: string;
   profilePicture?: string;
   coverPicture?: string;
+  resume?: string;
   education?: any[];
   experience?: any[];
 }

@@ -82,12 +82,11 @@ export default function CompaniesListingScreen() {
           <Select
             value={industryFilter}
             onChange={(e) => setIndustryFilter(e.target.value)}
-          >
-            <option value="">All Industries</option>
-            {industries.map((ind) => (
-              <option key={ind} value={ind}>{ind}</option>
-            ))}
-          </Select>
+            options={[
+              { value: '', label: 'All Industries' },
+              ...industries.map((ind) => ({ value: ind, label: ind })),
+            ]}
+          />
         </div>
       </div>
 

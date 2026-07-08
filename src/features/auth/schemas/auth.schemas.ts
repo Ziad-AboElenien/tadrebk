@@ -113,6 +113,7 @@ export const internshipSchema = z.object({
   softSkills: z.array(z.string()).default([]),
   technicalSkills: z.array(z.string()).default([]),
   questions: z.array(questionSchema).optional(),
+  preKnowledge: z.array(z.string()).optional(),
 });
 
 // ─── Exported Types ───────────────────────────────────────────

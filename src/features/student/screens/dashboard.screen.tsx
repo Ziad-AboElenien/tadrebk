@@ -131,6 +131,24 @@ export default function StudentDashboardScreen() {
           </div>
         </div>
 
+        {user.isConfirmed === false && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <i className="fas fa-envelope text-amber-600 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-amber-800">Verify your email</p>
+                <p className="text-xs text-amber-700 mt-0.5">Please confirm your email address to receive notifications and acceptance emails.</p>
+              </div>
+            </div>
+            <Link
+              href="/confirm-email"
+              className="shrink-0 rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700 transition shadow-sm"
+            >
+              Verify Now
+            </Link>
+          </div>
+        )}
+
         <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
           <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
             <div className="h-20 bg-gradient-to-r from-emerald-400 to-emerald-600" />

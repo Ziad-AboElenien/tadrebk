@@ -28,6 +28,7 @@ export default function CompanyDetailsScreen() {
   const [internships, setInternships] = useState<Internship[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalInternships, setTotalInternships] = useState(0);
+  const [logoError, setLogoError] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,8 +63,7 @@ export default function CompanyDetailsScreen() {
     );
   }
 
-  const [logoUrl] = useState(() => getImgUrl(company.logo));
-  const [logoError, setLogoError] = useState(false);
+  const logoUrl = getImgUrl(company.logo);
   const coverUrl = getImgUrl(company.coverPicture);
 
   return (

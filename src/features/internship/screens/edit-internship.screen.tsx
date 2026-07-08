@@ -28,11 +28,14 @@ export default function EditInternshipScreen() {
   const [technicalSkillsStr, setTechnicalSkillsStr] = useState('');
   const [softSkillsStr, setSoftSkillsStr] = useState('');
   const [questions, setQuestions] = useState<InternshipQuestion[]>([]);
+  const [preKnowledgeText, setPreKnowledgeText] = useState('');
 
   const {
     register,
     handleSubmit,
+    watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(internshipSchema),
@@ -45,6 +48,9 @@ export default function EditInternshipScreen() {
       technicalSkills: [] as string[],
     },
   });
+
+  const wLocation = watch('location');
+  const wWorkingTime = watch('workingTime');
 
   useEffect(() => {
     if (!internId) return;
@@ -62,6 +68,7 @@ export default function EditInternshipScreen() {
         setSoftSkillsStr(intern.softSkills?.join(', ') || '');
         setTechnicalSkillsStr(intern.technicalSkills?.join(', ') || '');
         setQuestions(intern.questions || []);
+        setPreKnowledgeText(intern.preKnowledge?.join(', ') || '');
       })
       .catch(() => {
         toast.error('Failed to load internship');
@@ -123,6 +130,7 @@ export default function EditInternshipScreen() {
         softSkills: softSkillsStr.split(',').map((s) => s.trim()).filter(Boolean),
         technicalSkills: technicalSkillsStr.split(',').map((s) => s.trim()).filter(Boolean),
         questions: cleaned.length > 0 ? cleaned : undefined,
+        preKnowledge: preKnowledgeText.split(',').map((s) => s.trim()).filter(Boolean),
       });
       toast.success('Internship updated!');
       router.push('/company/dashboard');
@@ -178,15 +186,27 @@ export default function EditInternshipScreen() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Select label="Location" error={errors.location?.message} {...register('location')}>
-            <option value="on-site">On-site</option>
-            <option value="remote">Remote</option>
-            <option value="hybrid">Hybrid</option>
-          </Select>
-          <Select label="Working time" error={errors.workingTime?.message} {...register('workingTime')}>
-            <option value="full-time">Full-time</option>
-            <option value="part-time">Part-time</option>
-          </Select>
+          <Select
+            label="Location"
+            error={errors.location?.message}
+            value={wLocation}
+            onChange={(e) => setValue('location', e.target.value, { shouldValidate: true })}
+            options={[
+              { value: 'on-site', label: 'On-site' },
+              { value: 'remote', label: 'Remote' },
+              { value: 'hybrid', label: 'Hybrid' },
+            ]}
+          />
+          <Select
+            label="Working time"
+            error={errors.workingTime?.message}
+            value={wWorkingTime}
+            onChange={(e) => setValue('workingTime', e.target.value, { shouldValidate: true })}
+            options={[
+              { value: 'full-time', label: 'Full-time' },
+              { value: 'part-time', label: 'Part-time' },
+            ]}
+          />
         </div>
 
         <Input
@@ -201,6 +221,21 @@ export default function EditInternshipScreen() {
           onChange={(e) => setSoftSkillsStr(e.target.value)}
           placeholder="e.g. Communication, Teamwork, Problem-solving"
         />
+
+        {/* Pre-knowledge to start */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-semibold text-gray-700">
+            Pre-knowledge to Start <span className="text-gray-400 font-normal">(optional, comma-separated)</span>
+          </label>
+          <textarea
+            value={preKnowledgeText}
+            onChange={(e) => setPreKnowledgeText(e.target.value)}
+            rows={4}
+            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-700 outline-none resize-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 placeholder:text-gray-400"
+            placeholder="e.g. Basic JavaScript knowledge, Understanding of REST APIs, Familiarity with Git"
+          />
+          <p className="text-xs text-gray-400">Enter items separated by commas. Each item will appear as a bullet point in the acceptance email.</p>
+        </div>
 
         {/* Questions builder */}
         <div className="space-y-4">

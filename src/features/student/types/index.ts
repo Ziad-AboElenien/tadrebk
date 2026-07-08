@@ -61,6 +61,7 @@ export interface UpdateUserRequest {
   gender?: 'male' | 'female';
   profilePicture?: string;
   coverPicture?: string;
+  resume?: string;
   skills?: string[];
   education?: Education[];
   experience?: Experience[];
