@@ -17,6 +17,7 @@ import Select from '@/components/ui/Select';
 import { userService } from '@/services/user.service';
 import { getErrorMessage } from '@/lib/axios';
 import { toast } from 'react-toastify';
+import ImageLightbox from '@/components/ui/ImageLightbox';
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '';
@@ -36,6 +37,7 @@ export default function StudentProfileScreen() {
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
   const [resumeUrl, setResumeUrl] = useState<string | null>(getUserImgUrl((user as any)?.resume));
+  const [lightbox, setLightbox] = useState<string | null>(null);
   const profileRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const resumeRef = useRef<HTMLInputElement>(null);
@@ -150,7 +152,9 @@ export default function StudentProfileScreen() {
         {/* Cover */}
         <div className="relative h-48 sm:h-56 md:h-64 rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20">
           {getUserImgUrl(user.coverPicture) ? (
-            <img src={getUserImgUrl(user.coverPicture)!} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+            <button onClick={() => setLightbox(getUserImgUrl(user.coverPicture)!)} className="absolute inset-0 w-full h-full">
+              <img src={getUserImgUrl(user.coverPicture)!} alt="Cover" className="w-full h-full object-cover" />
+            </button>
           ) : (
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10" />
           )}
@@ -169,9 +173,9 @@ export default function StudentProfileScreen() {
             <div className="flex items-end gap-4">
               <div className="relative shrink-0">
                 {getUserImgUrl(user.profilePicture) ? (
-                  <div className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-white shadow-xl">
+                  <button onClick={() => setLightbox(getUserImgUrl(user.profilePicture)!)} className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-white shadow-xl cursor-pointer">
                     <img src={getUserImgUrl(user.profilePicture)!} alt={displayName} className="w-full h-full object-cover" />
-                  </div>
+                  </button>
                 ) : (
                   <div className="w-32 h-32 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center ring-4 ring-white shadow-xl">
                     <span className="text-4xl font-bold text-white select-none">{displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}</span>
@@ -344,6 +348,8 @@ export default function StudentProfileScreen() {
             </div>
           </>
         )}
+
+        {lightbox && <ImageLightbox src={lightbox} alt="Profile image" onClose={() => setLightbox(null)} />}
 
         {/* Settings button */}
         <div className="mt-8 text-center">

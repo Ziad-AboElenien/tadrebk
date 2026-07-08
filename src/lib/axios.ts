@@ -1,5 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { LS_ACCESS_TOKEN, LS_REFRESH_TOKEN } from './constants';
+import { LS_ACCESS_TOKEN, LS_REFRESH_TOKEN, LS_TOKEN_TIMESTAMP } from './constants';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api/v1';
@@ -60,6 +60,7 @@ api.interceptors.response.use(
         if (tokens) {
           localStorage.setItem(LS_ACCESS_TOKEN, tokens.accessToken);
           localStorage.setItem(LS_REFRESH_TOKEN, tokens.refreshToken);
+          localStorage.setItem(LS_TOKEN_TIMESTAMP, String(Date.now()));
           originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
           return api(originalRequest);
         }
@@ -80,6 +81,9 @@ function clearAuthStorage() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(LS_ACCESS_TOKEN);
     localStorage.removeItem(LS_REFRESH_TOKEN);
+    localStorage.removeItem(LS_TOKEN_TIMESTAMP);
+    document.cookie = 'tadrebk_access_token=; Max-Age=0; path=/';
+    document.cookie = 'tadrebk_user_role=; Max-Age=0; path=/';
   }
 }
 

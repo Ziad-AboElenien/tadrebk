@@ -73,8 +73,13 @@ export const LS_REFRESH_TOKEN = 'tadrebk_refresh_token';
 export const LS_USER_ROLE = 'tadrebk_user_role';   // 'student' | 'company'
 export const LS_USER_ID = 'tadrebk_user_id';
 export const LS_COMPANY_ID = 'tadrebk_company_id';
+export const LS_TOKEN_TIMESTAMP = 'tadrebk_token_timestamp';
 // Stored temporarily during signup to route user to correct onboarding
 export const LS_PENDING_EMAIL = 'tadrebk_pending_email';
+export const LS_PROFILE_PICTURE = 'tadrebk_profile_picture';
+export const LS_COVER_PICTURE = 'tadrebk_cover_picture';
+
+export const TOKEN_TTL_MS = 86400000; // 1 day
 
 // ============================================================
 // Avatar gradient fallbacks

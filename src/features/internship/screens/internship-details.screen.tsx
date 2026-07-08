@@ -10,7 +10,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import Button from '@/components/ui/Button';
 import ApplyModal from '@/components/ui/ApplyModal';
 import { internshipService } from '@/services/internship.service';
-import { applicationService } from '@/services/application.service';
+import { applicationService, Answer } from '@/services/application.service';
 import { useAppSelector } from '@/store/store';
 import { getErrorMessage, getErrorUrl } from '@/lib/axios';
 import { toast } from 'react-toastify';
@@ -116,7 +116,7 @@ export default function InternshipDetailsScreen() {
     setShowApplyModal(true);
   }, [isAuthenticated, internship, internId, alreadyApplied, user, router]);
 
-  const handleApplySubmit = useCallback(async (coverLetter: string) => {
+  const handleApplySubmit = useCallback(async (coverLetter: string, answers: Answer[], resume?: File) => {
     if (!internship) return;
     setApplying(true);
     try {
@@ -127,7 +127,16 @@ export default function InternshipDetailsScreen() {
         setShowApplyModal(false);
         return;
       }
-      await applicationService.apply(cid, internId, { coverLetter: coverLetter || undefined });
+      const payload: any = {};
+      if (coverLetter) payload.coverLetter = coverLetter;
+      const hasAnswers = answers?.some((a) =>
+        a.type === 'mcq' ? a.selectedOption : a.text?.trim(),
+      );
+      if (hasAnswers) {
+        payload.answers = answers;
+      }
+      if (resume) payload.resume = resume;
+      await applicationService.apply(cid, internId, Object.keys(payload).length > 0 ? payload : undefined);
       toast.success('Application submitted!');
       setShowApplyModal(false);
     } catch (err: any) {
@@ -141,6 +150,8 @@ export default function InternshipDetailsScreen() {
       } else if (msg.includes('Invalid internship id')) {
         const idUrl = getErrorUrl(err);
         toast.warning(`Unable to apply. Make sure you have uploaded your CV/resume in your profile, and that you haven't already applied.${idUrl ? ` (${idUrl})` : ''}`);
+      } else if (msg.includes('answers') || msg.includes('questions')) {
+        toast.error('Please answer all required questions');
       } else {
         toast.error(msg);
       }
@@ -486,6 +497,7 @@ export default function InternshipDetailsScreen() {
         open={showApplyModal}
         internshipTitle={internship.title}
         companyName={company?.name}
+        questions={internship.questions}
         loading={applying}
         onSubmit={handleApplySubmit}
         onCancel={() => setShowApplyModal(false)}

@@ -6,6 +6,10 @@ import {
   LS_USER_ROLE,
   LS_USER_ID,
   LS_COMPANY_ID,
+  LS_TOKEN_TIMESTAMP,
+  LS_PROFILE_PICTURE,
+  LS_COVER_PICTURE,
+  TOKEN_TTL_MS,
 } from '@/lib/constants';
 
 // ─── Role logic ────────────────────────────────────────────────────────────
@@ -19,8 +23,27 @@ function deriveRole(): UserRole {
   if (typeof window === 'undefined') return 'student';
   const stored = localStorage.getItem(LS_USER_ROLE) as UserRole | null;
   if (stored) return stored;
-  // Fallback: if company id exists, they're a company user
   return localStorage.getItem(LS_COMPANY_ID) ? 'company' : 'student';
+}
+
+function clearAuthStorage() {
+  localStorage.removeItem(LS_ACCESS_TOKEN);
+  localStorage.removeItem(LS_REFRESH_TOKEN);
+  localStorage.removeItem(LS_USER_ROLE);
+  localStorage.removeItem(LS_USER_ID);
+  localStorage.removeItem(LS_COMPANY_ID);
+  localStorage.removeItem(LS_TOKEN_TIMESTAMP);
+  localStorage.removeItem(LS_PROFILE_PICTURE);
+  localStorage.removeItem(LS_COVER_PICTURE);
+  document.cookie = 'tadrebk_access_token=; Max-Age=0; path=/';
+  document.cookie = 'tadrebk_user_role=; Max-Age=0; path=/';
+}
+
+function isTokenExpired(): boolean {
+  if (typeof window === 'undefined') return true;
+  const saved = localStorage.getItem(LS_TOKEN_TIMESTAMP);
+  if (!saved) return true;
+  return Date.now() - Number(saved) > TOKEN_TTL_MS;
 }
 
 interface AuthState {
@@ -35,6 +58,10 @@ interface AuthState {
 
 function loadFromStorage(): Partial<AuthState> {
   if (typeof window === 'undefined') return {};
+  if (isTokenExpired()) {
+    clearAuthStorage();
+    return {};
+  }
   return {
     accessToken: localStorage.getItem(LS_ACCESS_TOKEN),
     refreshToken: localStorage.getItem(LS_REFRESH_TOKEN),
@@ -64,7 +91,7 @@ const authSlice = createSlice({
       action: PayloadAction<{
         tokens: AuthTokens;
         userId: string;
-        role?: UserRole; // optional — defaults to 'student', set to 'company' after company onboarding
+        role?: UserRole;
       }>,
     ) {
       const { tokens, userId, role = 'student' } = action.payload;
@@ -80,16 +107,16 @@ const authSlice = createSlice({
         localStorage.setItem(LS_REFRESH_TOKEN, tokens.refreshToken);
         localStorage.setItem(LS_USER_ROLE, role);
         localStorage.setItem(LS_USER_ID, userId);
-        // Sync to cookie for middleware
-        document.cookie = `tadrebk_access_token=${tokens.accessToken}; path=/; max-age=86400`;
-        document.cookie = `tadrebk_user_role=${role}; path=/; max-age=86400`;
+        localStorage.setItem(LS_TOKEN_TIMESTAMP, String(Date.now()));
+        document.cookie = `tadrebk_access_token=${tokens.accessToken}; path=/; max-age=${TOKEN_TTL_MS / 1000}`;
+        document.cookie = `tadrebk_user_role=${role}; path=/; max-age=${TOKEN_TTL_MS / 1000}`;
       }
     },
     setRole(state, action: PayloadAction<UserRole>) {
       state.role = action.payload;
       if (typeof window !== 'undefined') {
         localStorage.setItem(LS_USER_ROLE, action.payload);
-        document.cookie = `tadrebk_user_role=${action.payload}; path=/; max-age=86400`;
+        document.cookie = `tadrebk_user_role=${action.payload}; path=/; max-age=${TOKEN_TTL_MS / 1000}`;
       }
     },
     logout(state) {
@@ -100,16 +127,7 @@ const authSlice = createSlice({
       state.userId = null;
       state.status = 'idle';
       state.error = null;
-
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(LS_ACCESS_TOKEN);
-        localStorage.removeItem(LS_REFRESH_TOKEN);
-        localStorage.removeItem(LS_USER_ROLE);
-        localStorage.removeItem(LS_USER_ID);
-        localStorage.removeItem(LS_COMPANY_ID);
-        document.cookie = 'tadrebk_access_token=; Max-Age=0; path=/';
-        document.cookie = 'tadrebk_user_role=; Max-Age=0; path=/';
-      }
+      if (typeof window !== 'undefined') clearAuthStorage();
     },
     clearError(state) {
       state.error = null;

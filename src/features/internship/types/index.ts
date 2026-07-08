@@ -4,6 +4,19 @@ import type { Company } from '@/features/company/types';
 export type InternshipLocation = 'on-site' | 'remote' | 'hybrid';
 export type InternshipType = 'full-time' | 'part-time';
 
+export interface MCQQuestion {
+  type: 'mcq';
+  prompt: string;
+  options: string[];
+}
+
+export interface WritingQuestion {
+  type: 'writing';
+  prompt: string;
+}
+
+export type InternshipQuestion = MCQQuestion | WritingQuestion;
+
 export interface Internship {
   _id: string;
   title: string;
@@ -12,6 +25,7 @@ export interface Internship {
   workingTime?: InternshipType;
   softSkills?: string[];
   technicalSkills?: string[];
+  questions?: InternshipQuestion[];
   companyId: string | Company;
   addedBy?: string;    // API returns addedBy
   updatedBy?: string;  // API returns updatedBy
@@ -42,6 +56,7 @@ export interface CreateInternshipRequest {
   workingTime?: InternshipType;
   softSkills?: string[];
   technicalSkills?: string[];
+  questions?: InternshipQuestion[];
 }
 
 export interface UpdateInternshipRequest extends Partial<CreateInternshipRequest> {

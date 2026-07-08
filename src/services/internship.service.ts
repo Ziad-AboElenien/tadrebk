@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { Internship } from '@/features/internship/types';
+import { Internship, InternshipQuestion } from '@/features/internship/types';
 
 interface CreateInternshipPayload {
   title: string;
@@ -8,6 +8,7 @@ interface CreateInternshipPayload {
   workingTime: 'full-time' | 'part-time';
   softSkills: string[];
   technicalSkills: string[];
+  questions?: InternshipQuestion[];
 }
 
 interface UpdateInternshipPayload extends Partial<CreateInternshipPayload> {

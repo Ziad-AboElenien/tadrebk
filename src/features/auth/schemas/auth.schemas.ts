@@ -92,6 +92,19 @@ export const companyOnboardingSchema = z.object({
 });
 
 // ─── Internship Form ─────────────────────────────────────────
+const mcqSchema = z.object({
+  type: z.literal('mcq'),
+  prompt: z.string().min(1, 'Question prompt is required'),
+  options: z.array(z.string()).min(2, 'At least 2 options required'),
+});
+
+const writingSchema = z.object({
+  type: z.literal('writing'),
+  prompt: z.string().min(1, 'Question prompt is required'),
+});
+
+const questionSchema = z.discriminatedUnion('type', [mcqSchema, writingSchema]);
+
 export const internshipSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
@@ -99,6 +112,7 @@ export const internshipSchema = z.object({
   workingTime: z.enum(['full-time', 'part-time']),
   softSkills: z.array(z.string()).default([]),
   technicalSkills: z.array(z.string()).default([]),
+  questions: z.array(questionSchema).optional(),
 });
 
 // ─── Exported Types ───────────────────────────────────────────
