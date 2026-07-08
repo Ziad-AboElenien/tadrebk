@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import { getErrorMessage } from '@/lib/axios';
+import { getFileProxyUrl } from '@/lib/file-proxy';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 
@@ -27,6 +28,7 @@ export default function InternshipApplicationsScreen() {
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
+  const [sendingAll, setSendingAll] = useState(false);
 
   const fetchApplications = useCallback(async () => {
     if (!company || !internId) return;
@@ -52,7 +54,7 @@ export default function InternshipApplicationsScreen() {
     setReviewingId(applicationId);
     try {
       const updated = await applicationService.reviewApplication(company._id, internId, applicationId, { status });
-      setApplications((prev) => prev.map((a) => (a._id === applicationId ? updated : a)));
+      setApplications((prev) => prev.map((a) => (a._id === applicationId ? { ...a, ...updated, studentId: a.studentId, internshipId: a.internshipId, companyId: a.companyId } : a)));
       toast.success(`Application ${status === 'accepted' ? 'approved' : 'rejected'}`);
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -72,6 +74,25 @@ export default function InternshipApplicationsScreen() {
     } finally {
       setSendingEmailId(null);
     }
+  }
+
+  async function handleSendAllEmails() {
+    if (!company) return;
+    const accepted = applications.filter((a) => a.status === 'accepted');
+    setSendingAll(true);
+    let sent = 0;
+    let failed = 0;
+    for (const app of accepted) {
+      try {
+        await applicationService.sendAcceptanceEmail(company._id, internId, app._id);
+        sent++;
+      } catch {
+        failed++;
+      }
+    }
+    setSendingAll(false);
+    if (sent > 0) toast.success(`${sent} acceptance email${sent > 1 ? 's' : ''} sent!`);
+    if (failed > 0) toast.error(`${failed} email${failed > 1 ? 's' : ''} failed`);
   }
 
   const filtered = filter === 'all'
@@ -98,6 +119,16 @@ export default function InternshipApplicationsScreen() {
         </Link>
         <h1 className="text-2xl font-black text-dark">{internship?.title || 'Internship'}</h1>
         <p className="text-gray-500 text-sm mt-1">Manage applications for this internship</p>
+        {internship?.preKnowledge && internship.preKnowledge.length > 0 && (
+          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <h3 className="text-sm font-bold text-amber-900 mb-1">Pre-knowledge to Start</h3>
+            <ul className="list-disc list-inside text-sm text-amber-800">
+              {internship.preKnowledge.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* Stats cards */}
@@ -119,6 +150,19 @@ export default function InternshipApplicationsScreen() {
           </button>
         ))}
       </div>
+
+      {/* Send all button */}
+      {filter === 'accepted' && statusCounts.accepted > 0 && (
+        <div className="mb-6 flex justify-end">
+          <Button
+            variant="primary"
+            loading={sendingAll}
+            onClick={handleSendAllEmails}
+          >
+            <i className="fas fa-envelope text-xs mr-1" /> Send Email to All ({statusCounts.accepted})
+          </Button>
+        </div>
+      )}
 
       {/* Applications list */}
       <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
@@ -216,6 +260,21 @@ export default function InternshipApplicationsScreen() {
                         </Link>
                       </div>
                     </div>
+
+                    {app.resume?.secure_url && (
+                      <div className="mt-3">
+                        <a
+                          href={getFileProxyUrl(app.resume.secure_url) ?? '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 hover:bg-red-100 transition-colors"
+                        >
+                          <i className="fas fa-file-pdf text-red-500" />
+                          <span className="text-sm font-semibold text-gray-900">Application CV</span>
+                          <i className="fas fa-external-link-alt text-xs text-red-400 ml-auto" />
+                        </a>
+                      </div>
+                    )}
 
                     {app.answers && app.answers.length > 0 && (
                       <div className="mt-3 space-y-2">

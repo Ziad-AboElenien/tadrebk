@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { logout } from '@/store/authSlice';
-import { setUser, updateUser } from '@/store/userSlice';
+import { setUser, updateUser, clearUser } from '@/store/userSlice';
 import { getUserImgUrl } from '@/features/student/types';
 import { getFileProxyUrl } from '@/lib/file-proxy';
 import { profileSchema, type ProfileFormData } from '@/features/auth/schemas/auth.schemas';
@@ -38,6 +38,8 @@ export default function StudentProfileScreen() {
   const [uploadingResume, setUploadingResume] = useState(false);
   const [resumeUrl, setResumeUrl] = useState<string | null>(getUserImgUrl((user as any)?.resume));
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const profileRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const resumeRef = useRef<HTMLInputElement>(null);
@@ -121,8 +123,31 @@ export default function StudentProfileScreen() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingResume(true);
-    try { const url = await userService.uploadResume(file); setResumeUrl(url); toast.success('Resume uploaded!'); }
+    try {
+      const url = await userService.uploadResume(file);
+      await userService.updateProfile(userId!, { resume: url });
+      dispatch(updateUser({ resume: url }));
+      setResumeUrl(url);
+      toast.success('Resume uploaded!');
+    }
     catch (err) { toast.error(getErrorMessage(err)); } finally { setUploadingResume(false); if (resumeRef.current) resumeRef.current.value = ''; }
+  }
+
+  async function handleDeleteAccount() {
+    if (!userId) return;
+    setDeletingAccount(true);
+    try {
+      await userService.deleteAccount(userId);
+      dispatch(clearUser());
+      dispatch(logout());
+      router.push('/');
+      toast.success('Account deleted');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setDeletingAccount(false);
+      setConfirmDelete(false);
+    }
   }
 
   const handleSignOut = useCallback(() => {
@@ -365,6 +390,20 @@ export default function StudentProfileScreen() {
               <div className="flex flex-wrap gap-3">
                 <Link href="/change-password"><Button variant="outline" size="sm"><i className="fas fa-key text-xs" /> Change password</Button></Link>
                 <Link href="/change-email"><Button variant="outline" size="sm"><i className="fas fa-envelope text-xs" /> Change email</Button></Link>
+              </div>
+              <div className="border-t border-gray-100 pt-4 mt-4">
+                {confirmDelete ? (
+                  <div className="flex items-center gap-3">
+                    <Button variant="danger" size="sm" loading={deletingAccount} onClick={handleDeleteAccount}>
+                      <i className="fas fa-trash text-xs" /> Confirm Delete
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+                  </div>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setConfirmDelete(true)} className="border-red-200 text-red-500 hover:bg-red-50">
+                    <i className="fas fa-trash text-xs" /> Delete Account
+                  </Button>
+                )}
               </div>
             </div>
           </div>

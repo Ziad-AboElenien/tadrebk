@@ -9,6 +9,7 @@ interface CreateInternshipPayload {
   softSkills: string[];
   technicalSkills: string[];
   questions?: InternshipQuestion[];
+  preKnowledge?: string[];
 }
 
 interface UpdateInternshipPayload extends Partial<CreateInternshipPayload> {

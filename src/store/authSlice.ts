@@ -7,8 +7,6 @@ import {
   LS_USER_ID,
   LS_COMPANY_ID,
   LS_TOKEN_TIMESTAMP,
-  LS_PROFILE_PICTURE,
-  LS_COVER_PICTURE,
   TOKEN_TTL_MS,
 } from '@/lib/constants';
 
@@ -33,8 +31,6 @@ function clearAuthStorage() {
   localStorage.removeItem(LS_USER_ID);
   localStorage.removeItem(LS_COMPANY_ID);
   localStorage.removeItem(LS_TOKEN_TIMESTAMP);
-  localStorage.removeItem(LS_PROFILE_PICTURE);
-  localStorage.removeItem(LS_COVER_PICTURE);
   document.cookie = 'tadrebk_access_token=; Max-Age=0; path=/';
   document.cookie = 'tadrebk_user_role=; Max-Age=0; path=/';
 }
