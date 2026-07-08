@@ -11,6 +11,7 @@ import * as authService from '@/features/auth/server/auth.service';
 import Avatar from '@/components/ui/Avatar';
 import { getImgUrl } from '@/features/company/types';
 import { getUserImgUrl } from '@/features/student/types';
+import NotificationBell from '@/features/notifications/components/NotificationBell';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -87,7 +88,9 @@ export default function Navbar() {
         {/* Right side */}
         <div className="hidden md:flex items-center gap-3">
           {isAuthenticated && mounted ? (
-            <div className="relative">
+            <>
+              {role === 'student' && <NotificationBell />}
+              <div className="relative">
               <button
                 onClick={() => setUserMenuOpen((o) => !o)}
                 className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-colors"
@@ -192,6 +195,7 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+            </>
           ) : (
             <>
               <Link
@@ -213,7 +217,9 @@ export default function Navbar() {
         {/* Mobile right side */}
         <div className="md:hidden flex items-center gap-2">
           {isAuthenticated && mounted && (
-            <div className="relative">
+            <>
+              {role === 'student' && <NotificationBell />}
+              <div className="relative">
               <button
                 onClick={() => setUserMenuOpen((o) => !o)}
                 className="flex items-center gap-1 p-1 rounded-xl hover:bg-gray-50 transition-colors"
@@ -293,6 +299,7 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+            </>
           )}
           <button
             onClick={() => setMenuOpen((o) => !o)}

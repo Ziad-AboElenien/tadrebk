@@ -5,7 +5,7 @@ interface SpinnerProps {
   className?: string;
 }
 
-const sizes = { sm: '0.8px', md: '1.25px', lg: '1.8px' };
+const sizes = { sm: '0.6px', md: '1px', lg: '1.4px' };
 
 export default function Spinner({ size = 'md', className = '' }: SpinnerProps) {
   return (
