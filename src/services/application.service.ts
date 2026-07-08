@@ -1,5 +1,7 @@
 import api from '@/lib/axios';
 
+export type Answer = { type: 'mcq'; selectedOption: string } | { type: 'writing'; text: string };
+
 export interface PopulatedInternship {
   _id: string;
   title: string;
@@ -29,6 +31,7 @@ export interface Application {
     secure_url: string;
     _id: string;
   };
+  answers?: Answer[];
   createdAt: string;
   updatedAt?: string;
   reviewedBy?: string;
@@ -68,11 +71,12 @@ interface CompanyApplicationsParams {
 
 interface ApplyPayload {
   coverLetter?: string;
+  answers?: Answer[];
+  resume?: File;
 }
 
 interface ReviewPayload {
   status: 'accepted' | 'rejected';
-  notes?: string;
 }
 
 export const applicationService = {
@@ -81,9 +85,14 @@ export const applicationService = {
     internId: string,
     payload?: ApplyPayload,
   ): Promise<Application> {
+    const formData = new FormData();
+    if (payload?.coverLetter) formData.append('coverLetter', payload.coverLetter);
+    if (payload?.answers) formData.append('answers', JSON.stringify(payload.answers));
+    if (payload?.resume) formData.append('resume', payload.resume);
+
     const { data } = await api.post<ApplicationResponse>(
       `/company/${companyId}/internships/${internId}/applications`,
-      payload || {},
+      formData,
     );
     return data.data.application;
   },
@@ -144,5 +153,15 @@ export const applicationService = {
       applications: data.data.applications,
       pagination: data.data.pagination,
     };
+  },
+
+  async sendAcceptanceEmail(
+    companyId: string,
+    internId: string,
+    applicationId: string,
+  ): Promise<void> {
+    await api.post(
+      `/company/${companyId}/internships/${internId}/applications/${applicationId}/send-acceptance-email`,
+    );
   },
 };

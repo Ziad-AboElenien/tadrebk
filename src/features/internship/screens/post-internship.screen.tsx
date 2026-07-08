@@ -9,6 +9,7 @@ import { internshipService } from '@/services/internship.service';
 import { z } from 'zod';
 import { internshipSchema } from '@/features/auth/schemas/auth.schemas';
 type InternshipFormValues = z.output<typeof internshipSchema>;
+import type { InternshipQuestion } from '@/features/internship/types';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
@@ -22,6 +23,7 @@ export default function PostInternshipScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [technicalSkillsStr, setTechnicalSkillsStr] = useState('');
   const [softSkillsStr, setSoftSkillsStr] = useState('');
+  const [questions, setQuestions] = useState<InternshipQuestion[]>([]);
 
   const {
     register,
@@ -39,6 +41,46 @@ export default function PostInternshipScreen() {
     },
   });
 
+  function addQuestion(type: 'mcq' | 'writing') {
+    if (type === 'mcq') {
+      setQuestions((prev) => [...prev, { type: 'mcq', prompt: '', options: ['', ''] }]);
+    } else {
+      setQuestions((prev) => [...prev, { type: 'writing', prompt: '' }]);
+    }
+  }
+
+  function removeQuestion(index: number) {
+    setQuestions((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updateQuestion(index: number, patch: Partial<InternshipQuestion>) {
+    setQuestions((prev) => prev.map((q, i) => (i === index ? { ...q, ...patch } as InternshipQuestion : q)));
+  }
+
+  function updateOption(questionIndex: number, optionIndex: number, value: string) {
+    setQuestions((prev) => prev.map((q, i) => {
+      if (i !== questionIndex || q.type !== 'mcq') return q;
+      const opts = [...q.options];
+      opts[optionIndex] = value;
+      return { ...q, options: opts } as InternshipQuestion;
+    }));
+  }
+
+  function addOption(questionIndex: number) {
+    setQuestions((prev) => prev.map((q, i) => {
+      if (i !== questionIndex || q.type !== 'mcq') return q;
+      return { ...q, options: [...q.options, ''] } as InternshipQuestion;
+    }));
+  }
+
+  function removeOption(questionIndex: number, optionIndex: number) {
+    setQuestions((prev) => prev.map((q, i) => {
+      if (i !== questionIndex || q.type !== 'mcq') return q;
+      const opts = q.options.filter((_, oi) => oi !== optionIndex);
+      return { ...q, options: opts } as InternshipQuestion;
+    }));
+  }
+
   if (!company) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
@@ -54,6 +96,10 @@ export default function PostInternshipScreen() {
     if (!company) return;
     setSubmitting(true);
     try {
+      const cleaned = questions.map((q) => {
+        if (q.type === 'mcq') return { ...q, options: q.options.filter((o) => o.trim()) };
+        return q;
+      });
       await internshipService.createInternship(company._id, {
         ...data,
         softSkills: softSkillsStr
@@ -64,6 +110,7 @@ export default function PostInternshipScreen() {
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean),
+        questions: cleaned.length > 0 ? cleaned : undefined,
       });
       toast.success('Internship posted successfully!');
       router.push('/company/dashboard');
@@ -133,6 +180,88 @@ export default function PostInternshipScreen() {
           onChange={(e) => setSoftSkillsStr(e.target.value)}
           placeholder="e.g. Communication, Teamwork, Problem-solving"
         />
+
+        {/* Questions builder */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-semibold text-gray-700">Application Questions <span className="text-gray-400 font-normal">(optional)</span></label>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => addQuestion('mcq')} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-200 hover:bg-emerald-50 transition">
+                <i className="fas fa-list-ul text-[10px]" /> MCQ
+              </button>
+              <button type="button" onClick={() => addQuestion('writing')} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-200 hover:bg-emerald-50 transition">
+                <i className="fas fa-pen text-[10px]" /> Writing
+              </button>
+            </div>
+          </div>
+
+          {questions.length === 0 && (
+            <p className="text-xs text-gray-400 italic">No questions yet. Add MCQ or writing questions for applicants.</p>
+          )}
+
+          {questions.map((q, qi) => (
+            <div key={qi} className="border border-gray-200 rounded-2xl p-5 bg-gray-50/50 relative">
+              <button
+                type="button"
+                onClick={() => removeQuestion(qi)}
+                className="absolute top-3 right-3 h-6 w-6 rounded-full bg-red-100 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-200 transition"
+              >
+                <i className="fas fa-times text-[10px]" />
+              </button>
+
+              <div className="flex items-center gap-2 mb-3">
+                <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                  {q.type === 'mcq' ? 'Multiple Choice' : 'Writing'}
+                </span>
+                <span className="text-[10px] text-gray-400 font-medium">Question {qi + 1}</span>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-gray-600">Prompt</label>
+                <input
+                  type="text"
+                  value={q.prompt}
+                  onChange={(e) => updateQuestion(qi, { prompt: e.target.value })}
+                  placeholder="e.g. Why do you want this internship?"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 placeholder:text-gray-400"
+                />
+              </div>
+
+              {q.type === 'mcq' && (
+                <div className="mt-3 space-y-2">
+                  <label className="text-xs font-semibold text-gray-600">Options</label>
+                  {q.options.map((opt, oi) => (
+                    <div key={oi} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={opt}
+                        onChange={(e) => updateOption(qi, oi, e.target.value)}
+                        placeholder={`Option ${oi + 1}`}
+                        className="flex-1 rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 placeholder:text-gray-400"
+                      />
+                      {q.options.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => removeOption(qi, oi)}
+                          className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
+                        >
+                          <i className="fas fa-minus text-[10px]" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => addOption(qi)}
+                    className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 mt-1"
+                  >
+                    <i className="fas fa-plus text-[10px]" /> Add option
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
 
         <div className="flex gap-4 pt-4">
           <Button type="submit" loading={submitting}>

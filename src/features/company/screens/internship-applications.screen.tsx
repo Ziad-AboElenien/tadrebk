@@ -26,6 +26,7 @@ export default function InternshipApplicationsScreen() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
 
   const fetchApplications = useCallback(async () => {
     if (!company || !internId) return;
@@ -57,6 +58,19 @@ export default function InternshipApplicationsScreen() {
       toast.error(getErrorMessage(err));
     } finally {
       setReviewingId(null);
+    }
+  }
+
+  async function handleSendAcceptanceEmail(applicationId: string) {
+    if (!company) return;
+    setSendingEmailId(applicationId);
+    try {
+      await applicationService.sendAcceptanceEmail(company._id, internId, applicationId);
+      toast.success('Acceptance email sent!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setSendingEmailId(null);
     }
   }
 
@@ -183,6 +197,18 @@ export default function InternshipApplicationsScreen() {
                           </>
                         )}
 
+                        {app.status === 'accepted' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            loading={sendingEmailId === app._id}
+                            onClick={() => handleSendAcceptanceEmail(app._id)}
+                            className="border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                          >
+                            <i className="fas fa-envelope text-xs mr-1" /> Send Email
+                          </Button>
+                        )}
+
                         <Link href={`/company/applicants/${studentId || '#'}`}>
                           <Button variant="ghost" size="sm">
                             <i className="fas fa-external-link-alt text-xs" />
@@ -190,6 +216,20 @@ export default function InternshipApplicationsScreen() {
                         </Link>
                       </div>
                     </div>
+
+                    {app.answers && app.answers.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Answers</p>
+                        {app.answers.map((a, ai) => (
+                          <div key={ai} className="bg-gray-50 rounded-xl p-3">
+                            <p className="text-xs text-gray-500 font-medium mb-1">Q{ai + 1}</p>
+                            <p className="text-sm text-gray-700">
+                              {a.type === 'mcq' ? a.selectedOption : a.text}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {app.coverLetter && (
                       <div className="mt-3 bg-gray-50 rounded-xl p-4">
