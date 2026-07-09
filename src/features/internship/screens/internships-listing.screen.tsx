@@ -131,19 +131,22 @@ function InternshipsContent() {
 
   useEffect(() => { fetchInternships(); }, [fetchInternships]);
 
-  const handleSearch = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    const validLocations = ['on-site', 'remote', 'hybrid'] as const;
-    const loc = locationInput.toLowerCase().trim();
-    const isLocationType = validLocations.includes(loc as any);
-    if (loc && !isLocationType) {
-      setCityFilter(loc);
-      setFilters((prev) => ({ ...prev, title: query, location: '' }));
-    } else {
-      setCityFilter('');
-      setFilters((prev) => ({ ...prev, title: query, location: isLocationType ? loc : '' }));
-    }
-    setPage(1);
+  // Auto-search on type (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const validLocations = ['on-site', 'remote', 'hybrid'] as const;
+      const loc = locationInput.toLowerCase().trim();
+      const isLocationType = validLocations.includes(loc as any);
+      if (loc && !isLocationType) {
+        setCityFilter(loc);
+        setFilters((prev) => ({ ...prev, title: query, location: '' }));
+      } else {
+        setCityFilter('');
+        setFilters((prev) => ({ ...prev, title: query, location: isLocationType ? loc : '' }));
+      }
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
   }, [query, locationInput]);
 
   const handleFilterChange = useCallback((key: string, value: string) => {
@@ -218,7 +221,7 @@ function InternshipsContent() {
     <div className="min-h-screen bg-gray-50">
       {/* ── Search bar ─────────────────────────────────────── */}
       <div className="border-b border-gray-100 bg-gray-100 px-4 py-5 sm:px-6 lg:px-8">
-        <form onSubmit={handleSearch} className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row">
           <div className="flex flex-1 items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm">
             <i className="fas fa-search h-4 w-4 flex-shrink-0 text-gray-400" />
             <input
@@ -240,12 +243,12 @@ function InternshipsContent() {
             />
           </div>
           <button
-            type="submit"
+            type="button"
             className="rounded-2xl bg-emerald-500 px-8 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-600"
           >
             Search
           </button>
-        </form>
+        </div>
       </div>
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
