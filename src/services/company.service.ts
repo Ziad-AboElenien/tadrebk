@@ -65,7 +65,7 @@ export const companyService = {
     const { data } = await api.get<CompanyListResponse>('/company/', { params });
     const companies = data.data.companies.map((c) => ({
       ...c,
-      approvedByAdmin: c.approvedByAdmin ?? false,
+      approvedByAdmin: c.approvedByAdmin ?? true,
     })) as Company[];
     return {
       companies,

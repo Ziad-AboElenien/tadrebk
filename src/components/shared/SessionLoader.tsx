@@ -52,7 +52,8 @@ export default function SessionLoader({ children }: { children: React.ReactNode 
           return createdBy === id;
         });
         if (owned) {
-          dispatch(setCompany(owned));
+          const full = await companyService.getCompanyById(owned._id);
+          dispatch(setCompany(full));
           dispatch(setRole('company'));
         }
       } catch {
