@@ -69,6 +69,7 @@ export default function Navbar() {
             { href: '/internships', label: 'Internships' },
             { href: '/how-it-works', label: 'How it works' },
             { href: '/companies', label: 'For Companies' },
+            { href: '/company/billing/plans', label: 'Plans' },
             { href: '/about', label: 'About Us' },
           ].map((link) => (
             <Link
@@ -361,6 +362,9 @@ export default function Navbar() {
               </Link>
               <Link href="/how-it-works" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                 <i className="fas fa-circle-question w-5 text-center text-gray-400" /> How it works
+              </Link>
+              <Link href="/company/billing/plans" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
+                <i className="fas fa-credit-card w-5 text-center text-gray-400" /> Plans
               </Link>
               <Link href="/about" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                 <i className="fas fa-people-group w-5 text-center text-gray-400" /> About Us
