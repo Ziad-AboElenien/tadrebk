@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { billingService } from '@/services/billing.service';
 import { useAppSelector } from '@/store/store';
@@ -11,7 +11,7 @@ import Spinner from '@/components/ui/Spinner';
 import { toast } from 'react-toastify';
 import { getErrorMessage } from '@/lib/axios';
 
-type PaymentPhase = 'idle' | 'creating' | 'open_tab' | 'confirming' | 'success' | 'error';
+type PaymentPhase = 'idle' | 'creating' | 'popup_open' | 'confirming' | 'success' | 'error';
 
 export default function BillingPlansScreen() {
   const router = useRouter();
@@ -21,8 +21,15 @@ export default function BillingPlansScreen() {
   const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null);
   const [paymentOrderId, setPaymentOrderId] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const popupRef = useRef<Window | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const confirmRef = useRef<(() => void) | null>(null);
 
   const plans = Object.values(PLAN_DETAILS);
+
+  function stopPolling() {
+    if (pollRef.current) clearInterval(pollRef.current);
+  }
 
   async function handlePurchase(planId: PlanId) {
     if (!company) return;
@@ -34,12 +41,23 @@ export default function BillingPlansScreen() {
       const { paymentUrl, paymentOrderId: orderId } = await billingService.purchasePlan(company._id, { planId });
       setPaymentOrderId(orderId);
 
-      const paymobTab = window.open(paymentUrl, '_blank');
-      if (!paymobTab) {
-        toast.warning('Popup blocked. Please allow popups for this site.');
+      const popup = window.open(paymentUrl, 'paymob', 'width=600,height=750');
+      if (!popup) {
+        toast.warning('Popup was blocked. Please allow popups or try again.');
+        setPhase('error');
+        setErrorMsg('Popup blocked. Please allow popups for this site and try again.');
+        return;
       }
 
-      setPhase('open_tab');
+      popupRef.current = popup;
+      setPhase('popup_open');
+
+      pollRef.current = setInterval(() => {
+        if (popup.closed) {
+          stopPolling();
+          confirmRef.current?.();
+        }
+      }, 500);
     } catch (err) {
       setPhase('error');
       setErrorMsg(getErrorMessage(err));
@@ -64,7 +82,11 @@ export default function BillingPlansScreen() {
     }
   }
 
+  confirmRef.current = handleConfirm;
+
   function handleRetry() {
+    stopPolling();
+    if (popupRef.current && !popupRef.current.closed) popupRef.current.close();
     setPhase('idle');
     setSelectedPlan(null);
     setPaymentOrderId('');
@@ -86,18 +108,18 @@ export default function BillingPlansScreen() {
         <p className="text-gray-500 mt-2">Purchase internship credits to start posting opportunities</p>
       </div>
 
-      {phase === 'open_tab' && (
+      {phase === 'popup_open' && (
         <div className="max-w-lg mx-auto mb-10 bg-white border border-gray-100 rounded-3xl p-8 shadow-sm text-center">
           <div className="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center mx-auto mb-5">
             <i className="fas fa-credit-card text-amber-600 text-2xl" />
           </div>
-          <h2 className="text-xl font-black text-dark mb-2">Payment page opened</h2>
+          <h2 className="text-xl font-black text-dark mb-2">Complete your payment</h2>
           <p className="text-sm text-gray-500 mb-6">
-            Complete your payment in the new tab. If you don't see it, check your popup blocker.
+            A payment window is open. After you finish, close it and we will confirm automatically.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button onClick={handleConfirm}>
-              I've completed payment
+            <Button onClick={handleConfirm} variant="outline">
+              Click here if already paid
             </Button>
             <Button variant="outline" onClick={handleRetry}>
               Cancel
