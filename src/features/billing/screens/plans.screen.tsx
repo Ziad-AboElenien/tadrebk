@@ -19,8 +19,12 @@ export default function BillingPlansScreen() {
     if (!company) return;
     setPurchasing(planId);
     try {
-      const { paymentUrl, paymentOrderId } = await billingService.purchasePlan(company._id, { planId });
+      const [creditsBefore, { paymentUrl, paymentOrderId }] = await Promise.all([
+        billingService.getCredits(company._id).catch(() => 0),
+        billingService.purchasePlan(company._id, { planId }),
+      ]);
       sessionStorage.setItem('pendingPaymentOrderId', paymentOrderId);
+      sessionStorage.setItem('creditsBefore', String(creditsBefore));
       window.location.href = paymentUrl;
     } catch (err) {
       toast.error(getErrorMessage(err));
