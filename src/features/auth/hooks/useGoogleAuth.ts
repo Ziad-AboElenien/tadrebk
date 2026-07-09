@@ -81,7 +81,8 @@ export function useGoogleAuth() {
         });
         if (owned) {
           role = 'company';
-          dispatch(setCompany(owned));
+          const full = await companyService.getCompanyById(owned._id);
+          dispatch(setCompany(full));
         }
 
         dispatch(setTokens({ tokens, userId, role }));

@@ -85,7 +85,8 @@ export default function LoginForm({ role }: LoginFormProps) {
       });
       if (owned) {
         userRole = 'company';
-        dispatch(setCompany(owned));
+        const full = await companyService.getCompanyById(owned._id);
+        dispatch(setCompany(full));
       } else {
         // Fallback: check if companyId saved in localStorage actually exists
         const savedCompanyId = localStorage.getItem(LS_COMPANY_ID);
