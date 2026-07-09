@@ -63,20 +63,24 @@ export const companyService = {
     pagination: { page: number; limit: number; total: number; pages: number };
   }> {
     const { data } = await api.get<CompanyListResponse>('/company/', { params });
+    const companies = data.data.companies.map((c) => ({
+      ...c,
+      approvedByAdmin: c.approvedByAdmin ?? false,
+    })) as Company[];
     return {
-      companies: data.data.companies,
+      companies,
       pagination: data.data.pagination,
     };
   },
 
   async getCompanyById(companyId: string): Promise<Company> {
     const { data } = await api.get<CompanyResponse>(`/company/${companyId}`);
-    return data.data.company;
+    return { ...data.data.company, approvedByAdmin: data.data.company.approvedByAdmin ?? false };
   },
 
   async getCompanyByName(name: string): Promise<Company> {
     const { data } = await api.get<CompanyResponse>(`/company/name/${name}`);
-    return data.data.company;
+    return { ...data.data.company, approvedByAdmin: data.data.company.approvedByAdmin ?? false };
   },
 
   async createCompany(payload: CreateCompanyPayload): Promise<Company> {

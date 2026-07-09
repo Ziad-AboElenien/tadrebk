@@ -24,44 +24,43 @@ function PaymentCallbackInner() {
   useEffect(() => {
     if (!company?._id) return;
 
-    const isRedirectedFromApp = searchParams.get('status') === 'success';
-    if (isRedirectedFromApp) {
-      setStatus('success');
-      billingService.getCredits(company._id).then(setCreditsAmount).catch(() => {});
-      return;
-    }
-
+    const creditsBefore = Number(sessionStorage.getItem('creditsBefore')) || 0;
     const paymentOrderId = searchParams.get('paymentOrderId') || sessionStorage.getItem('pendingPaymentOrderId');
 
-    if (!paymentOrderId) {
-      billingService.getCredits(company._id).then((c) => {
-        if (c > 0) { setCreditsAmount(c); setStatus('success'); }
-        else { setStatus('error'); setErrorMsg('Missing payment order ID.'); }
-      }).catch(() => { setStatus('error'); setErrorMsg('Missing payment order ID.'); });
-      return;
-    }
-
-    billingService
-      .confirmPayment(company._id, { paymentOrderId })
-      .then(async () => {
-        sessionStorage.removeItem('pendingPaymentOrderId');
-        const credits = await billingService.getCredits(company._id);
-        dispatch(setCredits(credits));
-        setCreditsAmount(credits);
+    const cid = company._id;
+    async function checkCredits(): Promise<boolean> {
+      const current = await billingService.getCredits(cid).catch(() => 0);
+      if (current > creditsBefore) {
+        dispatch(setCredits(current));
+        setCreditsAmount(current);
         setStatus('success');
         toast.success('Payment confirmed! Credits added.');
-      })
-      .catch(async () => {
-        const credits = await billingService.getCredits(company._id).catch(() => 0);
-        if (credits > 0) {
-          dispatch(setCredits(credits));
-          setCreditsAmount(credits);
-          setStatus('success');
-        } else {
-          setStatus('error');
-          setErrorMsg('We could not verify your payment. Please check your credits in billing.');
-        }
-      });
+        sessionStorage.removeItem('pendingPaymentOrderId');
+        sessionStorage.removeItem('creditsBefore');
+        return true;
+      }
+      return false;
+    }
+
+    async function run() {
+      const already = await checkCredits();
+      if (already) return;
+
+      if (!paymentOrderId) {
+        setStatus('error');
+        setErrorMsg('We could not verify your payment. Please check your credits in billing.');
+        return;
+      }
+
+      await billingService.confirmPayment(cid, { paymentOrderId }).catch(() => {});
+      const confirmed = await checkCredits();
+      if (!confirmed) {
+        setStatus('error');
+        setErrorMsg('Payment failed. Please try again.');
+      }
+    }
+
+    run();
   }, [company?._id, searchParams, dispatch]);
 
   return (
