@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
 import { internshipService } from '@/services/internship.service';
+import { billingService } from '@/services/billing.service';
 import { z } from 'zod';
 import { internshipSchema } from '@/features/auth/schemas/auth.schemas';
 type InternshipFormValues = z.output<typeof internshipSchema>;
@@ -21,6 +22,22 @@ export default function PostInternshipScreen() {
   const router = useRouter();
   const company = useAppSelector((s) => s.company.currentCompany);
   const [submitting, setSubmitting] = useState(false);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [creditsLoading, setCreditsLoading] = useState(true);
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  useEffect(() => {
+    if (!company?._id) { setCreditsLoading(false); return; }
+    billingService
+      .getCredits(company._id)
+      .then((c) => {
+        setCredits(c);
+        if (c === 0) setShowCreditModal(true);
+      })
+      .catch(() => toast.error('Failed to check credits'))
+      .finally(() => setCreditsLoading(false));
+  }, [company?._id]);
   const [technicalSkillsStr, setTechnicalSkillsStr] = useState('');
   const [softSkillsStr, setSoftSkillsStr] = useState('');
   const [questions, setQuestions] = useState<InternshipQuestion[]>([]);
@@ -122,8 +139,7 @@ export default function PostInternshipScreen() {
           .map((s) => s.trim())
           .filter(Boolean),
       });
-      toast.success('Internship posted successfully!');
-      router.push('/company/dashboard');
+      setShowSuccessModal(true);
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -131,11 +147,85 @@ export default function PostInternshipScreen() {
     }
   }
 
+  if (creditsLoading) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+        <div className="flex justify-center py-24"><div className="w-10 h-10 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" /></div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-      <h1 className="text-2xl font-black text-dark mb-8">Post a new internship</h1>
+      {/* Credit modal */}
+      {showCreditModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => router.push('/company/dashboard')} />
+          <div className="relative bg-white rounded-[2rem] p-10 sm:p-12 shadow-2xl max-w-md w-full mx-4 text-center animate-fade-in-up">
+            <div className="w-20 h-20 rounded-[1.25rem] bg-amber-50 flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-black text-dark mb-3">You have reached your credit limit</h2>
+            <p className="text-gray-500 mb-2">Purchase a plan to get more internship credits and start posting opportunities.</p>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/company/billing/plans" className="w-full">
+                <Button fullWidth className="!bg-gradient-to-r !from-emerald-500 !to-emerald-600 !shadow-lg !shadow-emerald-200 !py-3.5 !font-bold">
+                  <i className="fas fa-bolt mr-2" />
+                  Charge Your Credit
+                </Button>
+              </Link>
+              <Button variant="outline" onClick={() => router.push('/company/dashboard')} className="!py-3.5">
+                Back to Dashboard
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Success modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => router.push('/company/dashboard')} />
+          <div className="relative bg-white rounded-[2rem] p-10 sm:p-12 shadow-2xl max-w-md w-full mx-4 text-center animate-fade-in-up">
+            <div className="w-20 h-20 rounded-[1.25rem] bg-emerald-50 flex items-center justify-center mx-auto mb-6">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+            </div>
+            <h2 className="text-2xl font-black text-dark mb-3">Internship Posted! 🎉</h2>
+            <p className="text-gray-500 mb-8">Your internship has been published successfully. Start reviewing applicants now.</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button onClick={() => router.push('/company/dashboard')} className="!bg-gradient-to-r !from-emerald-500 !to-emerald-600 !shadow-lg !shadow-emerald-200 !font-bold !px-8 !py-3.5">
+                <i className="fas fa-th-large mr-2" />
+                Go to Dashboard
+              </Button>
+              <Button variant="outline" onClick={() => router.push('/company/billing')} className="!px-8 !py-3.5">
+                <i className="fas fa-coins mr-2" />
+                Check Credits
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(20px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fade-in-up { animation: fade-in-up 0.35s ease-out both; }
+      `}</style>
+
+      {!showCreditModal && !showSuccessModal && (
+        <>
+          <h1 className="text-2xl font-black text-dark mb-8">Post a new internship</h1>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Input
           label="Title"
           placeholder="e.g. Frontend Developer Intern"
@@ -303,6 +393,8 @@ export default function PostInternshipScreen() {
           </Link>
         </div>
       </form>
+        </>
+      )}
     </div>
   );
 }

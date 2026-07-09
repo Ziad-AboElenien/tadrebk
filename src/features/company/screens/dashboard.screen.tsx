@@ -20,6 +20,7 @@ export default function CompanyDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!company?._id) { setLoading(false); return; }
@@ -36,13 +37,13 @@ export default function CompanyDashboardScreen() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  async function handleDelete(internId: string) {
-    if (!company) return;
-    if (!window.confirm('Are you sure you want to delete this internship?')) return;
-    setDeleting(internId);
+  async function confirmDelete() {
+    if (!company || !deleteTarget) return;
+    setDeleting(deleteTarget);
+    setDeleteTarget(null);
     try {
-      await internshipService.deleteInternship(company._id, internId);
-      setInternships((prev) => prev.filter((i) => i._id !== internId));
+      await internshipService.deleteInternship(company._id, deleteTarget);
+      setInternships((prev) => prev.filter((i) => i._id !== deleteTarget));
       toast.success('Internship deleted');
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -174,7 +175,7 @@ export default function CompanyDashboardScreen() {
                       variant="ghost"
                       size="sm"
                       loading={deleting === intern._id}
-                      onClick={() => handleDelete(intern._id)}
+                      onClick={() => setDeleteTarget(intern._id)}
                       className="text-red-400 hover:text-red-600 hover:bg-red-50"
                     >
                       <i className="fas fa-trash text-xs" />
@@ -186,6 +187,31 @@ export default function CompanyDashboardScreen() {
           </div>
         )}
       </div>
+
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDeleteTarget(null)} />
+          <div className="relative bg-white rounded-[2rem] p-10 shadow-2xl max-w-sm w-full mx-4 text-center animate-fade-in-up">
+            <div className="w-16 h-16 rounded-[1.25rem] bg-red-50 flex items-center justify-center mx-auto mb-5">
+              <svg className="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-black text-dark mb-2">Delete internship?</h2>
+            <p className="text-sm text-gray-500 mb-8">This action cannot be undone.</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button onClick={confirmDelete} loading={deleting === deleteTarget} className="!bg-red-500 hover:!bg-red-600 !shadow-lg !shadow-red-200 !font-bold">
+                Delete
+              </Button>
+              <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
