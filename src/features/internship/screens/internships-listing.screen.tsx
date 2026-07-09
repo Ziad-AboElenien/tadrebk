@@ -71,7 +71,7 @@ function InternshipsContent() {
       .catch(() => {});
   }, []);
 
-  // Filters for API
+  const [cityFilter, setCityFilter] = useState('');
   const [filters, setFilters] = useState({
     title: searchParams.get('title') || '',
     type: (searchParams.get('type') || '') as '' | 'full-time' | 'part-time',
@@ -89,31 +89,60 @@ function InternshipsContent() {
   const fetchInternships = useCallback(async () => {
     try {
       setLoading(true);
-      const result = await internshipService.listInternships({
-        ...(filters.title ? { title: filters.title } : {}),
-        ...(filters.type ? { type: filters.type } : {}),
-        ...(filters.location ? { location: filters.location } : {}),
-        page,
-        limit: 12,
-      });
-      setInternships(result.internships);
-      setTotalPages(result.pagination.pages);
-      setTotal(result.pagination.total);
+      const params: any = { page, limit: cityFilter ? 100 : 12 };
+      if (filters.title) params.title = filters.title;
+      if (filters.type) params.type = filters.type;
+      if (filters.location) params.location = filters.location;
+      const result = await internshipService.listInternships(params);
+
+      let filtered = result.internships;
+      if (cityFilter) {
+        const matchingIds = new Set(
+          Object.values(companyMap)
+            .filter((c) => c.address?.toLowerCase().includes(cityFilter))
+            .map((c) => c._id)
+        );
+        if (matchingIds.size > 0) {
+          filtered = result.internships.filter((internship) => {
+            const cid = typeof internship.companyId === 'string'
+              ? internship.companyId
+              : (internship.companyId as any)?._id;
+            return cid && matchingIds.has(cid);
+          });
+        }
+        const perPage = 12;
+        const totalFiltered = filtered.length;
+        setTotalPages(Math.ceil(totalFiltered / perPage) || 1);
+        setTotal(totalFiltered);
+        const start = (page - 1) * perPage;
+        filtered = filtered.slice(start, start + perPage);
+      } else {
+        setTotalPages(result.pagination.pages);
+        setTotal(result.pagination.total);
+      }
+
+      setInternships(filtered);
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to load internships', { position: 'bottom-right' });
     } finally {
       setLoading(false);
     }
-  }, [filters, page]);
+  }, [filters, page, cityFilter, companyMap]);
 
   useEffect(() => { fetchInternships(); }, [fetchInternships]);
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     const validLocations = ['on-site', 'remote', 'hybrid'] as const;
-    const loc = locationInput.toLowerCase();
+    const loc = locationInput.toLowerCase().trim();
     const isLocationType = validLocations.includes(loc as any);
-    setFilters((prev) => ({ ...prev, title: query, location: isLocationType ? loc : 'on-site' }));
+    if (loc && !isLocationType) {
+      setCityFilter(loc);
+      setFilters((prev) => ({ ...prev, title: query, location: '' }));
+    } else {
+      setCityFilter('');
+      setFilters((prev) => ({ ...prev, title: query, location: isLocationType ? loc : '' }));
+    }
     setPage(1);
   }, [query, locationInput]);
 
@@ -123,6 +152,7 @@ function InternshipsContent() {
   }, []);
 
   const clearAll = useCallback(() => {
+    setCityFilter('');
     setFilters({ title: '', type: '', location: '' });
     setQuery('');
     setLocationInput('');
