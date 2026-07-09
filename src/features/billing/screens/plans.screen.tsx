@@ -11,7 +11,7 @@ import Spinner from '@/components/ui/Spinner';
 import { toast } from 'react-toastify';
 import { getErrorMessage } from '@/lib/axios';
 
-type PaymentPhase = 'idle' | 'creating' | 'popup_open' | 'confirming' | 'success' | 'error';
+type PaymentPhase = 'idle' | 'creating' | 'popup_open' | 'confirming' | 'error';
 
 export default function BillingPlansScreen() {
   const router = useRouter();
@@ -71,10 +71,8 @@ export default function BillingPlansScreen() {
 
     try {
       await billingService.confirmPayment(company._id, { paymentOrderId });
-      setPhase('success');
       toast.success('Payment confirmed! Credits added.');
-
-      setTimeout(() => router.push('/company/dashboard'), 2000);
+      router.push('/company/billing/callback?status=success');
     } catch (err) {
       setPhase('error');
       setErrorMsg(getErrorMessage(err));
@@ -135,17 +133,6 @@ export default function BillingPlansScreen() {
           </div>
           <h2 className="text-xl font-black text-dark mb-2">Confirming payment...</h2>
           <p className="text-sm text-gray-500">Please wait while we verify your payment.</p>
-        </div>
-      )}
-
-      {phase === 'success' && (
-        <div className="max-w-lg mx-auto mb-10 bg-white border border-gray-100 rounded-3xl p-8 shadow-sm text-center">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto mb-5">
-            <i className="fas fa-check text-emerald-600 text-3xl" />
-          </div>
-          <h2 className="text-xl font-black text-dark mb-2">Payment successful!</h2>
-          <p className="text-sm text-gray-500 mb-2">Your credits have been added to your account.</p>
-          <p className="text-xs text-gray-400">Redirecting to dashboard...</p>
         </div>
       )}
 
