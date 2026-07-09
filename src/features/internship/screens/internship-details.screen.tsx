@@ -49,6 +49,7 @@ export default function InternshipDetailsScreen() {
   const [applying, setApplying] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const [showApplySuccess, setShowApplySuccess] = useState(false);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
 
   useEffect(() => { setSaved(isSaved(internId)); }, [internId]);
@@ -137,8 +138,8 @@ export default function InternshipDetailsScreen() {
       }
       if (resume) payload.resume = resume;
       await applicationService.apply(cid, internId, Object.keys(payload).length > 0 ? payload : undefined);
-      toast.success('Application submitted!');
       setShowApplyModal(false);
+      setShowApplySuccess(true);
     } catch (err: any) {
       const msg = getErrorMessage(err);
       if (msg.includes('already applied')) {
@@ -502,6 +503,42 @@ export default function InternshipDetailsScreen() {
         onSubmit={handleApplySubmit}
         onCancel={() => setShowApplyModal(false)}
       />
+
+      {/* Apply success modal */}
+      {showApplySuccess && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowApplySuccess(false)} />
+          <div className="relative bg-white rounded-[2rem] p-10 sm:p-12 shadow-2xl max-w-md w-full mx-4 text-center animate-fade-in-up">
+            <div className="w-20 h-20 rounded-[1.25rem] bg-emerald-50 flex items-center justify-center mx-auto mb-6">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+            </div>
+            <h2 className="text-2xl font-black text-dark mb-3">Application Submitted! 🎉</h2>
+            <p className="text-gray-500 mb-8">Your application has been sent successfully. The company will review it and get back to you.</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button onClick={() => router.push('/my-applications')} className="!bg-gradient-to-r !from-emerald-500 !to-emerald-600 !shadow-lg !shadow-emerald-200 !font-bold !px-8 !py-3.5">
+                <i className="fas fa-paper-plane mr-2" />
+                My Applications
+              </Button>
+              <Button variant="outline" onClick={() => { setShowApplySuccess(false); window.scrollTo(0, 0); }} className="!px-8 !py-3.5">
+                Continue Browsing
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Global modal animation */}
+      <style>{`
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(20px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fade-in-up { animation: fade-in-up 0.35s ease-out both; }
+      `}</style>
     </div>
   );
 }

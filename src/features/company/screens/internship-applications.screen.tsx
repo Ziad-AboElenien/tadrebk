@@ -29,6 +29,7 @@ export default function InternshipApplicationsScreen() {
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
   const [sendingAll, setSendingAll] = useState(false);
+  const [emailConfirmTarget, setEmailConfirmTarget] = useState<string | null>(null);
 
   const fetchApplications = useCallback(async () => {
     if (!company || !internId) return;
@@ -66,6 +67,7 @@ export default function InternshipApplicationsScreen() {
   async function handleSendAcceptanceEmail(applicationId: string) {
     if (!company) return;
     setSendingEmailId(applicationId);
+    setEmailConfirmTarget(null);
     try {
       await applicationService.sendAcceptanceEmail(company._id, internId, applicationId);
       toast.success('Acceptance email sent!');
@@ -78,6 +80,7 @@ export default function InternshipApplicationsScreen() {
 
   async function handleSendAllEmails() {
     if (!company) return;
+    setEmailConfirmTarget(null);
     const accepted = applications.filter((a) => a.status === 'accepted');
     setSendingAll(true);
     let sent = 0;
@@ -157,7 +160,7 @@ export default function InternshipApplicationsScreen() {
           <Button
             variant="primary"
             loading={sendingAll}
-            onClick={handleSendAllEmails}
+            onClick={() => setEmailConfirmTarget('all')}
           >
             <i className="fas fa-envelope text-xs mr-1" /> Send Email to All ({statusCounts.accepted})
           </Button>
@@ -246,7 +249,7 @@ export default function InternshipApplicationsScreen() {
                             variant="outline"
                             size="sm"
                             loading={sendingEmailId === app._id}
-                            onClick={() => handleSendAcceptanceEmail(app._id)}
+                            onClick={() => setEmailConfirmTarget(app._id)}
                             className="border-emerald-200 text-emerald-600 hover:bg-emerald-50"
                           >
                             <i className="fas fa-envelope text-xs mr-1" /> Send Email
@@ -314,6 +317,38 @@ export default function InternshipApplicationsScreen() {
           </div>
         )}
       </div>
+
+      {/* Email confirmation modal */}
+      {emailConfirmTarget && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setEmailConfirmTarget(null)} />
+          <div className="relative bg-white rounded-[2rem] p-10 shadow-2xl max-w-sm w-full mx-4 text-center animate-fade-in-up">
+            <div className="w-16 h-16 rounded-[1.25rem] bg-emerald-50 flex items-center justify-center mx-auto mb-5">
+              <svg className="w-8 h-8 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-black text-dark mb-2">Send acceptance email?</h2>
+            <p className="text-sm text-gray-500 mb-8">
+              {emailConfirmTarget === 'all'
+                ? `This will send acceptance emails to all ${applications.filter((a) => a.status === 'accepted').length} accepted applicants.`
+                : 'An acceptance email will be sent to this applicant.'}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button
+                onClick={() => emailConfirmTarget === 'all' ? handleSendAllEmails() : handleSendAcceptanceEmail(emailConfirmTarget as string)}
+                className="!bg-gradient-to-r !from-emerald-500 !to-emerald-600 !shadow-lg !shadow-emerald-200 !font-bold"
+              >
+                <i className="fas fa-envelope mr-2" /> Send
+              </Button>
+              <Button variant="outline" onClick={() => setEmailConfirmTarget(null)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
