@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useAppSelector } from '@/store/store';
 import { internshipService } from '@/services/internship.service';
+import { billingService } from '@/services/billing.service';
 import { Internship } from '@/features/internship/types';
 import { getImgUrl } from '@/features/company/types';
 import Button from '@/components/ui/Button';
@@ -12,49 +13,28 @@ import Badge from '@/components/ui/Badge';
 import { toast } from 'react-toastify';
 import { getErrorMessage } from '@/lib/axios';
 
-type Tab = 'active' | 'closed';
-
 export default function CompanyDashboardScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
   const [internships, setInternships] = useState<Internship[]>([]);
+  const [credits, setCredits] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<Tab>('active');
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [toggling, setToggling] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!company?._id) { setLoading(false); return; }
     try {
-      const res = await internshipService.listInternships({ companyId: company._id, limit: 100 });
-      setInternships(res.internships);
+      const [internshipsRes, creditsRes] = await Promise.all([
+        internshipService.listInternships({ companyId: company._id, limit: 100 }),
+        billingService.getCredits(company._id).catch(() => null),
+      ]);
+      setInternships(internshipsRes.internships);
+      setCredits(creditsRes);
     } catch { setInternships([]); }
     finally { setLoading(false); }
   }, [company?._id]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
-
-  const filtered = internships.filter((i) =>
-    tab === 'active' ? !i.closed : i.closed,
-  );
-
-  async function handleToggleStatus(intern: Internship) {
-    if (!company) return;
-    setToggling(intern._id);
-    try {
-      const updated = await internshipService.updateInternship(company._id, intern._id, {
-        closed: !intern.closed,
-      });
-      setInternships((prev) =>
-        prev.map((i) => (i._id === intern._id ? updated : i)),
-      );
-      toast.success(updated.closed ? 'Internship closed' : 'Internship reopened');
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setToggling(null);
-    }
-  }
 
   async function handleDelete(internId: string) {
     if (!company) return;
@@ -79,8 +59,6 @@ export default function CompanyDashboardScreen() {
       </div>
     );
   }
-
-  const activeCount = internships.filter((i) => !i.closed).length;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
@@ -126,14 +104,14 @@ export default function CompanyDashboardScreen() {
           <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wide">Total internships</p>
         </div>
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-          <p className="text-2xl font-black text-emerald-600">{activeCount}</p>
+          <p className="text-2xl font-black text-emerald-600">{internships.filter((i) => !i.closed).length}</p>
           <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wide">Active</p>
         </div>
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-          <p className="text-2xl font-black text-dark">{internships.length - activeCount}</p>
-          <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wide">Closed</p>
-        </div>
-        <Link href="/company/settings" className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:border-primary/30 transition-colors">
+        <Link href="/company/billing" className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:border-primary/30 transition-colors">
+          <p className="text-2xl font-black text-amber-600">{credits ?? '—'}</p>
+          <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wide">Credits</p>
+        </Link>
+        <Link href="/company/settings" className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:border-primary/30 transition-colors flex flex-col justify-center">
           <p className="text-sm font-semibold text-primary flex items-center gap-2">
             <i className="fas fa-cog" />
             Settings
@@ -144,46 +122,26 @@ export default function CompanyDashboardScreen() {
 
       {/* Internships section */}
       <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
-        <div className="p-6 sm:p-8 border-b border-gray-100">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h2 className="text-lg font-bold text-dark">Internships</h2>
-            <Link href="/company/post-internship">
-              <Button size="sm" leftIcon={<i className="fas fa-plus text-xs" />}>
-                Post internship
-              </Button>
-            </Link>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-1 mt-5 bg-gray-50 rounded-xl p-1 w-fit">
-            <button
-              onClick={() => setTab('active')}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${tab === 'active' ? 'bg-white text-dark shadow-sm' : 'text-gray-500 hover:text-dark'}`}
-            >
-              Active ({activeCount})
-            </button>
-            <button
-              onClick={() => setTab('closed')}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${tab === 'closed' ? 'bg-white text-dark shadow-sm' : 'text-gray-500 hover:text-dark'}`}
-            >
-              Closed ({internships.length - activeCount})
-            </button>
-          </div>
+        <div className="p-6 sm:p-8 border-b border-gray-100 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-dark">Internships</h2>
+          <Link href="/company/post-internship">
+            <Button size="sm" leftIcon={<i className="fas fa-plus text-xs" />}>
+              Post internship
+            </Button>
+          </Link>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-16"><Spinner /></div>
-        ) : filtered.length === 0 ? (
+        ) : internships.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <i className="fas fa-briefcase text-3xl mb-3 block" />
-            <p className="font-semibold">
-              {tab === 'active' ? 'No active internships' : 'No closed internships'}
-            </p>
-            <p className="text-sm mt-1">Post your first internship to get started.</p>
+            <p className="font-semibold">No internships yet</p>
+            <p className="text-sm mt-1">Post an internship to get started.</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
-            {filtered.map((intern) => (
+            {internships.map((intern) => (
               <div key={intern._id} className="p-6 sm:p-8 hover:bg-gray-50/50 transition-colors">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -212,14 +170,6 @@ export default function CompanyDashboardScreen() {
                         Edit
                       </Button>
                     </Link>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      loading={toggling === intern._id}
-                      onClick={() => handleToggleStatus(intern)}
-                    >
-                      {intern.closed ? <i className="fas fa-play text-xs" /> : <i className="fas fa-stop text-xs" />}
-                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"

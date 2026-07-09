@@ -69,6 +69,7 @@ export default function Navbar() {
             { href: '/internships', label: 'Internships' },
             { href: '/how-it-works', label: 'How it works' },
             { href: '/companies', label: 'For Companies' },
+            { href: '/about', label: 'About Us' },
           ].map((link) => (
             <Link
               key={link.href}
@@ -172,6 +173,14 @@ export default function Navbar() {
                       >
                         <i className="fas fa-building w-4 text-center text-gray-400" />
                         My Profile
+                      </Link>
+                      <Link
+                        href="/company/billing"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                      >
+                        <i className="fas fa-coins w-4 text-center text-gray-400" />
+                        Billing
                       </Link>
                       <Link
                         href="/company/settings"
@@ -278,6 +287,14 @@ export default function Navbar() {
                         My Profile
                       </Link>
                       <Link
+                        href="/company/billing"
+                        onClick={() => { setUserMenuOpen(false); setMenuOpen(false); }}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                      >
+                        <i className="fas fa-coins w-4 text-center text-gray-400" />
+                        Billing
+                      </Link>
+                      <Link
                         href="/company/settings"
                         onClick={() => { setUserMenuOpen(false); setMenuOpen(false); }}
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
@@ -345,6 +362,9 @@ export default function Navbar() {
               <Link href="/how-it-works" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                 <i className="fas fa-circle-question w-5 text-center text-gray-400" /> How it works
               </Link>
+              <Link href="/about" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
+                <i className="fas fa-people-group w-5 text-center text-gray-400" /> About Us
+              </Link>
 
               {isAuthenticated && mounted && (
                 <>
@@ -367,6 +387,9 @@ export default function Navbar() {
                     <>
                       <Link href="/company/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                         <i className="fas fa-building w-5 text-center text-gray-400" /> Company Profile
+                      </Link>
+                      <Link href="/company/billing" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
+                        <i className="fas fa-coins w-5 text-center text-gray-400" /> Billing
                       </Link>
                       <Link href="/company/settings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                         <i className="fas fa-gear w-5 text-center text-gray-400" /> Settings

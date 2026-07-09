@@ -5,6 +5,7 @@ import userReducer from './userSlice';
 import companyReducer from './companySlice';
 import internshipReducer from './internshipSlice';
 import notificationReducer from './notificationSlice';
+import billingReducer from './billingSlice';
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     company: companyReducer,
     internship: internshipReducer,
     notifications: notificationReducer,
+    billing: billingReducer,
   },
 });
 
