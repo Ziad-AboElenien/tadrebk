@@ -19,7 +19,8 @@ export default function BillingPlansScreen() {
     if (!company) return;
     setPurchasing(planId);
     try {
-      const { paymentUrl } = await billingService.purchasePlan(company._id, { planId });
+      const { paymentUrl, paymentOrderId } = await billingService.purchasePlan(company._id, { planId });
+      sessionStorage.setItem('pendingPaymentOrderId', paymentOrderId);
       window.location.href = paymentUrl;
     } catch (err) {
       toast.error(getErrorMessage(err));

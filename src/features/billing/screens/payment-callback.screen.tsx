@@ -7,7 +7,6 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setCredits } from '@/store/billingSlice';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
-import { getErrorMessage } from '@/lib/axios';
 import { toast } from 'react-toastify';
 
 type Status = 'processing' | 'success' | 'error';
@@ -32,25 +31,36 @@ function PaymentCallbackInner() {
       return;
     }
 
-    const paymentOrderId = searchParams.get('paymentOrderId');
+    const paymentOrderId = searchParams.get('paymentOrderId') || sessionStorage.getItem('pendingPaymentOrderId');
+
     if (!paymentOrderId) {
-      setStatus('error');
-      setErrorMsg('Missing payment order ID.');
+      billingService.getCredits(company._id).then((c) => {
+        if (c > 0) { setCreditsAmount(c); setStatus('success'); }
+        else { setStatus('error'); setErrorMsg('Missing payment order ID.'); }
+      }).catch(() => { setStatus('error'); setErrorMsg('Missing payment order ID.'); });
       return;
     }
 
     billingService
       .confirmPayment(company._id, { paymentOrderId })
       .then(async () => {
+        sessionStorage.removeItem('pendingPaymentOrderId');
         const credits = await billingService.getCredits(company._id);
         dispatch(setCredits(credits));
         setCreditsAmount(credits);
         setStatus('success');
         toast.success('Payment confirmed! Credits added.');
       })
-      .catch((err) => {
-        setStatus('error');
-        setErrorMsg(getErrorMessage(err));
+      .catch(async () => {
+        const credits = await billingService.getCredits(company._id).catch(() => 0);
+        if (credits > 0) {
+          dispatch(setCredits(credits));
+          setCreditsAmount(credits);
+          setStatus('success');
+        } else {
+          setStatus('error');
+          setErrorMsg('We could not verify your payment. Please check your credits in billing.');
+        }
       });
   }, [company?._id, searchParams, dispatch]);
 
