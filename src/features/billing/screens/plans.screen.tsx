@@ -175,8 +175,8 @@ export default function BillingPlansScreen() {
             <p className="text-sm text-gray-500 mt-1">{details.credits} internship credits</p>
 
             <div className="mt-6 mb-8">
-              <span className="text-4xl font-black text-dark">${details.price}</span>
-              <span className="text-gray-400 text-sm ml-1">/ one-time</span>
+              <span className="text-4xl font-black text-dark">{details.price}</span>
+              <span className="text-gray-400 text-sm ml-1">EGP / one-time</span>
             </div>
 
             <ul className="space-y-3 mb-8 flex-1">
@@ -208,7 +208,7 @@ export default function BillingPlansScreen() {
             >
               {phase === 'creating' && selectedPlan === details.planId
                 ? 'Creating payment...'
-                : `Purchase — $${details.price}`}
+                : `Purchase — ${details.price} EGP`}
             </Button>
           </div>
         ))}
