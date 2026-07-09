@@ -14,7 +14,7 @@ export const PLAN_DETAILS: Record<PlanId, PlanDetails> = {
   starter: {
     planId: 'starter',
     name: 'Starter',
-    price: 29,
+    price: 500,
     credits: 5,
     icon: 'fas fa-seedling',
     color: 'from-emerald-400 to-emerald-600',
@@ -22,7 +22,7 @@ export const PLAN_DETAILS: Record<PlanId, PlanDetails> = {
   growth: {
     planId: 'growth',
     name: 'Growth',
-    price: 79,
+    price: 1200,
     credits: 20,
     icon: 'fas fa-chart-line',
     color: 'from-violet-400 to-purple-600',
@@ -31,7 +31,7 @@ export const PLAN_DETAILS: Record<PlanId, PlanDetails> = {
   enterprise: {
     planId: 'enterprise',
     name: 'Enterprise',
-    price: 199,
+    price: 3000,
     credits: 60,
     icon: 'fas fa-crown',
     color: 'from-amber-400 to-orange-600',
