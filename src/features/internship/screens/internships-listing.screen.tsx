@@ -58,6 +58,7 @@ function InternshipsContent() {
   const [locationInput, setLocationInput] = useState(searchParams.get('location') || '');
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [filterOpen, setFilterOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Company cache
   const [companyMap, setCompanyMap] = useState<Record<string, Company>>({});
@@ -288,6 +289,26 @@ function InternshipsContent() {
               {total} results
             </span>
           </div>
+          <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <i className="fas fa-grid-2 text-xs" />
+              Grid
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <i className="fas fa-list text-xs" />
+              List
+            </button>
+          </div>
         </div>
 
         {/* ── Mobile filter button ────────────────────────── */}
@@ -357,7 +378,7 @@ function InternshipsContent() {
           </aside>
 
           {/* ── Cards grid ─────────────────────────────────── */}
-          <div>
+          <div className="min-w-0">
             {loading ? (
               <div className="flex justify-center py-12"><Spinner /></div>
             ) : internships.length === 0 ? (
@@ -366,7 +387,9 @@ function InternshipsContent() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {/* Grid View */}
+                {viewMode === 'grid' && (
+                <div className="grid grid-cols-1 gap-x-3 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
                   {internships.map((internship) => {
                     const company = companyFromInternship(internship);
                     const logoUrl = company ? getImgUrl(company.logo) : null;
@@ -375,64 +398,198 @@ function InternshipsContent() {
                     return (
                       <div
                         key={internship._id}
-                        className="flex flex-col rounded-2xl bg-white p-5 shadow-sm transition hover:shadow-md"
+                        className="group flex flex-col rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
                       >
-                        <Link href={`/internships/${internship._id}`}>
-                          <div className="mb-4 flex items-start justify-between">
-                            <div className="h-12 w-12 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-pink-200 via-yellow-100 to-sky-200 flex items-center justify-center text-gray-700 font-bold">
-                              {logoUrl ? (
-                                <img src={logoUrl} alt="" className="w-full h-full object-cover" />
-                              ) : company ? (
-                                company.name.substring(0, 2).toUpperCase()
-                              ) : (
-                                <i className="fas fa-building" />
-                              )}
+                        <Link href={`/internships/${internship._id}`} className="flex flex-col flex-1">
+                          <div className="p-5 pb-0 flex-1">
+                            {/* Logo + badges row */}
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="h-12 w-12 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-pink-200 via-yellow-100 to-sky-200 flex items-center justify-center text-gray-700 font-bold ring-2 ring-gray-50 group-hover:ring-emerald-200 transition-all">
+                                {logoUrl ? (
+                                  <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+                                ) : company ? (
+                                  company.name.substring(0, 2).toUpperCase()
+                                ) : (
+                                  <i className="fas fa-building text-gray-400" />
+                                )}
+                              </div>
+                              <div className="flex gap-1.5 flex-wrap justify-end">
+                                {internship.location && (
+                                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                                    internship.location === 'remote' ? 'bg-violet-50 text-violet-600' :
+                                    internship.location === 'hybrid' ? 'bg-blue-50 text-blue-600' :
+                                    'bg-amber-50 text-amber-600'
+                                  }`}>
+                                    <i className={`fas fa-${
+                                      internship.location === 'remote' ? 'globe' :
+                                      internship.location === 'hybrid' ? 'code-branch' : 'map-marker-alt'
+                                    } text-[9px]`} />
+                                    {locationLabels[internship.location] || internship.location}
+                                  </span>
+                                )}
+                                {internship.workingTime && (
+                                  <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-gray-100 text-gray-600">
+                                    <i className="fas fa-clock text-[9px]" />
+                                    {internship.workingTime === 'full-time' ? 'Full-time' : 'Part-time'}
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                            <div className="flex gap-2">
-                              {internship.workingTime && (
-                                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${internship.location === 'remote' ? 'border border-gray-200 text-gray-600' : 'bg-emerald-500 text-white font-bold'}`}>
-                                  {internship.workingTime === 'full-time' ? 'Full-time' : 'Part-time'}
+
+                            {/* Company name */}
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                                {company?.name || 'Unknown Company'}
+                              </span>
+                              {internship.closed && (
+                                <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600 leading-none">
+                                  Closed
                                 </span>
                               )}
                             </div>
-                          </div>
 
-                          <h3 className="text-base font-extrabold leading-snug text-gray-900 line-clamp-2">
-                            {internship.title}
-                          </h3>
-                          <p className="mt-1 text-sm text-gray-400">{company?.name || 'Unknown Company'}</p>
+                            {/* Title */}
+                            <h3 className="text-base font-bold leading-snug text-gray-900 line-clamp-2 group-hover:text-emerald-600 transition-colors">
+                              {internship.title}
+                            </h3>
 
-                          <div className="mt-3 space-y-1.5 text-sm text-gray-500">
-                            <p className="flex items-center gap-1.5">
-                              <i className="fas fa-map-marker-alt text-emerald-500 w-4 text-center" />
-                              {company?.address || locationLabels[internship.location] || internship.location}
-                            </p>
-                            <p className="flex items-center gap-1.5">
-                              <i className="fas fa-clock text-emerald-500 w-4 text-center" />
-                              {internship.workingTime ? `${internship.workingTime === 'full-time' ? 'Full-time' : 'Part-time'}` : 'Not specified'}
-                            </p>
+                            {/* Details */}
+                            <div className="mt-3 space-y-2 text-sm text-gray-500">
+                              <p className="flex items-center gap-2">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 shrink-0">
+                                  <i className="fas fa-map-marker-alt text-[10px]" />
+                                </span>
+                                {company?.address || locationLabels[internship.location] || internship.location}
+                              </p>
+                              {internship.technicalSkills && internship.technicalSkills.length > 0 && (
+                                <p className="flex items-center gap-2">
+                                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 shrink-0">
+                                    <i className="fas fa-code text-[10px]" />
+                                  </span>
+                                  <span className="truncate">
+                                    {internship.technicalSkills.slice(0, 2).join(', ')}
+                                    {internship.technicalSkills.length > 2 && ` +${internship.technicalSkills.length - 2}`}
+                                  </span>
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </Link>
 
-                        <div className="mt-5 flex items-center gap-2 border-t border-gray-100 pt-4">
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 px-5 py-4 border-t border-gray-100 mt-auto">
                           <Link
                             href={canApply ? `/internships/${internship._id}` : '#'}
-                            className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-white shadow-sm transition text-center ${canApply ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-gray-300 cursor-default'}`}
+                            className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-center transition-all ${
+                              canApply
+                                ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:shadow-md hover:from-emerald-600 hover:to-emerald-700 active:scale-[0.98]'
+                                : 'bg-gray-200 text-gray-400 cursor-default'
+                            }`}
                           >
                             Apply Now
                           </Link>
                           <button
                             onClick={() => handleSave(internship._id)}
                             aria-label="Save internship"
-                            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border-2 border-gray-100 text-gray-400 transition hover:border-gray-200 hover:text-emerald-500"
+                            className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border-2 transition-all ${
+                              saved
+                                ? 'border-emerald-200 bg-emerald-50 text-emerald-500'
+                                : 'border-gray-100 text-gray-400 hover:border-emerald-200 hover:text-emerald-500 hover:bg-emerald-50'
+                            }`}
                           >
-                            <i className={`fas fa-bookmark ${saved ? 'text-emerald-500' : ''}`} />
+                            <i className="fas fa-bookmark" />
                           </button>
                         </div>
                       </div>
                     );
                   })}
                 </div>
+                )}
+
+                {/* List View */}
+                {viewMode === 'list' && (
+                  <div className="space-y-4">
+                    {internships.map((internship) => {
+                      const company = companyFromInternship(internship);
+                      const logoUrl = company ? getImgUrl(company.logo) : null;
+                      const saved = savedIds.has(internship._id);
+                      return (
+                        <div
+                          key={internship._id}
+                          className="group flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-5 sm:px-6 sm:py-5 w-full max-w-full"
+                        >
+                          {/* Logo */}
+                          <Link href={`/internships/${internship._id}`} className="shrink-0">
+                            <div className="h-14 w-14 rounded-xl overflow-hidden bg-gradient-to-br from-pink-200 via-yellow-100 to-sky-200 flex items-center justify-center text-gray-700 font-bold ring-2 ring-gray-50">
+                              {logoUrl ? (
+                                <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+                              ) : company ? (
+                                company.name.substring(0, 2).toUpperCase()
+                              ) : (
+                                <i className="fas fa-building text-gray-400" />
+                              )}
+                            </div>
+                          </Link>
+
+                          {/* Info */}
+                          <Link href={`/internships/${internship._id}`} className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-xs font-semibold text-emerald-600">{company?.name || 'Unknown Company'}</span>
+                              {internship.closed && (
+                                <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">Closed</span>
+                              )}
+                            </div>
+                            <h3 className="text-base font-bold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">
+                              {internship.title}
+                            </h3>
+                            <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 flex-wrap">
+                              <span className="flex items-center gap-1">
+                                <i className="fas fa-map-marker-alt text-emerald-400 text-[10px]" />
+                                {company?.address || locationLabels[internship.location] || internship.location}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <i className="fas fa-clock text-emerald-400 text-[10px]" />
+                                {internship.workingTime === 'full-time' ? 'Full-time' : 'Part-time'}
+                              </span>
+                              {internship.technicalSkills && internship.technicalSkills.length > 0 && (
+                                <span className="flex items-center gap-1 truncate">
+                                  <i className="fas fa-code text-emerald-400 text-[10px]" />
+                                  {internship.technicalSkills.slice(0, 2).join(', ')}
+                                  {internship.technicalSkills.length > 2 && ` +${internship.technicalSkills.length - 2}`}
+                                </span>
+                              )}
+                            </div>
+                          </Link>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Link
+                              href={canApply ? `/internships/${internship._id}` : '#'}
+                              className={`rounded-xl px-5 py-2.5 text-sm font-bold text-center transition-all ${
+                                canApply
+                                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:shadow-md hover:from-emerald-600 hover:to-emerald-700 active:scale-[0.98]'
+                                  : 'bg-gray-200 text-gray-400 cursor-default'
+                              }`}
+                            >
+                              Apply Now
+                            </Link>
+                            <button
+                              onClick={() => handleSave(internship._id)}
+                              aria-label="Save internship"
+                              className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border-2 transition-all ${
+                                saved
+                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-500'
+                                  : 'border-gray-100 text-gray-400 hover:border-emerald-200 hover:text-emerald-500 hover:bg-emerald-50'
+                              }`}
+                            >
+                              <i className="fas fa-bookmark" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Pagination */}
                 {totalPages > 1 && (
