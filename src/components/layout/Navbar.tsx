@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/store';
@@ -24,6 +24,8 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const userMenuMobileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -31,6 +33,23 @@ export default function Navbar() {
     window.addEventListener('scroll', handler);
     return () => window.removeEventListener('scroll', handler);
   }, []);
+
+  // Close user menu on outside click
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      const desktop = userMenuRef.current;
+      const mobile = userMenuMobileRef.current;
+      const inDesktop = desktop && desktop.contains(target);
+      const inMobile = mobile && mobile.contains(target);
+      if (!inDesktop && !inMobile) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [userMenuOpen]);
 
   async function handleLogout() {
     await authService.logout();
@@ -92,7 +111,7 @@ export default function Navbar() {
           {isAuthenticated && mounted ? (
             <>
               {(role === 'student' || role === 'company') && <NotificationBell />}
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setUserMenuOpen((o) => !o)}
                 className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-colors"
@@ -229,7 +248,7 @@ export default function Navbar() {
           {isAuthenticated && mounted && (
             <>
               {(role === 'student' || role === 'company') && <NotificationBell />}
-              <div className="relative">
+              <div className="relative" ref={userMenuMobileRef}>
               <button
                 onClick={() => setUserMenuOpen((o) => !o)}
                 className="flex items-center gap-1 p-1 rounded-xl hover:bg-gray-50 transition-colors"
