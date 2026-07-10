@@ -52,7 +52,7 @@ export default function CertificateScreen() {
             {/* Subtle radial gradient overlay */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-50/60 via-transparent to-transparent pointer-events-none" />
 
-            <div className="relative px-14 py-12 sm:px-20 sm:py-16">
+            <div className="relative px-6 py-8 sm:px-20 sm:py-16">
               {/* Top section: Logo left, title right */}
               <div className="flex items-start justify-between mb-12">
                 <div className="flex-shrink-0">
@@ -129,16 +129,16 @@ export default function CertificateScreen() {
       </div>
 
       {/* Action buttons */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex gap-4">
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex flex-col sm:flex-row gap-3 sm:gap-4 w-[90vw] sm:w-auto">
         <button
           onClick={() => window.print()}
-          className="rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-3 text-sm font-bold text-white shadow-lg hover:from-amber-600 hover:to-orange-600 transition-all"
+          className="rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-3 text-sm font-bold text-white shadow-lg hover:from-amber-600 hover:to-orange-600 transition-all text-center"
         >
           <i className="fas fa-print mr-2" /> Print (Ctrl+P)
         </button>
         <Link
           href="/my-applications"
-          className="rounded-2xl bg-white px-8 py-3 text-sm font-bold text-gray-600 shadow-lg border border-gray-200 hover:bg-gray-50 transition"
+          className="rounded-2xl bg-white px-8 py-3 text-sm font-bold text-gray-600 shadow-lg border border-gray-200 hover:bg-gray-50 transition text-center"
         >
           Back
         </Link>
