@@ -64,6 +64,19 @@ export default function InternshipApplicationsScreen() {
     }
   }
 
+  async function handleComplete(applicationId: string) {
+    if (!company) return;
+    try {
+      await applicationService.completeApplication(company._id, internId, applicationId);
+      setApplications((prev) =>
+        prev.map((a) => (a._id === applicationId ? { ...a, completed: true } : a)),
+      );
+      toast.success('Application marked as completed');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  }
+
   async function handleSendAcceptanceEmail(applicationId: string) {
     if (!company) return;
     setSendingEmailId(applicationId);
@@ -245,15 +258,31 @@ export default function InternshipApplicationsScreen() {
                         )}
 
                         {app.status === 'accepted' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            loading={sendingEmailId === app._id}
-                            onClick={() => setEmailConfirmTarget(app._id)}
-                            className="border-emerald-200 text-emerald-600 hover:bg-emerald-50"
-                          >
-                            <i className="fas fa-envelope text-xs mr-1" /> Send Email
-                          </Button>
+                          <>
+                            {!app.completed ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleComplete(app._id)}
+                                className="border-amber-200 text-amber-600 hover:bg-amber-50"
+                              >
+                                <i className="fas fa-check-circle text-xs mr-1" /> Complete
+                              </Button>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 rounded-xl bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-600 border border-emerald-200">
+                                <i className="fas fa-check-circle text-xs" /> Completed
+                              </span>
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              loading={sendingEmailId === app._id}
+                              onClick={() => setEmailConfirmTarget(app._id)}
+                              className="border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                            >
+                              <i className="fas fa-envelope text-xs mr-1" /> Send Email
+                            </Button>
+                          </>
                         )}
 
                         <Link href={`/company/applicants/${studentId || '#'}`}>
