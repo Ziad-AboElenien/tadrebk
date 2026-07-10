@@ -71,7 +71,24 @@ function InternshipsContent() {
       .catch(() => {});
   }, []);
 
+  // Fetch real category counts
+  const CATEGORIES = ['Software', 'Design', 'Marketing', 'Finance', 'Data', 'HR'];
+  useEffect(() => {
+    Promise.all(
+      CATEGORIES.map((cat) =>
+        internshipService.listInternships({ title: cat, limit: 1 }).catch(() => null)
+      )
+    ).then((results) => {
+      const counts: Record<string, number> = {};
+      results.forEach((res, i) => {
+        if (res) counts[CATEGORIES[i]] = res.pagination.total;
+      });
+      setCategoryCounts(counts);
+    });
+  }, []);
+
   const [cityFilter, setCityFilter] = useState('');
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [filters, setFilters] = useState({
     title: searchParams.get('title') || '',
     type: (searchParams.get('type') || '') as '' | 'full-time' | 'part-time',
@@ -449,18 +466,18 @@ function InternshipsContent() {
           <h2 className="mb-5 text-xl font-extrabold text-gray-900">Popular Categories</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {[
-              { label: 'Software', count: 42, icon: 'fa-briefcase' },
-              { label: 'Design', count: 18, icon: 'fa-paint-brush' },
-              { label: 'Marketing', count: 24, icon: 'fa-bullhorn' },
-              { label: 'Finance', count: 12, icon: 'fa-dollar-sign' },
-              { label: 'Data', count: 15, icon: 'fa-chart-bar' },
-              { label: 'HR', count: 13, icon: 'fa-users' },
+              { label: 'Software', icon: 'fa-briefcase' },
+              { label: 'Design', icon: 'fa-paint-brush' },
+              { label: 'Marketing', icon: 'fa-bullhorn' },
+              { label: 'Finance', icon: 'fa-dollar-sign' },
+              { label: 'Data', icon: 'fa-chart-bar' },
+              { label: 'HR', icon: 'fa-users' },
             ].map((cat) => (
               <button key={cat.label} onClick={() => { setFilters((prev) => ({ ...prev, title: cat.label })); setPage(1); setQuery(cat.label); }}>
                 <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-5 text-center shadow-sm transition hover:shadow-md cursor-pointer">
                   <span className="text-emerald-500"><i className={`fas ${cat.icon} text-2xl`} /></span>
                   <span className="text-sm font-bold text-gray-900">{cat.label}</span>
-                  <span className="text-xs text-gray-400">{cat.count} Roles</span>
+                  <span className="text-xs text-gray-400">{categoryCounts[cat.label] ?? '-'} Roles</span>
                 </div>
               </button>
             ))}
