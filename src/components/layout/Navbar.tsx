@@ -91,7 +91,7 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           {isAuthenticated && mounted ? (
             <>
-              {role === 'student' && <NotificationBell />}
+              {(role === 'student' || role === 'company') && <NotificationBell />}
               <div className="relative">
               <button
                 onClick={() => setUserMenuOpen((o) => !o)}
@@ -228,7 +228,7 @@ export default function Navbar() {
         <div className="md:hidden flex items-center gap-2">
           {isAuthenticated && mounted && (
             <>
-              {role === 'student' && <NotificationBell />}
+              {(role === 'student' || role === 'company') && <NotificationBell />}
               <div className="relative">
               <button
                 onClick={() => setUserMenuOpen((o) => !o)}

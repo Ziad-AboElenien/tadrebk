@@ -25,7 +25,8 @@ function timeAgo(dateStr: string): string {
 function getIcon(type: string): string {
   switch (type) {
     case 'application_reviewed': return 'fa-check-circle';
-    case 'application_received': return 'fa-paper-plane';
+    case 'application_received':
+    case 'new_application': return 'fa-paper-plane';
     default: return 'fa-bell';
   }
 }
@@ -33,7 +34,8 @@ function getIcon(type: string): string {
 function getIconBg(type: string): string {
   switch (type) {
     case 'application_reviewed': return 'bg-emerald-100';
-    case 'application_received': return 'bg-blue-100';
+    case 'application_received':
+    case 'new_application': return 'bg-blue-100';
     default: return 'bg-gray-100';
   }
 }
@@ -41,7 +43,8 @@ function getIconBg(type: string): string {
 function getIconColor(type: string): string {
   switch (type) {
     case 'application_reviewed': return 'text-emerald-500';
-    case 'application_received': return 'text-blue-500';
+    case 'application_received':
+    case 'new_application': return 'text-blue-500';
     default: return 'text-gray-500';
   }
 }
@@ -63,7 +66,9 @@ function statusBadge(status?: string) {
 
 export default function NotificationsScreen() {
   const dispatch = useAppDispatch();
-  const unreadCount = useAppSelector((s) => s.notifications.unreadCount);
+  const { unreadCount } = useAppSelector((s) => s.notifications);
+  const role = useAppSelector((s) => s.auth.role);
+  const dashboardHref = role === 'company' ? '/company/dashboard' : '/dashboard';
 
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,7 +125,7 @@ export default function NotificationsScreen() {
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <Link href="/dashboard" className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+          <Link href={dashboardHref} className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
             <i className="fas fa-arrow-left text-xs" /> Back to Dashboard
           </Link>
           <h1 className="text-2xl font-extrabold text-gray-900">Notifications</h1>
@@ -146,7 +151,7 @@ export default function NotificationsScreen() {
         <div className="flex flex-col items-center py-20 text-gray-400">
           <i className="fas fa-bell-slash text-4xl mb-4" />
           <p className="text-lg font-semibold">No notifications yet</p>
-          <p className="mt-1 text-sm">When companies respond to your applications, you&apos;ll see it here.</p>
+          <p className="mt-1 text-sm">{role === 'company' ? 'When students apply to your internships, you&apos;ll see it here.' : 'When companies respond to your applications, you&apos;ll see it here.'}</p>
         </div>
       ) : (
         <div className="space-y-2">
