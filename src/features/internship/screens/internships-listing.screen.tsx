@@ -57,6 +57,7 @@ function InternshipsContent() {
   const [query, setQuery] = useState(searchParams.get('title') || '');
   const [locationInput, setLocationInput] = useState(searchParams.get('location') || '');
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [filterOpen, setFilterOpen] = useState(false);
 
   // Company cache
   const [companyMap, setCompanyMap] = useState<Record<string, Company>>({});
@@ -279,9 +280,25 @@ function InternshipsContent() {
           </div>
         </div>
 
+        {/* ── Mobile filter button ────────────────────────── */}
+        <div className="lg:hidden mb-4 flex items-center gap-2">
+          <button
+            onClick={() => setFilterOpen(true)}
+            className="flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-gray-700 shadow-sm border border-gray-200"
+          >
+            <i className="fas fa-sliders-h text-emerald-500" />
+            Filters
+            {hasActiveFilters && (
+              <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white">
+                {(filters.type ? 1 : 0) + (filters.location ? 1 : 0)}
+              </span>
+            )}
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
-          {/* ── Sidebar filters ───────────────────────────── */}
-          <aside className="h-fit rounded-2xl bg-white p-5 shadow-sm">
+          {/* ── Sidebar filters (desktop) ──────────────────── */}
+          <aside className="hidden lg:block h-fit rounded-2xl bg-white p-5 shadow-sm">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-base font-extrabold text-gray-900">Filters</h2>
               {hasActiveFilters && (
@@ -460,6 +477,47 @@ function InternshipsContent() {
             )}
           </div>
         </div>
+
+        {/* ── Mobile filter drawer ────────────────────────── */}
+        {filterOpen && (
+          <>
+            <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden" onClick={() => setFilterOpen(false)} />
+            <div className="fixed inset-y-0 right-0 z-50 w-72 max-w-[85vw] bg-white shadow-2xl lg:hidden overflow-y-auto">
+              <div className="flex items-center justify-between px-5 py-5 border-b border-gray-100">
+                <h2 className="text-base font-extrabold text-gray-900">Filters</h2>
+                <button onClick={() => setFilterOpen(false)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100">
+                  <i className="fas fa-xmark text-lg text-gray-500" />
+                </button>
+              </div>
+              <div className="px-5 py-4">
+                {hasActiveFilters && (
+                  <button onClick={() => { clearAll(); setFilterOpen(false); }} className="mb-4 text-sm font-semibold text-emerald-500 hover:underline">
+                    Clear all
+                  </button>
+                )}
+                <FilterGroup
+                  title="Working Time"
+                  options={[
+                    { label: 'Full-time', value: 'full-time' },
+                    { label: 'Part-time', value: 'part-time' },
+                  ]}
+                  value={filters.type}
+                  onChange={(v) => handleFilterChange('type', v)}
+                />
+                <FilterGroup
+                  title="Location"
+                  options={[
+                    { label: 'On-site', value: 'on-site' },
+                    { label: 'Remote', value: 'remote' },
+                    { label: 'Hybrid', value: 'hybrid' },
+                  ]}
+                  value={filters.location}
+                  onChange={(v) => handleFilterChange('location', v)}
+                />
+              </div>
+            </div>
+          </>
+        )}
 
         {/* ── Popular categories ──────────────────────────── */}
         <section className="mt-14">
