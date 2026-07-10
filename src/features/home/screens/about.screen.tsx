@@ -37,6 +37,39 @@ const team = [
     cv: '#',
     image: '/images/emad.jpeg',
   },
+  {
+    name: 'Aly Khalid',
+    role: 'Backend Developer',
+    title: 'Backend Developer',
+    email: 'alykhalid327@gmail.com',
+    phone: '01023129345',
+    linkedin: 'https://www.linkedin.com/in/aly-khalid',
+    github: 'https://github.com/alyKhalid3',
+    cv: 'https://drive.google.com/file/d/15fJmhh514zyRyWTNNuNZ6a0oBBjl7-uS/view',
+    image: '/images/aly.jpeg',
+  },
+  {
+    name: 'Mostafa Rafat',
+    role: 'Full Stack Developer',
+    title: 'Full Stack Developer',
+    email: 'rafatkandel533@gmail.com',
+    phone: '01027807676',
+    linkedin: 'https://linkedin.com/in/mostafa-rafat7',
+    github: 'https://github.com/mostafarafat529',
+    cv: 'https://drive.google.com/file/d/1iTwmbaHIoGgLObCElu3w5u5ZA5Wf70Mc/view',
+    image: '/images/mostafa.jpeg',
+  },
+  {
+    name: 'Khaled Manaa Abdelfadeel',
+    role: 'Backend Developer',
+    title: 'Backend Developer',
+    email: '#',
+    phone: '01011738567',
+    linkedin: '#',
+    github: 'https://github.com/manaa-khaled-2025',
+    cv: '#',
+    image: '/images/khaled.jpeg',
+  },
 ];
 
 function TeamCard({ member, index }: { member: (typeof team)[number]; index: number }) {
@@ -108,14 +141,18 @@ function TeamCard({ member, index }: { member: (typeof team)[number]; index: num
           <p className="text-xs text-gray-400 mt-0.5">{member.role}</p>
 
           <div className="mt-3 space-y-1.5 text-xs text-gray-300">
-            <a href={`mailto:${member.email}`} className="flex items-center gap-2 hover:text-white transition-colors">
-              <i className="fas fa-envelope w-3.5 text-center" />
-              {member.email}
-            </a>
-            <a href={`tel:${member.phone}`} className="flex items-center gap-2 hover:text-white transition-colors">
-              <i className="fas fa-phone w-3.5 text-center" />
-              {member.phone}
-            </a>
+            {member.email !== '#' && (
+              <a href={`mailto:${member.email}`} className="flex items-center gap-2 hover:text-white transition-colors">
+                <i className="fas fa-envelope w-3.5 text-center" />
+                {member.email}
+              </a>
+            )}
+            {member.phone !== '#' && (
+              <a href={`tel:${member.phone}`} className="flex items-center gap-2 hover:text-white transition-colors">
+                <i className="fas fa-phone w-3.5 text-center" />
+                {member.phone}
+              </a>
+            )}
           </div>
 
           {member.cv !== '#' && (
