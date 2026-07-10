@@ -149,6 +149,16 @@ function InternshipsContent() {
 
   useEffect(() => { fetchInternships(); }, [fetchInternships]);
 
+  // Close filter drawer on Escape
+  useEffect(() => {
+    if (!filterOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFilterOpen(false);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [filterOpen]);
+
   // Auto-search on type (debounced)
   useEffect(() => {
     const timer = setTimeout(() => {

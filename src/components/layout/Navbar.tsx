@@ -51,6 +51,18 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler);
   }, [userMenuOpen]);
 
+  // Close menus on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setUserMenuOpen(false);
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
+
   async function handleLogout() {
     await authService.logout();
     dispatch(logout());
