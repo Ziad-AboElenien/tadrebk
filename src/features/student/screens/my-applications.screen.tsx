@@ -134,7 +134,7 @@ export default function MyApplicationsScreen() {
                     <Badge variant={app.status === 'accepted' ? 'success' : app.status === 'rejected' ? 'danger' : 'warning'}>
                       {statusLabels[app.status] || app.status}
                     </Badge>
-                    {app.status === 'accepted' && internId && (
+                    {app.status === 'accepted' && app.completed && internId && (
                       <Link
                         href={`/certificate?name=${encodeURIComponent(user.firstName + ' ' + user.lastName)}&internshipId=${internId}`}
                         className="rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-600 transition"

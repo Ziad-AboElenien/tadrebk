@@ -25,6 +25,7 @@ export interface Application {
   internshipId: string | PopulatedInternship;
   companyId: string;
   status: 'pending' | 'accepted' | 'rejected';
+  completed?: boolean;
   coverLetter?: string;
   resume?: {
     public_id: string;
@@ -153,6 +154,17 @@ export const applicationService = {
       applications: data.data.applications,
       pagination: data.data.pagination,
     };
+  },
+
+  async completeApplication(
+    companyId: string,
+    internId: string,
+    applicationId: string,
+  ): Promise<Application> {
+    const { data } = await api.patch<ApplicationResponse>(
+      `/company/${companyId}/internships/${internId}/applications/${applicationId}/complete`,
+    );
+    return data.data.application;
   },
 
   async sendAcceptanceEmail(
