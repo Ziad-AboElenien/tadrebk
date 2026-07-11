@@ -38,23 +38,26 @@ src/
 │   │   ├── internships/          # Internship listing + details
 │   │   ├── companies/            # Company listing + details
 │   │   ├── how-it-works/         # Static info page
-│   │   └── get-started/          # Landing/CTA page
+│   │   └── about/                # About page
 │   ├── (auth)/                   # Auth routes
 │   │   ├── login/student, login/company
 │   │   ├── signup/student, signup/company
 │   │   ├── confirm-email/
 │   │   ├── forgot-password/
-│   │   └── reset-password/
+│   │   ├── reset-password/
+│   │   └── get-started/          # Landing/CTA page
 │   ├── (student)/                # Student routes
 │   │   ├── dashboard/
 │   │   ├── profile/
 │   │   ├── my-applications/
+│   │   ├── notifications/
 │   │   ├── change-password/
 │   │   └── change-email/
 │   ├── (company)/                # Company routes
 │   │   ├── company/dashboard/
 │   │   ├── company/onboarding/
 │   │   ├── company/post-internship/
+│   │   ├── company/billing/      # Billing plans + callback
 │   │   ├── company/internships/[internId]/edit
 │   │   ├── company/internships/[internId]/applications
 │   │   ├── company/applicants/[userId]
@@ -63,6 +66,7 @@ src/
 │   │   └── company/change-password, company/change-email
 │   ├── (admin)/                   # Admin routes
 │   │   └── admin/dashboard/
+│   ├── certificate/               # Certificate page (query params: name, internshipId)
 │   ├── layout.tsx                 # Root layout (Inter font, globals.css, Providers)
 │   ├── providers.tsx              # Redux Provider + SessionLoader + ToastContainer
 │   └── globals.css                # Tailwind v4 entry + design tokens
@@ -74,7 +78,7 @@ src/
 │   ├── shared/
 │   │   ├── SessionLoader.tsx      # Hydrates Redux from API on hard refresh
 │   │   └── FilterSidebar.tsx      # Sidebar filter for internship listing
-│   └── ui/                        # 14 reusable components
+│   └── ui/                        # 15 reusable components
 │       ├── Button.tsx             # forwardRef, 5 variants, 3 sizes, loading state
 │       ├── Input.tsx              # forwardRef, label, error, hint, leftIcon, rightElement
 │       ├── Select.tsx             # Custom dropdown, options array OR children <option>
@@ -85,6 +89,7 @@ src/
 │       ├── EmptyState.tsx         # Centered placeholder with icon + title + action
 │       ├── ConfirmModal.tsx       # Modal with backdrop blur, Escape key close
 │       ├── ApplyModal.tsx         # Application form with cover letter + answers
+│       ├── ImageLightbox.tsx      # Full-screen image lightbox modal
 │       ├── OTPInput.tsx           # 6-digit code, auto-advance, paste support
 │       ├── InternshipCard.tsx     # Compact and full detail modes
 │       ├── CompanyCard.tsx        # Gradient avatar, industry, stats
@@ -96,22 +101,37 @@ src/
 │   │   ├── schemas/auth.schemas.ts # ALL Zod schemas (signup, login, profile, internship, etc.)
 │   │   ├── hooks/useGoogleAuth.ts  # Google Identity Services integration
 │   │   ├── server/auth.service.ts  # Auth API calls (separate axios instance)
+│   │   ├── store/                  # Auth-related Redux logic
 │   │   └── types/index.ts          # UserRole, AuthTokens, etc.
-│   ├── home/screens/home.tsx       # Full homepage component
+│   ├── home/                       # Homepage + About page
+│   │   ├── screens/
+│   │   │   ├── home.tsx            # Full homepage component
+│   │   │   └── about.screen.tsx    # About page with team cards
+│   │   ├── components/
+│   │   ├── server/
+│   │   └── types/
 │   ├── internship/
 │   │   ├── types/index.ts          # Internship, MCQQuestion, WritingQuestion, etc.
+│   │   ├── server/                 # Internship server utilities
+│   │   ├── components/             # Internship-specific components
 │   │   └── screens/
+│   │       ├── internships-listing.screen.tsx
+│   │       ├── internship-details.screen.tsx
 │   │       ├── post-internship.screen.tsx
-│   │       ├── edit-internship.screen.tsx
-│   │       └── internship-details.screen.tsx
+│   │       └── edit-internship.screen.tsx
 │   ├── student/
 │   │   ├── types/index.ts          # User type with profile fields
+│   │   ├── server/                 # Student server utilities
+│   │   ├── components/             # Student-specific components
 │   │   └── screens/
 │   │       ├── dashboard.screen.tsx
 │   │       ├── profile.screen.tsx
-│   │       └── my-applications.screen.tsx
+│   │       ├── my-applications.screen.tsx
+│   │       └── certificate.screen.tsx
 │   ├── company/
 │   │   ├── types/index.ts          # Company type
+│   │   ├── server/                 # Company server utilities
+│   │   ├── components/             # Company-specific components
 │   │   └── screens/
 │   │       ├── dashboard.screen.tsx
 │   │       ├── onboarding.screen.tsx
@@ -119,13 +139,30 @@ src/
 │   │       ├── company-details.screen.tsx
 │   │       ├── internship-applications.screen.tsx
 │   │       └── company-settings.screen.tsx
-│   └── notifications/             # Notifications feature
+│   ├── billing/                    # Billing feature
+│   │   ├── screens/
+│   │   │   ├── plans.screen.tsx
+│   │   │   └── payment-callback.screen.tsx
+│   │   └── types/                  # Plan types
+│   ├── notifications/             # Notifications feature
+│   │   ├── components/
+│   │   │   └── NotificationBell.tsx
+│   │   ├── screens/
+│   │   │   └── notifications.screen.tsx
+│   │   ├── server/
+│   │   └── types/
+│   └── admin/                      # Admin feature
+│       ├── screens/
+│       │   └── admin-dashboard.screen.tsx
+│       ├── components/
+│       ├── server/
+│       └── types/
 │
 ├── services/                      # API service modules (axios-based)
 │   ├── user.service.ts            # User CRUD + file uploads (profile/cover/resume)
 │   ├── internship.service.ts      # Internship CRUD + listing + filtering
 │   ├── company.service.ts         # Company CRUD + file uploads (logo/cover)
-│   ├── application.service.ts     # Application CRUD + review + cancel + email
+│   ├── application.service.ts     # Application CRUD + review + cancel + complete + email
 │   └── admin.service.ts           # Company approval/ban management
 │
 ├── store/
@@ -140,15 +177,19 @@ src/
 │   ├── constants.ts               # LocalStorage keys, enums, config
 │   └── file-proxy.ts              # File proxy URL construction
 │
+├── assets/
+│   └── images/                    # Static images (team photos, logo)
+│
 └── proxy.ts                       # Next.js middleware (route protection via cookies)
 ```
 
-### 31 Page Routes
-- `(public)`: `/`, `/internships`, `/internships/[id]`, `/companies`, `/companies/[id]`, `/how-it-works`, `/get-started`
-- `(auth)`: `/login/student`, `/login/company`, `/signup/student`, `/signup/company`, `/confirm-email`, `/forgot-password`, `/reset-password`
-- `(student)`: `/dashboard`, `/profile`, `/my-applications`, `/change-password`, `/change-email`
-- `(company)`: `/company/dashboard`, `/company/onboarding`, `/company/post-internship`, `/company/internships/[id]/edit`, `/company/internships/[id]/applications`, `/company/applicants/[id]`, `/company/profile`, `/company/settings`, `/company/change-password`, `/company/change-email`
+### Page Routes
+- `(public)`: `/`, `/internships`, `/internships/[id]`, `/companies`, `/companies/[id]`, `/how-it-works`, `/about`
+- `(auth)`: `/login/student`, `/login/company`, `/signup/student`, `/signup/company`, `/confirm-email`, `/forgot-password`, `/reset-password`, `/get-started`
+- `(student)`: `/dashboard`, `/profile`, `/my-applications`, `/notifications`, `/change-password`, `/change-email`
+- `(company)`: `/company/dashboard`, `/company/onboarding`, `/company/post-internship`, `/company/billing`, `/company/billing/plans`, `/company/billing/callback`, `/company/internships/[id]/edit`, `/company/internships/[id]/applications`, `/company/applicants/[id]`, `/company/profile`, `/company/settings`, `/company/change-password`, `/company/change-email`
 - `(admin)`: `/admin/dashboard`
+- `certificate`: `/certificate` (query params: `name`, `internshipId`)
 
 ### Screen Pattern
 Every page in `app/` is a thin wrapper (5-25 lines) that imports and renders a Screen component from `features/{domain}/screens/`. Example:
@@ -254,6 +295,7 @@ export default function HomePage() { return <HomeComponent />; }
 - Standalone page (separate from dashboard)
 - Same status filter tabs: All / Pending / Accepted / Rejected with count cards
 - Each application: internship title (link), applied date, status Badge, "View Internship" link, cover letter preview (2-line clamp)
+- **Certificate button**: shown only when `status === 'accepted' && completed === true` — links to `/certificate?name=...&internshipId=...`
 - Pagination with Previous/Next buttons
 
 ### 4.4 Applying to Internships
@@ -338,6 +380,7 @@ The resume upload flow was fixed to properly persist to backend AND Redux:
   - Accept: `reviewApplication() with { status: 'accepted' }` → `PATCH /company/{companyId}/internships/{internId}/applications/{appId}`
   - Reject: Same endpoint with `{ status: 'rejected' }`
   - **Bug fix**: `handleReview` preserves original `studentId`, `internshipId`, `companyId` from old application because API review response may return them as plain IDs (not populated)
+  - **Complete**: `completeApplication()` → `PATCH /company/{companyId}/internships/{internId}/applications/{applicationId}/complete` — marks an accepted application as completed, shown as "Complete" button for accepted apps, turns into "Completed" badge after success. Only completed applications show the Certificate button to students.
 - **Send Email** (for accepted applications): `POST /company/{companyId}/internships/{internId}/applications/{applicationId}/send-acceptance-email` — no request body
 - **"Send Email to All"**: loops through all accepted applications, sends emails, shows success/failure counts
 - **Application CV**: shows download link for `app.resume.secure_url` via file proxy
@@ -432,6 +475,7 @@ From Swagger:
   "internshipId": "string | { _id, title, location, workingTime }",
   "companyId": "string",
   "status": "pending | accepted | rejected",
+  "completed": false,
   "coverLetter": "string?",
   "resume": { "public_id": "string", "secure_url": "string" }?,
   "answers": [{ "type": "mcq", "selectedOption": "string" } | { "type": "writing", "text": "string" }]?,
@@ -471,6 +515,7 @@ From Swagger:
 | GET | `/company/{companyId}/internships/{id}/applications` | List applications |
 | PATCH | `/company/{companyId}/internships/{id}/applications/{appId}` | Review (accept/reject) |
 | DELETE | `/company/{companyId}/internships/{id}/applications/{appId}` | Cancel application |
+| PATCH | `/company/{companyId}/internships/{id}/applications/{appId}/complete` | Mark application as completed |
 | POST | `/company/{companyId}/internships/{id}/applications/{appId}/send-acceptance-email` | Send email |
 | GET | `/user/{userId}/applications` | Get user's applications |
 | POST | `/notifications` | Mark notification as read |
@@ -639,6 +684,58 @@ export const useAppSelector = useSelector.withTypes<RootState>();
 - **Problem**: Profile/cover pictures had localStorage fallbacks (`LS_PROFILE_PICTURE`, `LS_COVER_PICTURE`) that could show stale images
 - **Fix**: Removed all localStorage fallback code from constants, authSlice, userSlice. Images come exclusively from `user.profilePicture` / `user.coverPicture` API response.
 
+### 11.11 Billing Callback Credits Comparison
+- **Problem**: Payment callback relied on `confirmPayment()` response which wasn't reliable
+- **Fix**: Save `creditsBefore` to `sessionStorage` before redirect; on callback compare `currentCredits > creditsBefore` as source of truth
+
+### 11.12 Company Approval Status via getCompanyById
+- **Problem**: `listCompanies()` response omits `approvedByAdmin` field
+- **Fix**: After login, call `getCompanyById(owned._id)` to get full company data including `approvedByAdmin`. Fallback defaults added to all company service methods.
+
+### 11.13 City Search Client-Side
+- **Problem**: Backend API doesn't support city/location filter on `GET /internships`
+- **Fix**: Client-side filter using company address from `companyMap` instead of sending `location: 'on-site'`
+
+### 11.14 Live Search with Debounce
+- **Problem**: Search had a submit button, no real-time filtering
+- **Fix**: Removed submit button, added 300ms debounced auto-search on keystroke
+
+### 11.15 Billing Route Protection
+- **Problem**: `/company/billing` routes were accessible to non-company users
+- **Fix**: Added role guard — redirects to login if `role !== 'company'`
+
+### 11.16 Notifications for Companies
+- **Problem**: `NotificationBell` only showed for students; company notification screen was broken (duplicate route group)
+- **Fix**: `NotificationBell` renders for both roles. Screen is role-aware (back link, empty text, `new_application` icon). Removed duplicate `(company)/notifications` route group.
+
+### 11.17 Plan Credits Updated
+- **Problem**: Plan credits were too high
+- **Fix**: Growth 20→15, Enterprise 60→50
+
+### 11.18 Certificate Page
+- **Problem**: No way for students to get a completion certificate
+- **Fix**: Created `/certificate?name=Student&internshipId=XXX` with professional template (logo, gold theme, signature, print styles). Button shown in My Applications for accepted + completed internships.
+
+### 11.19 Category Counts from API
+- **Problem**: Category counts were hardcoded (42, 18, 24, 12, 15, 13)
+- **Fix**: 6 parallel API calls with `limit: 1` per category for real counts
+
+### 11.20 Mobile Filter Drawer
+- **Problem**: Sidebar filter didn't work on mobile (hidden with no alternative)
+- **Fix**: Slide-out drawer triggered by "Filters" button with badge count. Desktop sidebar unchanged. Closes on Escape + backdrop click.
+
+### 11.21 User Dropdown Outside-Click + Escape
+- **Problem**: User menus stayed open until clicked again
+- **Fix**: `useRef` + `useEffect` for mousedown outside detection. Escape key closes both hamburger menu and user menu.
+
+### 11.22 Internship Card Redesign (Grid/List View Toggle)
+- **Problem**: Internship cards had only grid layout with large horizontal gaps
+- **Fix**: Grid view with `gap-x-3`. Added Grid/List toggle button. List view: horizontal card layout (logo left, info middle, actions right), responsive `flex-col sm:flex-row`, `flex-wrap` for tags, `w-full max-w-full` to prevent overflow, `min-w-0` parent.
+
+### 11.23 Application Completed Field
+- **Problem**: Certificate button showed for all accepted applications regardless of completion
+- **Fix**: Added `completed?: boolean` to Application interface. Certificate button only shows when `status === 'accepted' && completed === true`. Added "Complete" button for companies in applications management — calls `PATCH .../applications/{applicationId}/complete`. After completion, shows "Completed" badge.
+
 ---
 
 ## 12. Key Design Decisions
@@ -703,14 +800,24 @@ Resume URLs are proxied through `/file-proxy/resume.pdf?url=${encodeURIComponent
 | `src/services/user.service.ts` | User CRUD, file uploads API |
 | `src/services/internship.service.ts` | Internship CRUD, listing API |
 | `src/services/company.service.ts` | Company CRUD, file uploads API |
-| `src/services/application.service.ts` | Application CRUD, review, cancel, email API |
+| `src/services/application.service.ts` | Application CRUD, review, cancel, complete, email API |
 | `src/services/admin.service.ts` | Admin company management API |
-| `src/features/auth/schemas/auth.schemas.ts` | ALL Zod schemas (signup, login, profile, internship, etc.) |
 | `src/features/internship/types/index.ts` | Internship, MCQQuestion, WritingQuestion types |
+| `src/features/student/screens/certificate.screen.tsx` | Certificate page template |
+| `src/features/home/screens/home.tsx` | Full homepage component |
+| `src/features/home/screens/about.screen.tsx` | About page with team cards (6 members) |
+| `src/features/billing/screens/plans.screen.tsx` | Billing plans listing |
+| `src/features/billing/screens/payment-callback.screen.tsx` | Payment callback handler |
+| `src/features/notifications/components/NotificationBell.tsx` | Notification bell for both roles |
+| `src/features/notifications/screens/notifications.screen.tsx` | Notifications listing screen |
 | `src/components/ui/Select.tsx` | Custom Select with options prop + children fallback |
 | `src/components/ui/ApplyModal.tsx` | Application modal with cover letter + questions + resume |
+| `src/components/ui/ImageLightbox.tsx` | Full-screen image lightbox modal |
 | `src/components/layout/Navbar.tsx` | Role-based sticky navbar with user menu |
 | `src/components/layout/Footer.tsx` | Server component footer |
 | `src/components/shared/SessionLoader.tsx` | Redux hydration on hard refresh |
+| `src/components/shared/FilterSidebar.tsx` | Sidebar filter for internship listing + mobile drawer |
 | `src/app/providers.tsx` | Redux Provider + SessionLoader + ToastContainer |
 | `src/app/globals.css` | Tailwind v4 entry, design tokens, custom utilities |
+| `src/app/certificate/page.tsx` | Certificate route wrapper |
+| `src/proxy.ts` | Next.js middleware for route protection |
