@@ -63,11 +63,11 @@ const team = [
     name: 'Khaled Manaa Abdelfadeel',
     role: 'Backend Developer',
     title: 'Backend Developer',
-    email: '#',
+    email: 'khaledmanaaz.123456@gmail.com',
     phone: '01011738567',
     linkedin: '#',
     github: 'https://github.com/manaa-khaled-2025',
-    cv: '#',
+    cv: 'https://drive.google.com/drive/folders/1Jz2Tp1HnzaWFvJOWDHRLebQYWa-e_vcZm1jEQwL2KZZhWyQUMH0sLrvXDWbeERwfkhgcZR8z',
     image: '/images/khaled.jpeg',
   },
 ];
