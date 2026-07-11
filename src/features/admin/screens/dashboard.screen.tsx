@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAppSelector } from '@/store/store';
-import { adminService } from '@/services/admin.service';
+import { adminService } from '@/features/admin/services/admin.service';
 import { Company } from '@/features/company/types';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';

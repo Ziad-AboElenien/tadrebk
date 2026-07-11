@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { internshipService } from '@/services/internship.service';
+import { internshipService } from '@/features/internship/services/internship.service';
 import { getImgUrl } from '@/features/company/types';
 import type { Internship } from '@/features/internship/types';
 import Spinner from '@/components/ui/Spinner';

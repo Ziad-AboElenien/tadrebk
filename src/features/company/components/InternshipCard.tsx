@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Internship } from '@/features/internship/types';
 import type { Company } from '@/features/company/types';
 import { getImgUrl } from '@/features/company/types';
-import Badge from './Badge';
-import Button from './Button';
+import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
 import { useState, useEffect, useCallback } from 'react';
 
 const LS_SAVED = 'tadrebk_saved_internships';

@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage } from '@/lib/axios';
 import { LS_PENDING_EMAIL, LS_INTENDED_ROLE } from '@/lib/constants';
-import OTPInput from '@/components/ui/OTPInput';
+import OTPInput from '@/features/auth/components/OTPInput';
 import Button from '@/components/ui/Button';
 
 export default function ConfirmEmailPage() {

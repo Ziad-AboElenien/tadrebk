@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useAppSelector } from '@/store/store';
-import { internshipService } from '@/services/internship.service';
-import { billingService } from '@/services/billing.service';
+import { internshipService } from '@/features/internship/services/internship.service';
+import { billingService } from '@/features/billing/services/billing.service';
 import { Internship } from '@/features/internship/types';
 import { getImgUrl } from '@/features/company/types';
 import Button from '@/components/ui/Button';

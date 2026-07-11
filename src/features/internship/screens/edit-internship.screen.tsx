@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useParams } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
-import { internshipService } from '@/services/internship.service';
+import { internshipService } from '@/features/internship/services/internship.service';
 import { z } from 'zod';
 import { internshipSchema } from '@/features/auth/schemas/auth.schemas';
 type InternshipFormValues = z.output<typeof internshipSchema>;

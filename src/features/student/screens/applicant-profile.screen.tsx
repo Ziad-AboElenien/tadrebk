@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { userService } from '@/services/user.service';
+import { userService } from '@/features/student/services/user.service';
 import { User, getUserImgUrl } from '@/features/student/types';
 import { getFileProxyUrl } from '@/lib/file-proxy';
 import Spinner from '@/components/ui/Spinner';

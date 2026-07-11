@@ -12,7 +12,7 @@ import {
 import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage } from '@/lib/axios';
 import Input from '@/components/ui/Input';
-import OTPInput from '@/components/ui/OTPInput';
+import OTPInput from '@/features/auth/components/OTPInput';
 import Button from '@/components/ui/Button';
 
 export default function ChangeEmailForm() {

@@ -11,7 +11,7 @@ import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage } from '@/lib/axios';
 import { LS_PENDING_EMAIL } from '@/lib/constants';
 import Input from '@/components/ui/Input';
-import OTPInput from '@/components/ui/OTPInput';
+import OTPInput from '@/features/auth/components/OTPInput';
 import Button from '@/components/ui/Button';
 
 export default function ResetPasswordPage() {

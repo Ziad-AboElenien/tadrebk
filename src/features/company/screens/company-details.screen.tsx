@@ -5,12 +5,12 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Company, getImgUrl } from '@/features/company/types';
 import { Internship } from '@/features/internship/types';
-import InternshipCard from '@/components/ui/InternshipCard';
+import InternshipCard from '@/features/company/components/InternshipCard';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import EmptyState from '@/components/ui/EmptyState';
-import { companyService } from '@/services/company.service';
-import { internshipService } from '@/services/internship.service';
+import { companyService } from '@/features/company/services/company.service';
+import { internshipService } from '@/features/internship/services/internship.service';
 import { toast } from 'react-toastify';
 
 function formatDate(dateStr?: string): string {

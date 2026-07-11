@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
-import { internshipService } from '@/services/internship.service';
-import { applicationService, Application } from '@/services/application.service';
+import { internshipService } from '@/features/internship/services/internship.service';
+import { applicationService, Application } from '@/features/student/services/application.service';
 import { Internship } from '@/features/internship/types';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';

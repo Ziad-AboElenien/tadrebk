@@ -9,7 +9,7 @@ import {
   companyOnboardingSchema,
   type CompanyOnboardingFormData,
 } from '@/features/auth/schemas/auth.schemas';
-import { companyService } from '@/services/company.service';
+import { companyService } from '@/features/company/services/company.service';
 import { getErrorMessage } from '@/lib/axios';
 import { useAppDispatch } from '@/store/store';
 import { setCompany } from '@/store/companySlice';

@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { companyService } from '@/services/company.service';
+import { companyService } from '@/features/company/services/company.service';
 import { COMPANY_INDUSTRIES } from '@/lib/constants';
 import { getImgUrl } from '@/features/company/types';
 import { getErrorMessage } from '@/lib/axios';

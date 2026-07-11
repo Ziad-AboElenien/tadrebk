@@ -16,8 +16,8 @@ import { setUser } from '@/store/userSlice';
 import { setCompany } from '@/store/companySlice';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { companyService } from '@/services/company.service';
-import { userService } from '@/services/user.service';
+import { companyService } from '@/features/company/services/company.service';
+import { userService } from '@/features/student/services/user.service';
 import { useGoogleAuth } from '@/features/auth/hooks/useGoogleAuth';
 
 function parseJwt(token: string) {

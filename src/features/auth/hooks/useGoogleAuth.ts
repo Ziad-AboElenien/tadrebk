@@ -9,8 +9,8 @@ import { useAppDispatch } from '@/store/store';
 import { setTokens } from '@/store/authSlice';
 import { setUser } from '@/store/userSlice';
 import { setCompany } from '@/store/companySlice';
-import { companyService } from '@/services/company.service';
-import { userService } from '@/services/user.service';
+import { companyService } from '@/features/company/services/company.service';
+import { userService } from '@/features/student/services/user.service';
 
 function parseJwt(token: string) {
   try {
