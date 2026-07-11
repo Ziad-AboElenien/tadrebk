@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { billingService } from '@/services/billing.service';
+import { billingService } from '@/features/billing/services/billing.service';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setCredits } from '@/store/billingSlice';
 import Button from '@/components/ui/Button';

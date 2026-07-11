@@ -6,8 +6,8 @@ import { getImgUrl } from '@/features/company/types';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
-import { companyService } from '@/services/company.service';
-import { internshipService } from '@/services/internship.service';
+import { companyService } from '@/features/company/services/company.service';
+import { internshipService } from '@/features/internship/services/internship.service';
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '';

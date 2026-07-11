@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { companyService } from '@/services/company.service';
+import { companyService } from '@/features/company/services/company.service';
 import { getImgUrl } from '@/features/company/types';
 import type { Company } from '@/features/company/types';
 import Spinner from '@/components/ui/Spinner';

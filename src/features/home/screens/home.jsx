@@ -3,8 +3,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { internshipService } from '@/services/internship.service';
-import InternshipCard from '@/components/ui/InternshipCard';
+import { internshipService } from '@/features/internship/services/internship.service';
+import InternshipCard from '@/features/company/components/InternshipCard';
 import Spinner from '@/components/ui/Spinner';
 import Button from '@/components/ui/Button';
 

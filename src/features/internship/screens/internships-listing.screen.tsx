@@ -7,8 +7,8 @@ import { Internship } from '@/features/internship/types';
 import type { Company } from '@/features/company/types';
 import { getImgUrl } from '@/features/company/types';
 import Spinner from '@/components/ui/Spinner';
-import { internshipService } from '@/services/internship.service';
-import { companyService } from '@/services/company.service';
+import { internshipService } from '@/features/internship/services/internship.service';
+import { companyService } from '@/features/company/services/company.service';
 import { useAppSelector } from '@/store/store';
 import { toast } from 'react-toastify';
 

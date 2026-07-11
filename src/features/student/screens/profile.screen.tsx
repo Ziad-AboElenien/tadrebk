@@ -14,10 +14,10 @@ import { profileSchema, type ProfileFormData } from '@/features/auth/schemas/aut
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { userService } from '@/services/user.service';
+import { userService } from '@/features/student/services/user.service';
 import { getErrorMessage } from '@/lib/axios';
 import { toast } from 'react-toastify';
-import ImageLightbox from '@/components/ui/ImageLightbox';
+import ImageLightbox from '@/features/student/components/ImageLightbox';
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '';

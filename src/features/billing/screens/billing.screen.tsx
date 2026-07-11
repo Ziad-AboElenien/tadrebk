@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { billingService } from '@/services/billing.service';
+import { billingService } from '@/features/billing/services/billing.service';
 import { useAppSelector } from '@/store/store';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { billingService } from '@/services/billing.service';
+import { billingService } from '@/features/billing/services/billing.service';
 import { useAppSelector } from '@/store/store';
 import type { PlanId } from '@/features/billing/types';
 import { PLAN_DETAILS } from '@/features/billing/types';

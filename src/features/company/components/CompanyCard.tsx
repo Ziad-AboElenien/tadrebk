@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Company } from '@/features/company/types';
-import Badge from './Badge';
+import Badge from '@/components/ui/Badge';
 
 interface CompanyCardProps {
   company: Company;

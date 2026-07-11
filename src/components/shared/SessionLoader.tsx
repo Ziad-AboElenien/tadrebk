@@ -5,8 +5,8 @@ import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setUser } from '@/store/userSlice';
 import { setCompany } from '@/store/companySlice';
 import { setRole } from '@/store/authSlice';
-import { userService } from '@/services/user.service';
-import { companyService } from '@/services/company.service';
+import { userService } from '@/features/student/services/user.service';
+import { companyService } from '@/features/company/services/company.service';
 
 /**
  * On mount, if auth tokens exist but currentUser / currentCompany are null,
