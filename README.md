@@ -1,29 +1,137 @@
-# Tadrebk — Full Project Documentation for Presentation Agent
+# Tadrebk
+
+<p align="center">
+  <strong>Bridging Egypt's brightest university students with the future of work.</strong>
+</p>
+
+<p align="center">
+  <a href="https://tadrebk.vercel.app">Live Demo</a> ·
+  <a href="https://tadreebak-e285.onbelmo.uk/api/v1/docs/swagger-ui-init.js">API Docs</a> ·
+  <a href="https://github.com/Ziad-AboElenien/tadrebk/issues">Report Bug</a>
+</p>
 
 ---
 
-## 1. Project Overview
+## About
 
-**Tadrebk** is a full-stack internship platform connecting students with companies. Built with **Next.js 16 (App Router)**, **React 19**, **Redux Toolkit**, **Tailwind CSS v4**, **TypeScript**, and **Zod** validation.
+**Tadrebk** is a full-stack internship platform built to connect talented university students in Egypt with forward-thinking companies. Students can browse and apply to internships, track their applications, and receive completion certificates. Companies can post internships, manage applicants, and communicate with candidates — all from a single platform.
 
-### Repository
-- GitHub: `Ziad-AboElenien/tadrebk`
-- Deployed on Vercel
-- Backend API: `https://tadreebak-e285.onbelmo.uk/api/v1`
-- Swagger Docs: `https://tadreebak-e285.onbelmo.uk/api/v1/docs/swagger-ui-init.js`
+### Key Features
 
-### Core Stack Decisions
-| Aspect | Choice |
-|--------|--------|
-| CSS | Tailwind v4 (no config file, `@import 'tailwindcss'`, `@theme` block for design tokens) |
-| Icons | FontAwesome via CSS webfont (`@fortawesome/fontawesome-free/css/all.min.css`), NOT React component |
-| Forms | `react-hook-form` + `@hookform/resolvers/zod` for validation |
-| State | Redux Toolkit (4 slices: auth, user, company, internship) |
-| HTTP | Axios with request interceptor (Bearer token) + response interceptor (auto-refresh on 401) |
-| Auth | JWT tokens in localStorage + cookies; role derived on frontend (API has no role field) |
-| Routing | Next.js App Router with route groups: `(public)`, `(auth)`, `(student)`, `(company)`, `(admin)` |
-| File uploads | `FormData` with `multipart/form-data` content type |
-| Toasts | `react-toastify` (top-right, 4s auto-close, light theme) |
+**For Students:**
+- Browse and search internships by category, location, working time, and skills
+- Apply with cover letter, resume, and answers to custom questions
+- Track application status in real-time (pending → accepted → completed)
+- Receive acceptance emails and download completion certificates
+- Build a professional profile with education, experience, and skills
+
+**For Companies:**
+- Post internships with custom MCQ and writing questions
+- Review and manage applicants (accept, reject, complete)
+- Send acceptance emails and view applicant profiles
+- Upload company branding (logo, cover image)
+- Manage billing plans and internship credits via Paymob integration
+
+**For Admins:**
+- Approve or ban companies
+- View all registered companies with filtering
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16 (App Router) |
+| UI | React 19, Tailwind CSS v4 |
+| State | Redux Toolkit |
+| Forms | React Hook Form + Zod |
+| Auth | JWT (localStorage + cookies), Google OAuth |
+| HTTP | Axios (auto-refresh on 401) |
+| Icons | FontAwesome |
+| Payments | Paymob |
+| Language | TypeScript |
+| Deployment | Vercel (frontend), Custom Node.js API (backend) |
+
+---
+
+## Getting Started
+
+```bash
+# Clone the repository
+git clone https://github.com/Ziad-AboElenien/tadrebk.git
+cd tadrebk
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp src/config/.env .env.local
+# Edit .env.local with your API base URL
+
+# Run development server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to see the app.
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_API_BASE_URL` | Backend API base URL | `http://localhost:3000/api/v1` |
+
+---
+
+## How It Works
+
+1. **Students** sign up, complete their profile, and browse available internships
+2. **Companies** register, get approved by admin, and post internship opportunities
+3. Students apply to internships with their resume and answers to custom questions
+4. Companies review applications, accept or reject candidates, and send acceptance emails
+5. After the internship is completed, companies mark it as done and students receive a certificate
+
+---
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router (route groups: public, auth, student, company, admin)
+├── components/             # Shared UI components, layout, and session management
+├── features/               # Feature-based modules
+│   ├── auth/               # Authentication (login, signup, OTP, Google OAuth)
+│   ├── student/            # Student dashboard, profile, applications, certificate
+│   ├── company/            # Company dashboard, internships, applicant management
+│   ├── internship/         # Internship listing, details, search, and filters
+│   ├── billing/            # Billing plans, Paymob payment integration
+│   ├── notifications/      # Real-time notifications system
+│   ├── admin/              # Admin dashboard for company approval
+│   └── home/               # Homepage and about page
+├── services/               # (Empty - services are in feature folders)
+├── store/                  # Redux slices (auth, user, company, internship)
+├── lib/                    # Axios instance, constants, file proxy
+└── proxy.ts                # Next.js middleware for route protection
+```
+
+---
+
+## Team
+
+| Name | Role | 
+|------|------|
+| Ziad Elsayed | Frontend Developer & CEO |
+| Ammar Sobhi | Frontend Developer & CTO |
+| Emad Abd Elaaty | UI/UX & Frontend Developer & CDO |
+| Aly Khalid | Backend Developer |
+| Mostafa Rafat | Full Stack Developer |
+| Khaled Manaa | Backend Developer |
+
+---
+
+## License
+
+This project was built as a graduation project for DEPI (Digital Egypt Pioneers Initiative).
 
 ---
 
