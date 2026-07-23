@@ -9,6 +9,7 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import { logout } from '@/store/authSlice';
 import { setUser, updateUser, clearUser } from '@/store/userSlice';
 import { getUserImgUrl } from '@/features/student/types';
+import { CATEGORY_LABELS, type Category } from '@/features/student/types';
 import { getFileProxyUrl } from '@/lib/file-proxy';
 import { profileSchema, type ProfileFormData } from '@/features/auth/schemas/auth.schemas';
 import Button from '@/components/ui/Button';
@@ -45,7 +46,7 @@ export default function StudentProfileScreen() {
   const resumeRef = useRef<HTMLInputElement>(null);
 
   const {
-    register, handleSubmit, reset, control,
+    register, handleSubmit, reset, control, watch, setValue,
     formState: { errors },
   } = useForm<ProfileFormData>({ resolver: zodResolver(profileSchema) });
 
@@ -64,6 +65,7 @@ export default function StudentProfileScreen() {
         dateOfBirth: user.dateOfBirth ? user.dateOfBirth.slice(0, 10) : '',
         gender: (user.gender as 'male' | 'female' | '') || '',
         skills: user.skills?.join(', ') || '',
+        categories: (user.categories as string[]) || [],
         experience: user.experience || [],
         education: user.education || [],
       });
@@ -84,6 +86,7 @@ export default function StudentProfileScreen() {
         dateOfBirth: data.dateOfBirth || undefined,
         gender: data.gender || undefined,
         skills: data.skills ? data.skills.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
+        categories: data.categories?.length ? data.categories as Category[] : undefined,
         experience: data.experience?.filter((e) => e.company && e.title) || undefined,
         education: data.education?.filter((e) => e.institution) || undefined,
       });
@@ -253,6 +256,42 @@ export default function StudentProfileScreen() {
             </div>
             <Input label="Skills (comma-separated)" error={errors.skills?.message} {...register('skills')} placeholder="e.g. JavaScript, Python, Public Speaking" />
 
+            {/* Categories */}
+            <div className="border-t border-gray-100 pt-4">
+              <h3 className="font-bold text-dark text-sm flex items-center gap-2 mb-1"><i className="fas fa-tags text-primary" />Categories <span className="text-gray-400 font-normal text-xs">(max 4)</span></h3>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {(Object.entries(CATEGORY_LABELS) as [Category, string][]).map(([value, label]) => {
+                  const selected = (watch('categories') || []).includes(value);
+                  const atLimit = (watch('categories') || []).length >= 4;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      disabled={!selected && atLimit}
+                      onClick={() => {
+                        const current = (watch('categories') || []) as string[];
+                        if (selected) {
+                          setValue('categories', current.filter((c) => c !== value) as any, { shouldValidate: true });
+                        } else if (current.length < 4) {
+                          setValue('categories', [...current, value] as any, { shouldValidate: true });
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                        selected
+                          ? 'bg-primary text-white border-primary shadow-sm'
+                          : atLimit
+                            ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-primary/40 hover:text-primary cursor-pointer'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.categories && <p className="text-red-500 text-xs font-medium mt-1">{errors.categories.message}</p>}
+            </div>
+
             {/* Experience */}
             <div className="border-t border-gray-100 pt-4">
               <div className="flex items-center justify-between mb-3">
@@ -281,7 +320,7 @@ export default function StudentProfileScreen() {
             <div className="border-t border-gray-100 pt-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-dark text-sm flex items-center gap-2"><i className="fas fa-graduation-cap text-primary" />Education</h3>
-                <Button type="button" variant="ghost" size="sm" onClick={() => appendEdu({ institution: '', degree: '', field: '', startDate: '', endDate: '' })}>
+                <Button type="button" variant="ghost" size="sm" onClick={() => appendEdu({ institution: '', degree: '', field: '', grade: '', startDate: '', endDate: '' })}>
                   <i className="fas fa-plus text-xs" /> Add
                 </Button>
               </div>
@@ -292,11 +331,12 @@ export default function StudentProfileScreen() {
                     <input {...register(`education.${i}.institution`)} placeholder="Institution name" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
                     <input {...register(`education.${i}.degree`)} placeholder="Degree (e.g. Bachelor's)" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
                   </div>
-                  <input {...register(`education.${i}.field`)} placeholder="Field of study (e.g. Computer Science)" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input {...register(`education.${i}.startDate`)} type="date" placeholder="Start date" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
-                    <input {...register(`education.${i}.endDate`)} type="date" placeholder="End date" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
-                  </div>
+                   <input {...register(`education.${i}.field`)} placeholder="Field of study (e.g. Computer Science)" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
+                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                     <input {...register(`education.${i}.grade`)} placeholder="Grade / GPA (e.g. 3.5)" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
+                     <input {...register(`education.${i}.startDate`)} type="date" placeholder="Start date" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
+                     <input {...register(`education.${i}.endDate`)} type="date" placeholder="End date" className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary border-gray-200" />
+                   </div>
                 </div>
               ))}
             </div>
@@ -320,6 +360,12 @@ export default function StudentProfileScreen() {
                 <div className="flex flex-wrap gap-2">{user.skills.map((skill) => <span key={skill} className="px-4 py-1.5 bg-emerald-50 text-primary text-sm font-semibold rounded-full border border-emerald-100">{skill}</span>)}</div>
               </div>
             )}
+            {user.categories && user.categories.length > 0 && (
+              <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
+                <h2 className="font-bold text-dark text-lg mb-4 flex items-center gap-2"><i className="fas fa-tags text-primary text-base" />Categories</h2>
+                <div className="flex flex-wrap gap-2">{user.categories.map((cat) => <span key={cat} className="px-4 py-1.5 bg-blue-50 text-blue-700 text-sm font-semibold rounded-full border border-blue-100">{CATEGORY_LABELS[cat as Category] || cat}</span>)}</div>
+              </div>
+            )}
             {user.experience && user.experience.length > 0 && (
               <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
                 <h2 className="font-bold text-dark text-lg mb-4 flex items-center gap-2"><i className="fas fa-briefcase text-primary text-base" />Experience</h2>
@@ -337,7 +383,7 @@ export default function StudentProfileScreen() {
                 <div className="space-y-5">{user.education.map((edu, i) => (
                   <div key={i} className="flex gap-4">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white font-bold shrink-0">{edu.institution[0]?.toUpperCase()}</div>
-                    <div className="flex-1 min-w-0"><p className="font-semibold text-dark">{edu.institution}</p>{edu.degree && <p className="text-sm text-gray-500">{edu.degree}{edu.field ? `, ${edu.field}` : ''}</p>}{(edu.startDate || edu.endDate) && <p className="text-xs text-gray-400 mt-0.5">{formatDate(edu.startDate)} - {edu.endDate ? formatDate(edu.endDate) : 'Present'}</p>}</div>
+                    <div className="flex-1 min-w-0"><p className="font-semibold text-dark">{edu.institution}</p>{edu.degree && <p className="text-sm text-gray-500">{edu.degree}{edu.field ? `, ${edu.field}` : ''}</p>}{edu.grade && <p className="text-xs text-gray-400 mt-0.5">Grade: {edu.grade}</p>}{(edu.startDate || edu.endDate) && <p className="text-xs text-gray-400 mt-0.5">{formatDate(edu.startDate)} - {edu.endDate ? formatDate(edu.endDate) : 'Present'}</p>}</div>
                   </div>
                 ))}</div>
               </div>

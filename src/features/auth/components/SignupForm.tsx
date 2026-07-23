@@ -11,8 +11,71 @@ import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage } from '@/lib/axios';
 import { LS_PENDING_EMAIL } from '@/lib/constants';
 import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import { useGoogleAuth } from '@/features/auth/hooks/useGoogleAuth';
+
+const universityOptions = [
+  { value: 'Cairo University', label: 'Cairo University' },
+  { value: 'Ain Shams University', label: 'Ain Shams University' },
+  { value: 'Alexandria University', label: 'Alexandria University' },
+  { value: 'Helwan University', label: 'Helwan University' },
+  { value: 'Mansoura University', label: 'Mansoura University' },
+  { value: 'Assiut University', label: 'Assiut University' },
+  { value: 'Zagazig University', label: 'Zagazig University' },
+  { value: 'Suez Canal University', label: 'Suez Canal University' },
+  { value: 'AUC', label: 'American University in Cairo (AUC)' },
+  { value: 'GUC', label: 'German University in Cairo (GUC)' },
+  { value: 'BUE', label: 'British University in Egypt (BUE)' },
+  { value: 'MTI University', label: 'MTI University' },
+  { value: 'MIU', label: 'Misr International University' },
+  { value: 'Other', label: 'Other' },
+];
+
+const fieldOfStudyOptions = [
+  { value: 'Computer Science', label: 'Computer Science' },
+  { value: 'Computer Engineering', label: 'Computer Engineering' },
+  { value: 'Information Technology', label: 'Information Technology' },
+  { value: 'Information Systems', label: 'Information Systems' },
+  { value: 'Software Engineering', label: 'Software Engineering' },
+  { value: 'Electrical Engineering', label: 'Electrical Engineering' },
+  { value: 'Mechanical Engineering', label: 'Mechanical Engineering' },
+  { value: 'Business Administration', label: 'Business Administration' },
+  { value: 'Accounting', label: 'Accounting' },
+  { value: 'Economics', label: 'Economics' },
+  { value: 'Finance', label: 'Finance' },
+  { value: 'Marketing', label: 'Marketing' },
+  { value: 'Mass Communication', label: 'Mass Communication' },
+  { value: 'Medicine', label: 'Medicine' },
+  { value: 'Pharmacy', label: 'Pharmacy' },
+  { value: 'Nursing', label: 'Nursing' },
+  { value: 'Law', label: 'Law' },
+  { value: 'Architecture', label: 'Architecture' },
+  { value: 'Design', label: 'Design' },
+  { value: 'Other', label: 'Other' },
+];
+
+const degreeOptions = [
+  { value: 'Bachelor', label: "Bachelor's" },
+  { value: 'Master', label: "Master's" },
+  { value: 'PhD', label: 'PhD' },
+  { value: 'Diploma', label: 'Diploma' },
+  { value: 'High School', label: 'High School' },
+];
+
+const gradeOptions = [
+  { value: '3.7-4.0', label: '3.7 - 4.0 (Excellent)' },
+  { value: '3.3-3.69', label: '3.3 - 3.69 (Very Good)' },
+  { value: '2.7-3.29', label: '2.7 - 3.29 (Good)' },
+  { value: '2.3-2.69', label: '2.3 - 2.69 (Above Average)' },
+  { value: '2.0-2.29', label: '2.0 - 2.29 (Average)' },
+  { value: 'Below 2.0', label: 'Below 2.0' },
+];
+
+const startDateOptions = Array.from({ length: 11 }, (_, i) => {
+  const year = 2026 - i;
+  return { value: `${year}-09-01`, label: `September ${year}` };
+});
 
 interface SignupFormProps {
   role: 'student' | 'company';
@@ -27,12 +90,26 @@ export default function SignupForm({ role }: SignupFormProps) {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
   });
 
   async function onSubmit(data: SignupFormData) {
+    if (!isCompany) {
+      const missing: string[] = [];
+      if (!data.university) missing.push('University');
+      if (!data.fieldOfStudy) missing.push('Field of Study');
+      if (!data.degree) missing.push('Degree');
+      if (!data.grade) missing.push('Grade');
+      if (!data.startDate) missing.push('Start Date');
+      if (missing.length > 0) {
+        toast.error(`Please fill in: ${missing.join(', ')}`);
+        return;
+      }
+    }
     try {
       await authService.signup({
         firstName: data.firstName,
@@ -41,6 +118,15 @@ export default function SignupForm({ role }: SignupFormProps) {
         password: data.password,
         confirmPassword: data.confirmPassword,
         phone: data.phone || undefined,
+        education: !isCompany && data.university
+          ? [{
+              institution: data.university,
+              degree: data.degree!,
+              field: data.fieldOfStudy!,
+              grade: data.grade!,
+              startDate: data.startDate!,
+            }]
+          : undefined,
       });
       // Store pending email for the confirm-email page
       if (typeof window !== 'undefined') {
@@ -171,6 +257,66 @@ export default function SignupForm({ role }: SignupFormProps) {
           error={errors.confirmPassword?.message}
           {...register('confirmPassword')}
         />
+
+        {/* Academic Info - Student only */}
+        {!isCompany && (
+          <>
+            <div className="pt-2">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Academic Information</p>
+            </div>
+
+            <Select
+              label="University"
+              id="signup-university"
+              placeholder="Select your university"
+              options={universityOptions}
+              error={errors.university?.message}
+              value={watch('university') ?? ''}
+              onChange={(e) => setValue('university', e.target.value, { shouldValidate: true })}
+            />
+
+            <Select
+              label="Field of Study"
+              id="signup-fieldOfStudy"
+              placeholder="Select your field"
+              options={fieldOfStudyOptions}
+              error={errors.fieldOfStudy?.message}
+              value={watch('fieldOfStudy') ?? ''}
+              onChange={(e) => setValue('fieldOfStudy', e.target.value, { shouldValidate: true })}
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+              <Select
+                label="Degree"
+                id="signup-degree"
+                placeholder="Select degree"
+                options={degreeOptions}
+                error={errors.degree?.message}
+                value={watch('degree') ?? ''}
+                onChange={(e) => setValue('degree', e.target.value, { shouldValidate: true })}
+              />
+              <Select
+                label="Grade / GPA"
+                id="signup-grade"
+                placeholder="Select grade"
+                options={gradeOptions}
+                error={errors.grade?.message}
+                value={watch('grade') ?? ''}
+                onChange={(e) => setValue('grade', e.target.value, { shouldValidate: true })}
+              />
+            </div>
+
+            <Select
+              label="Start Date"
+              id="signup-startDate"
+              placeholder="When did you start?"
+              options={startDateOptions}
+              error={errors.startDate?.message}
+              value={watch('startDate') ?? ''}
+              onChange={(e) => setValue('startDate', e.target.value, { shouldValidate: true })}
+            />
+          </>
+        )}
 
         <Button
           type="submit"

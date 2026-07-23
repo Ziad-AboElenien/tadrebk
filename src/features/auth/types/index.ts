@@ -23,6 +23,14 @@ export interface SignupRequest {
   password: string;
   confirmPassword: string;
   phone?: string;
+  education?: {
+    institution: string;
+    degree: string;
+    field: string;
+    grade: string;
+    startDate: string;
+    endDate?: string;
+  }[];
 }
 
 export interface OtpConfirmRequest {

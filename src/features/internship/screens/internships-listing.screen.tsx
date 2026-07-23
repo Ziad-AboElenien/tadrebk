@@ -10,9 +10,47 @@ import Spinner from '@/components/ui/Spinner';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { companyService } from '@/features/company/services/company.service';
 import { useAppSelector } from '@/store/store';
+import { CATEGORY_LABELS, type Category } from '@/features/student/types';
 import { toast } from 'react-toastify';
 
 const LS_SAVED = 'tadrebk_saved_internships';
+
+// Map each user category to keywords that may appear in internship title or skills
+const CATEGORY_KEYWORDS: Record<Category, string[]> = {
+  frontend: ['frontend', 'front-end', 'front end', 'react', 'angular', 'vue', 'nextjs', 'next.js', 'javascript', 'typescript', 'css', 'html'],
+  backend: ['backend', 'back-end', 'back end', 'node', 'nodejs', 'java', 'python', 'django', 'spring', 'api', 'server', 'golang', 'rust'],
+  fullstack: ['fullstack', 'full-stack', 'full stack'],
+  mobile: ['mobile', 'android', 'ios', 'react native', 'flutter', 'swift', 'kotlin'],
+  uiux: ['ui/ux', 'ui ux', 'ui-ux', 'figma', 'user experience', 'user interface', 'ux design', 'ui design'],
+  devops: ['devops', 'dev-ops', 'dev ops', 'cloud', 'aws', 'azure', 'docker', 'kubernetes', 'ci/cd', 'terraform'],
+  data_science: ['data science', 'data scientist', 'data analyst', 'data engineer', 'analytics', 'etl'],
+  ai_ml: ['ai', 'artificial intelligence', 'machine learning', 'ml engineer', 'deep learning', 'nlp', 'llm', 'genai', 'generative'],
+  cybersecurity: ['cybersecurity', 'cyber', 'security', 'infosec', 'penetration', 'ethical hacking', 'soc'],
+  qa_testing: ['qa', 'quality assurance', 'testing', 'test automation', 'selenium', 'cypress', 'playwright'],
+  marketing: ['marketing', 'digital marketing', 'seo', 'sem', 'social media', 'content marketing', 'performance marketing'],
+  sales: ['sales', 'business development', 'account executive', 'b2b', 'lead generation'],
+  hr: ['hr', 'human resources', 'recruitment', 'talent', 'people operations'],
+  finance: ['finance', 'financial', 'accounting', 'accountant', 'controller', 'audit'],
+  design: ['design', 'graphic design', 'visual design', 'product design', 'creative'],
+  content_writing: ['content', 'writing', 'copywriter', 'copywriting', 'blog', 'editorial'],
+  project_management: ['project management', 'pm ', 'scrum', 'agile', 'product manager'],
+  other: [],
+};
+
+function matchesCategory(internship: Internship, categories: Category[]): boolean {
+  if (categories.includes('other')) return true;
+  const title = internship.title.toLowerCase();
+  const skills = [
+    ...(internship.technicalSkills || []),
+    ...(internship.softSkills || []),
+  ].map((s) => s.toLowerCase()).join(' ');
+  const searchText = `${title} ${skills}`;
+  return categories.some((cat) => {
+    const keywords = CATEGORY_KEYWORDS[cat];
+    if (!keywords || keywords.length === 0) return false;
+    return keywords.some((kw) => searchText.includes(kw));
+  });
+}
 
 function isSaved(id: string): boolean {
   if (typeof window === 'undefined') return false;
@@ -44,6 +82,7 @@ function InternshipsContent() {
   const searchParams = useSearchParams();
   const role = useAppSelector((s) => s.auth.role);
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
+  const userCategories = useAppSelector((s) => s.user.currentUser?.categories as Category[] | undefined);
   const canApply = role !== 'company' && role !== 'admin';
   const [mounted, setMounted] = useState(false);
 
@@ -140,13 +179,21 @@ function InternshipsContent() {
         setTotal(result.pagination.total);
       }
 
+      // Prioritize internships matching user categories when no active search/filters
+      const hasActiveSearch = filters.title || filters.type || filters.location;
+      if (!hasActiveSearch && !cityFilter && userCategories && userCategories.length > 0) {
+        const matching = filtered.filter((i) => matchesCategory(i, userCategories));
+        const rest = filtered.filter((i) => !matchesCategory(i, userCategories));
+        filtered = [...matching, ...rest];
+      }
+
       setInternships(filtered);
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to load internships', { position: 'bottom-right' });
     } finally {
       setLoading(false);
     }
-  }, [filters, page, cityFilter, companyMap]);
+  }, [filters, page, cityFilter, companyMap, userCategories]);
 
   useEffect(() => { fetchInternships(); }, [fetchInternships]);
 

@@ -8,6 +8,7 @@ interface UpdateUserPayload {
   bio?: string;
   headline?: string;
   skills?: string[];
+  categories?: string[];
   dateOfBirth?: string;
   gender?: 'male' | 'female' | 'other';
   address?: string;

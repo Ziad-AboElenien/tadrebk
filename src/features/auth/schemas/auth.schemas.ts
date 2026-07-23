@@ -21,6 +21,11 @@ export const signupSchema = z
       .or(z.literal('')),
     password: passwordSchema,
     confirmPassword: z.string(),
+    university: z.string().optional(),
+    fieldOfStudy: z.string().optional(),
+    degree: z.string().optional(),
+    grade: z.string().optional(),
+    startDate: z.string().optional(),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: 'Passwords do not match',
@@ -138,6 +143,7 @@ export const profileSchema = z.object({
   dateOfBirth: z.string().optional(),
   gender: z.enum(['male', 'female']).optional().or(z.literal('')),
   skills: z.string().optional(),
+  categories: z.array(z.string()).max(4, 'Maximum 4 categories').optional(),
   experience: z.array(z.object({
     company: z.string().min(1, 'Company is required'),
     title: z.string().min(1, 'Title is required'),
@@ -149,6 +155,7 @@ export const profileSchema = z.object({
     institution: z.string().min(1, 'Institution is required'),
     degree: z.string().optional(),
     field: z.string().optional(),
+    grade: z.string().optional(),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
   })).optional(),
