@@ -2,7 +2,8 @@
 export interface Education {
   institution: string;
   degree?: string;
-  field?: string;       // API uses "field" not "fieldOfStudy"
+  field?: string;
+  grade?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -27,13 +28,40 @@ function extractUrl(img: string | CloudinaryResource | null | undefined): string
   return img.secure_url || null;
 }
 
+export type Category =
+  | 'frontend' | 'backend' | 'fullstack' | 'mobile' | 'uiux' | 'devops'
+  | 'data_science' | 'ai_ml' | 'cybersecurity' | 'qa_testing'
+  | 'marketing' | 'sales' | 'hr' | 'finance' | 'design'
+  | 'content_writing' | 'project_management' | 'other';
+
+export const CATEGORY_LABELS: Record<Category, string> = {
+  frontend: 'Frontend',
+  backend: 'Backend',
+  fullstack: 'Fullstack',
+  mobile: 'Mobile',
+  uiux: 'UI/UX',
+  devops: 'DevOps',
+  data_science: 'Data Science',
+  ai_ml: 'AI / ML',
+  cybersecurity: 'Cybersecurity',
+  qa_testing: 'QA / Testing',
+  marketing: 'Marketing',
+  sales: 'Sales',
+  hr: 'HR',
+  finance: 'Finance',
+  design: 'Design',
+  content_writing: 'Content Writing',
+  project_management: 'Project Management',
+  other: 'Other',
+};
+
 export interface User {
   _id: string;
   firstName: string;
   lastName: string;
   email: string;
-  phoneNumber?: string;  // API uses "phoneNumber" not "phone"
-  isConfirmed: boolean;  // API uses "isConfirmed" not "isEmailVerified"
+  phoneNumber?: string;
+  isConfirmed: boolean;
   provider: 'system' | 'google';
   profilePicture?: string | CloudinaryResource;
   coverPicture?: string | CloudinaryResource;
@@ -44,6 +72,7 @@ export interface User {
   gender?: 'male' | 'female';
   resume?: string | CloudinaryResource;
   skills?: string[];
+  categories?: Category[];
   education?: Education[];
   experience?: Experience[];
   createdAt?: string;
@@ -63,6 +92,7 @@ export interface UpdateUserRequest {
   coverPicture?: string;
   resume?: string;
   skills?: string[];
+  categories?: Category[];
   education?: Education[];
   experience?: Experience[];
 }
