@@ -83,23 +83,28 @@ export interface ApiUserShape {
   email: string;
   phoneNumber?: string;
   isConfirmed: boolean;
-  provider: 'system' | 'google';
+  provider: 'system' | 'google' | 'facebook';
   bio?: string;
   headline?: string;
   skills?: string[];
   education?: {
     institution: string;
     degree?: string;
-    field?: string; // "field" not "fieldOfStudy"
+    field?: string;
+    grade?: string;
     startDate?: string;
     endDate?: string;
   }[];
   experience?: {
-    company: string;
-    title: string;
-    description?: string;
-    startDate?: string;
-    endDate?: string;
+    applicationId: string;
+    internshipId: string;
+    internshipTitle: string;
+    companyId: string;
+    companyName: string;
+    completedAt: string;
+    rating: number | null;
+    feedback: string | null;
+    feedbackCreatedAt: string | null;
   }[];
   dateOfBirth?: string;
   gender?: 'male' | 'female';

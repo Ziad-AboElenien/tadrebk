@@ -10,7 +10,7 @@ import { getImgUrl } from '@/features/company/types';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import { getErrorMessage } from '@/lib/axios';
 
 export default function CompanyDashboardScreen() {
@@ -44,9 +44,9 @@ export default function CompanyDashboardScreen() {
     try {
       await internshipService.deleteInternship(company._id, deleteTarget);
       setInternships((prev) => prev.filter((i) => i._id !== deleteTarget));
-      toast.success('Internship deleted');
+      toastHelper.success('Internship deleted');
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setDeleting(null);
     }

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
 import { signupSchema, type SignupFormData } from '@/features/auth/schemas/auth.schemas';
 import * as authService from '@/features/auth/server/auth.service';
@@ -72,10 +72,18 @@ const gradeOptions = [
   { value: 'Below 2.0', label: 'Below 2.0' },
 ];
 
-const startDateOptions = Array.from({ length: 11 }, (_, i) => {
-  const year = 2026 - i;
-  return { value: `${year}-09-01`, label: `September ${year}` };
+const startDateOptions = Array.from({ length: 27 }, (_, i) => {
+  const year = 2000 + i;
+  return { value: `${year}`, label: `${year}` };
 });
+
+const endDateOptions = [
+  { value: 'present', label: 'Present (still studying)' },
+  ...Array.from({ length: 30 }, (_, i) => {
+    const year = 2004 + i;
+    return { value: `${year}`, label: `${year}` };
+  }),
+];
 
 interface SignupFormProps {
   role: 'student' | 'company';
@@ -101,12 +109,14 @@ export default function SignupForm({ role }: SignupFormProps) {
     if (!isCompany) {
       const missing: string[] = [];
       if (!data.university) missing.push('University');
+      if (data.university === 'Other' && !data.universityOther) missing.push('University name');
       if (!data.fieldOfStudy) missing.push('Field of Study');
+      if (data.fieldOfStudy === 'Other' && !data.fieldOfStudyOther) missing.push('Field of Study name');
       if (!data.degree) missing.push('Degree');
       if (!data.grade) missing.push('Grade');
       if (!data.startDate) missing.push('Start Date');
       if (missing.length > 0) {
-        toast.error(`Please fill in: ${missing.join(', ')}`);
+        toastHelper.error(`Please fill in: ${missing.join(', ')}`);
         return;
       }
     }
@@ -120,11 +130,12 @@ export default function SignupForm({ role }: SignupFormProps) {
         phone: data.phone || undefined,
         education: !isCompany && data.university
           ? [{
-              institution: data.university,
+              institution: data.university === 'Other' && data.universityOther ? data.universityOther : data.university,
               degree: data.degree!,
-              field: data.fieldOfStudy!,
+              field: data.fieldOfStudy === 'Other' && data.fieldOfStudyOther ? data.fieldOfStudyOther : data.fieldOfStudy!,
               grade: data.grade!,
               startDate: data.startDate!,
+              endDate: data.endDate || undefined,
             }]
           : undefined,
       });
@@ -132,10 +143,10 @@ export default function SignupForm({ role }: SignupFormProps) {
       if (typeof window !== 'undefined') {
         localStorage.setItem(LS_PENDING_EMAIL, data.email);
       }
-      toast.success('Account created! Please check your email for the OTP.');
+      toastHelper.success('Account created! Please check your email for the OTP.');
       router.push('/confirm-email');
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     }
   }
 
@@ -274,6 +285,15 @@ export default function SignupForm({ role }: SignupFormProps) {
               value={watch('university') ?? ''}
               onChange={(e) => setValue('university', e.target.value, { shouldValidate: true })}
             />
+            {watch('university') === 'Other' && (
+              <Input
+                label="University name"
+                id="signup-universityOther"
+                placeholder="Enter your university"
+                error={errors.universityOther?.message}
+                {...register('universityOther')}
+              />
+            )}
 
             <Select
               label="Field of Study"
@@ -284,6 +304,15 @@ export default function SignupForm({ role }: SignupFormProps) {
               value={watch('fieldOfStudy') ?? ''}
               onChange={(e) => setValue('fieldOfStudy', e.target.value, { shouldValidate: true })}
             />
+            {watch('fieldOfStudy') === 'Other' && (
+              <Input
+                label="Field of study"
+                id="signup-fieldOfStudyOther"
+                placeholder="Enter your field of study"
+                error={errors.fieldOfStudyOther?.message}
+                {...register('fieldOfStudyOther')}
+              />
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <Select
@@ -314,6 +343,16 @@ export default function SignupForm({ role }: SignupFormProps) {
               error={errors.startDate?.message}
               value={watch('startDate') ?? ''}
               onChange={(e) => setValue('startDate', e.target.value, { shouldValidate: true })}
+            />
+
+            <Select
+              label="End Date / Expected"
+              id="signup-endDate"
+              placeholder="When do/did you graduate?"
+              options={endDateOptions}
+              error={errors.endDate?.message}
+              value={watch('endDate') ?? ''}
+              onChange={(e) => setValue('endDate', e.target.value, { shouldValidate: true })}
             />
           </>
         )}

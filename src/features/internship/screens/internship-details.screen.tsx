@@ -13,7 +13,7 @@ import { internshipService } from '@/features/internship/services/internship.ser
 import { applicationService, Answer } from '@/features/student/services/application.service';
 import { useAppSelector } from '@/store/store';
 import { getErrorMessage, getErrorUrl } from '@/lib/axios';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 
 const LS_SAVED = 'tadrebk_saved_internships';
 
@@ -89,7 +89,7 @@ export default function InternshipDetailsScreen() {
           } catch { /* ignore */ }
         }
       } catch (error) {
-        toast.error(getErrorMessage(error));
+        toastHelper.error(getErrorMessage(error));
       } finally {
         setLoading(false);
       }
@@ -104,15 +104,15 @@ export default function InternshipDetailsScreen() {
       return;
     }
     if (!internship || internship.closed) {
-      toast.error('This internship is closed');
+      toastHelper.error('This internship is closed');
       return;
     }
     if (alreadyApplied) {
-      toast.info('You already applied to this internship');
+      toastHelper.info('You already applied to this internship');
       return;
     }
     if (!user?.resume) {
-      toast.warning('You haven\'t uploaded your CV/resume yet. Please upload one in your profile before applying.');
+      toastHelper.warning('You haven\'t uploaded your CV/resume yet. Please upload one in your profile before applying.');
     }
     setShowApplyModal(true);
   }, [isAuthenticated, internship, internId, alreadyApplied, user, router]);
@@ -123,7 +123,7 @@ export default function InternshipDetailsScreen() {
     try {
       const cid = getCompanyIdFromInternship(internship);
       if (!cid) {
-        toast.error('Company information not available for this internship');
+        toastHelper.error('Company information not available for this internship');
         setApplying(false);
         setShowApplyModal(false);
         return;
@@ -143,18 +143,18 @@ export default function InternshipDetailsScreen() {
     } catch (err: any) {
       const msg = getErrorMessage(err);
       if (msg.includes('already applied')) {
-        toast.info('You already applied to this internship');
+        toastHelper.info('You already applied to this internship');
       } else if (msg.includes('resume') || msg.includes('CV')) {
-        toast.warning('Please upload your CV/resume in your profile settings first');
+        toastHelper.warning('Please upload your CV/resume in your profile settings first');
       } else if (msg.includes('closed')) {
-        toast.error('This internship is no longer accepting applications');
+        toastHelper.error('This internship is no longer accepting applications');
       } else if (msg.includes('Invalid internship id')) {
         const idUrl = getErrorUrl(err);
-        toast.warning(`Unable to apply. Make sure you have uploaded your CV/resume in your profile, and that you haven't already applied.${idUrl ? ` (${idUrl})` : ''}`);
+        toastHelper.warning(`Unable to apply. Make sure you have uploaded your CV/resume in your profile, and that you haven't already applied.${idUrl ? ` (${idUrl})` : ''}`);
       } else if (msg.includes('answers') || msg.includes('questions')) {
-        toast.error('Please answer all required questions');
+        toastHelper.error('Please answer all required questions');
       } else {
-        toast.error(msg);
+        toastHelper.error(msg);
       }
       setShowApplyModal(false);
     } finally {
@@ -165,7 +165,7 @@ export default function InternshipDetailsScreen() {
   const handleSave = useCallback(() => {
     const now = toggleSaved(internId);
     setSaved(now);
-    toast.success(now ? 'Saved!' : 'Removed from saved');
+    toastHelper.success(now ? 'Saved!' : 'Removed from saved');
   }, [internId]);
 
   if (loading) {

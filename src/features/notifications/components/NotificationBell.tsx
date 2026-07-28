@@ -1,35 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppDispatch, useAppSelector } from '@/store/store';
-import { setUnreadCount } from '@/store/notificationSlice';
-import { notificationService } from '@/features/notifications/server/notification.service';
-import { toast } from 'react-toastify';
+import { useAppSelector } from '@/store/store';
 
 export default function NotificationBell() {
-  const dispatch = useAppDispatch();
   const router = useRouter();
   const unreadCount = useAppSelector((s) => s.notifications.unreadCount);
-  const lastCountRef = useRef(0);
-
-  const fetchCount = useCallback(async () => {
-    try {
-      const count = await notificationService.getUnreadCount();
-      if (count > lastCountRef.current) {
-        const diff = count - lastCountRef.current;
-        toast.info(`You have ${diff} new notification${diff > 1 ? 's' : ''}!`);
-      }
-      lastCountRef.current = count;
-      dispatch(setUnreadCount(count));
-    } catch { /* ignore */ }
-  }, [dispatch]);
-
-  useEffect(() => {
-    fetchCount();
-    const interval = setInterval(fetchCount, 30000);
-    return () => clearInterval(interval);
-  }, [fetchCount]);
 
   return (
     <button

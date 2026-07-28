@@ -27,6 +27,8 @@ export interface Internship {
   technicalSkills?: string[];
   questions?: InternshipQuestion[];
   preKnowledge?: string[];
+  categories?: string[];
+  universities?: string[];
   companyId: string | Company;
   addedBy?: string;    // API returns addedBy
   updatedBy?: string;  // API returns updatedBy
@@ -59,6 +61,8 @@ export interface CreateInternshipRequest {
   technicalSkills?: string[];
   questions?: InternshipQuestion[];
   preKnowledge?: string[];
+  categories?: string[];
+  universities?: string[];
 }
 
 export interface UpdateInternshipRequest extends Partial<CreateInternshipRequest> {

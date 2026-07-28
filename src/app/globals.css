@@ -166,7 +166,72 @@ input, textarea, select {
 
 /* ── React Toastify overrides ─────────────────────────────── */
 .Toastify__toast {
-  border-radius: 0.75rem !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.06) !important;
   font-family: var(--font-sans) !important;
+  padding: 0 !important;
+  overflow: hidden;
+  border: 1px solid #f0f0f0;
+  animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.Toastify__toast--enter {
+  animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.Toastify__toast--exit {
+  animation: toast-slide-out 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+}
+
+.Toastify__toast-body {
+  margin: 0 !important;
+  padding: 14px 16px !important;
+}
+
+.Toastify__progress-bar {
+  height: 3px !important;
+  border-radius: 0 !important;
+}
+
+.Toastify__progress-bar--success {
+  background: linear-gradient(90deg, #10b981, #34d399) !important;
+}
+.Toastify__progress-bar--error {
+  background: linear-gradient(90deg, #ef4444, #f87171) !important;
+}
+.Toastify__progress-bar--info {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa) !important;
+}
+.Toastify__progress-bar--warning {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24) !important;
+}
+
+.Toastify__close-button {
+  opacity: 0.4 !important;
+  transition: opacity 0.2s !important;
+  margin: 10px !important;
+}
+.Toastify__close-button:hover {
+  opacity: 1 !important;
 }

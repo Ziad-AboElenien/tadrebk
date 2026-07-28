@@ -22,10 +22,13 @@ export const signupSchema = z
     password: passwordSchema,
     confirmPassword: z.string(),
     university: z.string().optional(),
+    universityOther: z.string().optional(),
     fieldOfStudy: z.string().optional(),
+    fieldOfStudyOther: z.string().optional(),
     degree: z.string().optional(),
     grade: z.string().optional(),
     startDate: z.string().optional(),
+    endDate: z.string().optional(),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: 'Passwords do not match',
@@ -119,6 +122,8 @@ export const internshipSchema = z.object({
   technicalSkills: z.array(z.string()).default([]),
   questions: z.array(questionSchema).optional(),
   preKnowledge: z.array(z.string()).optional(),
+  categories: z.array(z.string()).optional(),
+  universities: z.array(z.string()).optional(),
 });
 
 // ─── Exported Types ───────────────────────────────────────────
@@ -144,13 +149,6 @@ export const profileSchema = z.object({
   gender: z.enum(['male', 'female']).optional().or(z.literal('')),
   skills: z.string().optional(),
   categories: z.array(z.string()).max(4, 'Maximum 4 categories').optional(),
-  experience: z.array(z.object({
-    company: z.string().min(1, 'Company is required'),
-    title: z.string().min(1, 'Title is required'),
-    description: z.string().optional(),
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
-  })).optional(),
   education: z.array(z.object({
     institution: z.string().min(1, 'Institution is required'),
     degree: z.string().optional(),
@@ -158,6 +156,9 @@ export const profileSchema = z.object({
     grade: z.string().optional(),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
+  })).optional(),
+  courses: z.array(z.object({
+    name: z.string().min(1, 'Course name is required'),
   })).optional(),
 });
 export type ProfileFormData = z.infer<typeof profileSchema>;

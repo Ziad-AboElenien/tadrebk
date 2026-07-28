@@ -18,6 +18,8 @@ interface UpdateCompanyPayload {
   address?: string;
   numberOfEmployees?: string;
   companyEmail?: string;
+  logo?: string;
+  coverPicture?: string;
 }
 
 interface ListCompaniesParams {

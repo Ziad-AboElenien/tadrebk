@@ -8,7 +8,7 @@ import { notificationService } from '@/features/notifications/server/notificatio
 import type { Notification } from '@/features/notifications/types';
 import Spinner from '@/components/ui/Spinner';
 import Pagination from '@/components/ui/Pagination';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -106,7 +106,7 @@ export default function NotificationsScreen() {
       await notificationService.markAsRead(n._id);
       await fetchPage(page);
       await refreshCount();
-    } catch { toast.error('Failed to mark as read'); }
+    } catch { toastHelper.error('Failed to mark as read'); }
     finally { setMarkingIds((prev) => { const next = new Set(prev); next.delete(n._id); return next; }); }
   }
 
@@ -116,7 +116,7 @@ export default function NotificationsScreen() {
       await notificationService.markAllAsRead();
       await fetchPage(page);
       await refreshCount();
-    } catch { toast.error('Failed to mark all as read'); }
+    } catch { toastHelper.error('Failed to mark all as read'); }
     finally { setMarkingAll(false); }
   }
 

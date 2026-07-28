@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage } from '@/lib/axios';
 import { LS_PENDING_EMAIL, LS_INTENDED_ROLE } from '@/lib/constants';
@@ -40,7 +40,7 @@ export default function ConfirmEmailPage() {
     setIsSubmitting(true);
     try {
       await authService.confirmEmail({ email, otp });
-      toast.success('Email confirmed! Welcome to Tadrebk!');
+      toastHelper.success('Email confirmed! Welcome to Tadrebk!');
       localStorage.removeItem(LS_PENDING_EMAIL);
 
       // Route based on intended role
@@ -52,7 +52,7 @@ export default function ConfirmEmailPage() {
         router.push('/login/student');
       }
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -63,11 +63,11 @@ export default function ConfirmEmailPage() {
     setIsResending(true);
     try {
       await authService.resendOtp({ email });
-      toast.success('New OTP sent! Check your email.');
+      toastHelper.success('New OTP sent! Check your email.');
       setCountdown(300); // 5 min cooldown
       setOtp('');
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setIsResending(false);
     }

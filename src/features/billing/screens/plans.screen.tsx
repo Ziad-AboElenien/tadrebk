@@ -6,7 +6,7 @@ import { useAppSelector } from '@/store/store';
 import type { PlanId } from '@/features/billing/types';
 import { PLAN_DETAILS } from '@/features/billing/types';
 import Button from '@/components/ui/Button';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import { getErrorMessage } from '@/lib/axios';
 
 export default function BillingPlansScreen() {
@@ -27,7 +27,7 @@ export default function BillingPlansScreen() {
       sessionStorage.setItem('creditsBefore', String(creditsBefore));
       window.location.href = paymentUrl;
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
       setPurchasing(null);
     }
   }

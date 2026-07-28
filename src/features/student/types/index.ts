@@ -9,11 +9,23 @@ export interface Education {
 }
 
 export interface Experience {
-  company: string;
-  title: string;
-  description?: string;
-  startDate?: string;
-  endDate?: string;
+  applicationId: string;
+  internshipId: string;
+  internshipTitle: string;
+  companyId: string;
+  companyName: string;
+  completedAt: string;
+  rating: number | null;
+  feedback: string | null;
+  feedbackCreatedAt: string | null;
+}
+
+export interface Course {
+  _id?: string;
+  name: string;
+  link?: string;
+  attachmentUrl?: string;
+  attachmentType?: 'image' | 'pdf';
 }
 
 export interface CloudinaryResource {
@@ -62,7 +74,7 @@ export interface User {
   email: string;
   phoneNumber?: string;
   isConfirmed: boolean;
-  provider: 'system' | 'google';
+  provider: 'system' | 'google' | 'facebook';
   profilePicture?: string | CloudinaryResource;
   coverPicture?: string | CloudinaryResource;
   bio?: string;
@@ -75,6 +87,7 @@ export interface User {
   categories?: Category[];
   education?: Education[];
   experience?: Experience[];
+  courses?: Course[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -88,13 +101,10 @@ export interface UpdateUserRequest {
   address?: string;
   dateOfBirth?: string;
   gender?: 'male' | 'female';
-  profilePicture?: string;
-  coverPicture?: string;
-  resume?: string;
   skills?: string[];
   categories?: Category[];
   education?: Education[];
-  experience?: Experience[];
+  courses?: Course[];
 }
 
 /** Extract a URL string from either a plain URL or a Cloudinary resource object */

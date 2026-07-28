@@ -8,7 +8,7 @@ import { getFileProxyUrl } from '@/lib/file-proxy';
 import Spinner from '@/components/ui/Spinner';
 import Button from '@/components/ui/Button';
 import { getErrorMessage } from '@/lib/axios';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
 
 function formatDate(dateStr?: string): string {
@@ -32,7 +32,7 @@ export default function ApplicantProfileScreen() {
         const data = await userService.getUserProfile(userId);
         setUser(data);
       } catch (err) {
-        toast.error(getErrorMessage(err));
+        toastHelper.error(getErrorMessage(err));
         router.back();
       } finally {
         setLoading(false);
@@ -138,15 +138,23 @@ export default function ApplicantProfileScreen() {
               {user.experience.map((exp, i) => (
                 <div key={i} className="flex gap-4">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-400 to-purple-600 flex items-center justify-center text-white font-bold shrink-0">
-                    {exp.company[0]?.toUpperCase()}
+                    {exp.companyName[0]?.toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-dark">{exp.title}</p>
-                    <p className="text-sm text-gray-500">{exp.company}</p>
-                    {(exp.startDate || exp.endDate) && (
-                      <p className="text-xs text-gray-400 mt-0.5">{formatDate(exp.startDate)} - {exp.endDate ? formatDate(exp.endDate) : 'Present'}</p>
+                    <p className="font-semibold text-dark">{exp.internshipTitle}</p>
+                    <p className="text-sm text-gray-500">{exp.companyName}</p>
+                    {exp.completedAt && (
+                      <p className="text-xs text-gray-400 mt-0.5">Completed {formatDate(exp.completedAt)}</p>
                     )}
-                    {exp.description && <p className="text-sm text-gray-600 mt-1">{exp.description}</p>}
+                    {exp.rating != null && (
+                      <div className="flex items-center gap-1 mt-1">
+                        {Array.from({ length: 5 }, (_, s) => (
+                          <i key={s} className={`fas fa-star text-xs ${s < exp.rating! ? 'text-amber-400' : 'text-gray-200'}`} />
+                        ))}
+                        <span className="text-xs text-gray-400 ml-1">{exp.rating}/5</span>
+                      </div>
+                    )}
+                    {exp.feedback && <p className="text-sm text-gray-600 mt-1 italic">&ldquo;{exp.feedback}&rdquo;</p>}
                   </div>
                 </div>
               ))}

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import {
   companyOnboardingSchema,
   type CompanyOnboardingFormData,
@@ -36,7 +36,7 @@ export default function CompanyOnboardingScreen() {
 
   async function onSubmit(data: CompanyOnboardingFormData) {
     if (!legalFile) {
-      toast.error('Legal document is required');
+      toastHelper.error('Legal document is required');
       return;
     }
 
@@ -53,10 +53,10 @@ export default function CompanyOnboardingScreen() {
 
       dispatch(setCompany(company));
       dispatch(setRole('company'));
-      toast.success('Company profile created successfully!');
+      toastHelper.success('Company profile created successfully!');
       router.push('/company/dashboard');
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     }
   }
 

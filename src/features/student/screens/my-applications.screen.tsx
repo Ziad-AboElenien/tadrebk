@@ -4,10 +4,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
 import { applicationService, Application } from '@/features/student/services/application.service';
+import type { RatingData } from '@/features/student/services/application.service';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import { getErrorMessage } from '@/lib/axios';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
 
 const statusLabels: Record<string, string> = { pending: 'Pending', accepted: 'Accepted', rejected: 'Rejected' };
@@ -33,6 +34,11 @@ export default function MyApplicationsScreen() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState<FilterStatus>('all');
+  const [ratingModal, setRatingModal] = useState<{ applicationId: string; companyName: string } | null>(null);
+  const [ratingScore, setRatingScore] = useState(5);
+  const [ratingComment, setRatingComment] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
+  const [ratings, setRatings] = useState<Record<string, RatingData | null>>({});
 
   const fetchApplications = useCallback(async () => {
     if (!user?._id) return;
@@ -44,7 +50,7 @@ export default function MyApplicationsScreen() {
       setApplications(res.applications);
       setTotalPages(res.pagination.pages);
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -52,6 +58,39 @@ export default function MyApplicationsScreen() {
 
   useEffect(() => { fetchApplications(); }, [fetchApplications]);
   useEffect(() => { setPage(1); }, [filter]);
+
+  useEffect(() => {
+    if (applications.length === 0) return;
+    const completed = applications.filter((a) => a.completed && a.status === 'accepted');
+    completed.forEach(async (app) => {
+      try {
+        const res = await applicationService.getRatings(app._id);
+        setRatings((prev) => ({ ...prev, [app._id]: res.studentRating }));
+      } catch {
+        setRatings((prev) => ({ ...prev, [app._id]: null }));
+      }
+    });
+  }, [applications]);
+
+  async function submitRating() {
+    if (!ratingModal) return;
+    setSubmittingRating(true);
+    try {
+      await applicationService.rateApplication(ratingModal.applicationId, {
+        score: ratingScore,
+        comment: ratingComment || undefined,
+      });
+      setRatings((prev) => ({ ...prev, [ratingModal.applicationId]: { submitted: true, score: ratingScore, comment: ratingComment } }));
+      setRatingModal(null);
+      setRatingScore(5);
+      setRatingComment('');
+      toastHelper.success('Rating submitted!');
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setSubmittingRating(false);
+    }
+  }
 
   if (!user) {
     return (
@@ -142,6 +181,24 @@ export default function MyApplicationsScreen() {
                         <i className="fas fa-certificate mr-1" /> Certificate
                       </Link>
                     )}
+                    {app.status === 'accepted' && app.completed && ratings[app._id] == null && (
+                      <button
+                        onClick={() => {
+                          const compName = typeof app.companyId === 'object' ? (app.companyId as any)?.name || 'Company' : 'Company';
+                          setRatingModal({ applicationId: app._id, companyName: compName });
+                        }}
+                        className="rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-600 transition"
+                      >
+                        <i className="fas fa-star mr-1" /> Rate Company
+                      </button>
+                    )}
+                    {app.status === 'accepted' && app.completed && ratings[app._id] != null && (
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: 5 }, (_, s) => (
+                          <i key={s} className={`fas fa-star text-xs ${s < (ratings[app._id]?.score || 0) ? 'text-amber-400' : 'text-gray-200'}`} />
+                        ))}
+                      </div>
+                    )}
                     {internId && (
                       <Link href={`/internships/${internId}`}>
                         <span className="text-xs font-semibold text-primary hover:underline">View Internship</span>
@@ -183,6 +240,59 @@ export default function MyApplicationsScreen() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Rating Modal */}
+      {ratingModal && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={() => setRatingModal(null)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-bold text-dark mb-1">Rate {ratingModal.companyName}</h3>
+              <p className="text-sm text-gray-400 mb-5">How was your experience with this company?</p>
+
+              {/* Star rating */}
+              <div className="flex items-center gap-2 mb-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRatingScore(star)}
+                    className="text-2xl transition-transform hover:scale-110"
+                  >
+                    <i className={`fas fa-star ${star <= ratingScore ? 'text-amber-400' : 'text-gray-200'}`} />
+                  </button>
+                ))}
+                <span className="text-sm text-gray-500 ml-2">{ratingScore}/5</span>
+              </div>
+
+              {/* Comment */}
+              <textarea
+                value={ratingComment}
+                onChange={(e) => setRatingComment(e.target.value)}
+                rows={3}
+                placeholder="Leave a comment (optional)..."
+                className="w-full border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary resize-none mb-5"
+              />
+
+              <div className="flex gap-3">
+                <button
+                  onClick={submitRating}
+                  disabled={submittingRating}
+                  className="flex-1 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-600 transition disabled:opacity-50"
+                >
+                  {submittingRating ? 'Submitting...' : 'Submit Rating'}
+                </button>
+                <button
+                  onClick={() => setRatingModal(null)}
+                  className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

@@ -12,6 +12,7 @@ import { companyService } from '@/features/company/services/company.service';
 import { useAppSelector } from '@/store/store';
 import { CATEGORY_LABELS, type Category } from '@/features/student/types';
 import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 
 const LS_SAVED = 'tadrebk_saved_internships';
 
@@ -245,7 +246,7 @@ function InternshipsContent() {
       if (now) next.add(id); else next.delete(id);
       return next;
     });
-    toast.success(now ? 'Saved!' : 'Removed from saved');
+    toastHelper.success(now ? 'Saved!' : 'Removed from saved');
   }, []);
 
   const hasActiveFilters = filters.title || filters.type || filters.location;

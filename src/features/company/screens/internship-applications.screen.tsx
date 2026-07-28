@@ -5,13 +5,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { applicationService, Application } from '@/features/student/services/application.service';
+import type { RatingData } from '@/features/student/services/application.service';
 import { Internship } from '@/features/internship/types';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import { getErrorMessage } from '@/lib/axios';
 import { getFileProxyUrl } from '@/lib/file-proxy';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
 
 type FilterStatus = 'all' | 'pending' | 'accepted' | 'rejected';
@@ -30,6 +31,11 @@ export default function InternshipApplicationsScreen() {
   const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
   const [sendingAll, setSendingAll] = useState(false);
   const [emailConfirmTarget, setEmailConfirmTarget] = useState<string | null>(null);
+  const [ratingModal, setRatingModal] = useState<{ applicationId: string; studentName: string } | null>(null);
+  const [ratingScore, setRatingScore] = useState(5);
+  const [ratingComment, setRatingComment] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
+  const [ratings, setRatings] = useState<Record<string, RatingData | null>>({});
 
   const fetchApplications = useCallback(async () => {
     if (!company || !internId) return;
@@ -41,7 +47,7 @@ export default function InternshipApplicationsScreen() {
       setInternship(internData);
       setApplications(appData.applications);
     } catch {
-      toast.error('Failed to load applications');
+      toastHelper.error('Failed to load applications');
       router.push('/company/dashboard');
     } finally {
       setLoading(false);
@@ -50,15 +56,48 @@ export default function InternshipApplicationsScreen() {
 
   useEffect(() => { fetchApplications(); }, [fetchApplications]);
 
+  useEffect(() => {
+    if (applications.length === 0) return;
+    const completed = applications.filter((a) => a.completed && a.status === 'accepted');
+    completed.forEach(async (app) => {
+      try {
+        const res = await applicationService.getRatings(app._id);
+        setRatings((prev) => ({ ...prev, [app._id]: res.companyRating }));
+      } catch {
+        setRatings((prev) => ({ ...prev, [app._id]: null }));
+      }
+    });
+  }, [applications]);
+
+  async function submitRating() {
+    if (!ratingModal) return;
+    setSubmittingRating(true);
+    try {
+      await applicationService.rateApplication(ratingModal.applicationId, {
+        score: ratingScore,
+        comment: ratingComment || undefined,
+      });
+      setRatings((prev) => ({ ...prev, [ratingModal.applicationId]: { submitted: true, score: ratingScore, comment: ratingComment } }));
+      setRatingModal(null);
+      setRatingScore(5);
+      setRatingComment('');
+      toastHelper.success('Rating submitted!');
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setSubmittingRating(false);
+    }
+  }
+
   async function handleReview(applicationId: string, status: 'accepted' | 'rejected') {
     if (!company) return;
     setReviewingId(applicationId);
     try {
       const updated = await applicationService.reviewApplication(company._id, internId, applicationId, { status });
       setApplications((prev) => prev.map((a) => (a._id === applicationId ? { ...a, ...updated, studentId: a.studentId, internshipId: a.internshipId, companyId: a.companyId } : a)));
-      toast.success(`Application ${status === 'accepted' ? 'approved' : 'rejected'}`);
+      toastHelper.success(`Application ${status === 'accepted' ? 'approved' : 'rejected'}`);
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setReviewingId(null);
     }
@@ -71,9 +110,9 @@ export default function InternshipApplicationsScreen() {
       setApplications((prev) =>
         prev.map((a) => (a._id === applicationId ? { ...a, completed: true } : a)),
       );
-      toast.success('Application marked as completed');
+      toastHelper.success('Application marked as completed');
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     }
   }
 
@@ -83,9 +122,9 @@ export default function InternshipApplicationsScreen() {
     setEmailConfirmTarget(null);
     try {
       await applicationService.sendAcceptanceEmail(company._id, internId, applicationId);
-      toast.success('Acceptance email sent!');
+      toastHelper.success('Acceptance email sent!');
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setSendingEmailId(null);
     }
@@ -107,8 +146,8 @@ export default function InternshipApplicationsScreen() {
       }
     }
     setSendingAll(false);
-    if (sent > 0) toast.success(`${sent} acceptance email${sent > 1 ? 's' : ''} sent!`);
-    if (failed > 0) toast.error(`${failed} email${failed > 1 ? 's' : ''} failed`);
+    if (sent > 0) toastHelper.success(`${sent} acceptance email${sent > 1 ? 's' : ''} sent!`);
+    if (failed > 0) toastHelper.error(`${failed} email${failed > 1 ? 's' : ''} failed`);
   }
 
   const filtered = filter === 'all'
@@ -273,6 +312,26 @@ export default function InternshipApplicationsScreen() {
                                 <i className="fas fa-check-circle text-xs" /> Completed
                               </span>
                             )}
+                            {ratings[app._id] == null && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const stuName = s ? `${s.firstName} ${s.lastName}` : 'Student';
+                                  setRatingModal({ applicationId: app._id, studentName: stuName });
+                                }}
+                                className="border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                              >
+                                <i className="fas fa-star text-xs mr-1" /> Rate Student
+                              </Button>
+                            )}
+                            {ratings[app._id] != null && (
+                              <div className="flex items-center gap-1">
+                                {Array.from({ length: 5 }, (_, s) => (
+                                  <i key={s} className={`fas fa-star text-xs ${s < (ratings[app._id]?.score || 0) ? 'text-amber-400' : 'text-gray-200'}`} />
+                                ))}
+                              </div>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
@@ -377,6 +436,57 @@ export default function InternshipApplicationsScreen() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Rating Modal */}
+      {ratingModal && (
+        <>
+          <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm" onClick={() => setRatingModal(null)} />
+          <div className="fixed inset-0 z-[101] flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-bold text-dark mb-1">Rate {ratingModal.studentName}</h3>
+              <p className="text-sm text-gray-400 mb-5">How was this student's performance?</p>
+
+              <div className="flex items-center gap-2 mb-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRatingScore(star)}
+                    className="text-2xl transition-transform hover:scale-110"
+                  >
+                    <i className={`fas fa-star ${star <= ratingScore ? 'text-amber-400' : 'text-gray-200'}`} />
+                  </button>
+                ))}
+                <span className="text-sm text-gray-500 ml-2">{ratingScore}/5</span>
+              </div>
+
+              <textarea
+                value={ratingComment}
+                onChange={(e) => setRatingComment(e.target.value)}
+                rows={3}
+                placeholder="Leave a comment (optional)..."
+                className="w-full border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary resize-none mb-5"
+              />
+
+              <div className="flex gap-3">
+                <button
+                  onClick={submitRating}
+                  disabled={submittingRating}
+                  className="flex-1 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-600 transition disabled:opacity-50"
+                >
+                  {submittingRating ? 'Submitting...' : 'Submit Rating'}
+                </button>
+                <button
+                  onClick={() => setRatingModal(null)}
+                  className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

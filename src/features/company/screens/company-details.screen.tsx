@@ -11,7 +11,7 @@ import Spinner from '@/components/ui/Spinner';
 import EmptyState from '@/components/ui/EmptyState';
 import { companyService } from '@/features/company/services/company.service';
 import { internshipService } from '@/features/internship/services/internship.service';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '';
@@ -40,7 +40,7 @@ export default function CompanyDetailsScreen() {
         setInternships(result.internships);
         setTotalInternships(result.pagination.total);
       } catch {
-        toast.error('Failed to load company profile');
+        toastHelper.error('Failed to load company profile');
       } finally {
         setLoading(false);
       }

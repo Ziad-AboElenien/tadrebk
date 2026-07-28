@@ -15,7 +15,7 @@ import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import { getErrorMessage } from '@/lib/axios';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
 
 export default function EditInternshipScreen() {
@@ -71,7 +71,7 @@ export default function EditInternshipScreen() {
         setPreKnowledgeText(intern.preKnowledge?.join(', ') || '');
       })
       .catch(() => {
-        toast.error('Failed to load internship');
+        toastHelper.error('Failed to load internship');
         router.push('/company/dashboard');
       })
       .finally(() => setLoading(false));
@@ -132,10 +132,10 @@ export default function EditInternshipScreen() {
         questions: cleaned.length > 0 ? cleaned : undefined,
         preKnowledge: preKnowledgeText.split(',').map((s) => s.trim()).filter(Boolean),
       });
-      toast.success('Internship updated!');
+      toastHelper.success('Internship updated!');
       router.push('/company/dashboard');
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
