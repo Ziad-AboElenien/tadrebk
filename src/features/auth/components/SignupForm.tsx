@@ -78,7 +78,6 @@ const startDateOptions = Array.from({ length: 27 }, (_, i) => {
 });
 
 const endDateOptions = [
-  { value: 'present', label: 'Present (still studying)' },
   ...Array.from({ length: 30 }, (_, i) => {
     const year = 2004 + i;
     return { value: `${year}`, label: `${year}` };
