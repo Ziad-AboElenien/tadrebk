@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import {
   changePasswordSchema,
   type ChangePasswordFormData,
@@ -35,10 +35,10 @@ export default function ChangePasswordForm() {
         newPassword: data.newPassword,
         confirmPassword: data.confirmPassword,
       });
-      toast.success('Password changed successfully!');
+      toastHelper.success('Password changed successfully!');
       router.back();
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     }
   }
 

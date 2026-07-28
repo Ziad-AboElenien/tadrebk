@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
 import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/features/auth/schemas/auth.schemas';
 import * as authService from '@/features/auth/server/auth.service';
@@ -31,9 +31,9 @@ export default function ForgotPasswordPage() {
       await authService.forgotPassword(data.email);
       localStorage.setItem(LS_PENDING_EMAIL, data.email);
       setSent(true);
-      toast.success('OTP sent to your email!');
+      toastHelper.success('OTP sent to your email!');
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     }
   }
 

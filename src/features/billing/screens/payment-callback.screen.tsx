@@ -7,7 +7,7 @@ import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setCredits } from '@/store/billingSlice';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 
 type Status = 'processing' | 'success' | 'error';
 
@@ -34,7 +34,7 @@ function PaymentCallbackInner() {
         dispatch(setCredits(current));
         setCreditsAmount(current);
         setStatus('success');
-        toast.success('Payment confirmed! Credits added.');
+        toastHelper.success('Payment confirmed! Credits added.');
         sessionStorage.removeItem('pendingPaymentOrderId');
         sessionStorage.removeItem('creditsBefore');
         return true;

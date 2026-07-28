@@ -14,11 +14,13 @@ import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
+import ImageMenu from '@/components/ui/ImageMenu';
+import ImageCropperModal from '@/components/ui/ImageCropperModal';
 import { companyService } from '@/features/company/services/company.service';
 import { COMPANY_INDUSTRIES } from '@/lib/constants';
 import { getImgUrl } from '@/features/company/types';
 import { getErrorMessage } from '@/lib/axios';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 
 export default function CompanySettingsScreen() {
   const dispatch = useAppDispatch();
@@ -27,6 +29,8 @@ export default function CompanySettingsScreen() {
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [cropTarget, setCropTarget] = useState<'logo' | 'cover' | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   const logoRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
@@ -63,44 +67,60 @@ export default function CompanySettingsScreen() {
     try {
       const updated = await companyService.updateCompany(company._id, data);
       dispatch(setCompany(updated));
-      toast.success('Company settings saved!');
+      toastHelper.success('Company settings saved!');
       router.push('/company/profile');
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function onFileSelect(e: React.ChangeEvent<HTMLInputElement>, target: 'logo' | 'cover') {
     const file = e.target.files?.[0];
-    if (!file || !company) return;
-    setUploadingLogo(true);
-    try {
-      const url = await companyService.uploadLogo(company._id, file);
-      dispatch(setCompany({ ...company, logo: url }));
-      toast.success('Logo uploaded!');
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setUploadingLogo(false);
-      if (logoRef.current) logoRef.current.value = '';
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setCropSrc(url);
+    setCropTarget(target);
+    e.target.value = '';
+  }
+
+  async function uploadCroppedBlob(blob: Blob, target: 'logo' | 'cover') {
+    if (!company) return;
+    const file = new File([blob], `${target}.jpg`, { type: 'image/jpeg' });
+    if (target === 'logo') {
+      setUploadingLogo(true);
+      try {
+        const url = await companyService.uploadLogo(company._id, file);
+        dispatch(setCompany({ ...company, logo: url }));
+        toastHelper.success('Logo uploaded!');
+      } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setUploadingLogo(false); }
+    } else {
+      setUploadingCover(true);
+      try {
+        const url = await companyService.uploadCoverPicture(company._id, file);
+        dispatch(setCompany({ ...company, coverPicture: url }));
+        toastHelper.success('Cover image uploaded!');
+      } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setUploadingCover(false); }
     }
   }
 
-  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !company) return;
-    setUploadingCover(true);
-    try {
-      const url = await companyService.uploadCoverPicture(company._id, file);
-      dispatch(setCompany({ ...company, coverPicture: url }));
-      toast.success('Cover image uploaded!');
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setUploadingCover(false);
-      if (coverRef.current) coverRef.current.value = '';
+  async function handleRemoveImage(target: 'logo' | 'cover') {
+    if (!company) return;
+    if (target === 'logo') {
+      setUploadingLogo(true);
+      try {
+        await companyService.updateCompany(company._id, { logo: '' });
+        dispatch(setCompany({ ...company, logo: '' }));
+        toastHelper.success('Logo removed');
+      } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setUploadingLogo(false); }
+    } else {
+      setUploadingCover(true);
+      try {
+        await companyService.updateCompany(company._id, { coverPicture: '' });
+        dispatch(setCompany({ ...company, coverPicture: '' }));
+        toastHelper.success('Cover image removed');
+      } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setUploadingCover(false); }
     }
   }
 
@@ -137,22 +157,12 @@ export default function CompanySettingsScreen() {
           )}
           <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
           <div className="absolute top-4 right-4 z-10">
-            <input ref={coverRef} type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
-            <button
-              onClick={() => coverRef.current?.click()}
-              disabled={uploadingCover}
-              className="bg-white/80 backdrop-blur-sm hover:bg-white text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition-all flex items-center gap-1.5"
-            >
-              {uploadingCover ? (
-                <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-              ) : (
-                <i className="fas fa-camera text-xs" />
-              )}
-              {uploadingCover ? 'Uploading...' : 'Change cover'}
-            </button>
+            <input ref={coverRef} type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'cover')} className="hidden" />
+            <ImageMenu
+              onEdit={() => coverRef.current?.click()}
+              onDelete={coverUrl ? () => handleRemoveImage('cover') : undefined}
+              loading={uploadingCover}
+            />
           </div>
         </div>
 
@@ -167,24 +177,14 @@ export default function CompanySettingsScreen() {
                   <span className="text-2xl font-bold text-white select-none">{initials}</span>
                 )}
               </div>
-              <input ref={logoRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
-              <button
-                onClick={() => logoRef.current?.click()}
-                disabled={uploadingLogo}
-                className="absolute inset-0 w-full h-full rounded-2xl bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center"
-              >
-                <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-semibold px-2 py-1 rounded-lg flex items-center gap-1">
-                  {uploadingLogo ? (
-                    <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                  ) : (
-                    <i className="fas fa-camera" />
-                  )}
-                  {uploadingLogo ? '...' : 'Change'}
-                </span>
-              </button>
+              <input ref={logoRef} type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'logo')} className="hidden" />
+              <div className="absolute -bottom-1 -right-1">
+                <ImageMenu
+                  onEdit={() => logoRef.current?.click()}
+                  onDelete={logoUrl ? () => handleRemoveImage('logo') : undefined}
+                  loading={uploadingLogo}
+                />
+              </div>
             </div>
             <div className="pb-1">
               <h1 className="text-2xl sm:text-3xl font-black text-dark">{company.name}</h1>
@@ -319,6 +319,16 @@ export default function CompanySettingsScreen() {
         </div>
 
       </main>
+
+      {cropSrc && cropTarget && (
+        <ImageCropperModal
+          src={cropSrc}
+          aspect={cropTarget === 'logo' ? 1 : 16 / 9}
+          title={cropTarget === 'logo' ? 'Crop logo' : 'Crop cover photo'}
+          onCrop={(blob) => { uploadCroppedBlob(blob, cropTarget); setCropSrc(null); setCropTarget(null); }}
+          onCancel={() => { setCropSrc(null); setCropTarget(null); }}
+        />
+      )}
     </div>
   );
 }

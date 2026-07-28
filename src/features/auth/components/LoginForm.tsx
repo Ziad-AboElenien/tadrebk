@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
 import { loginSchema, type LoginFormData } from '@/features/auth/schemas/auth.schemas';
 import * as authService from '@/features/auth/server/auth.service';
@@ -68,7 +68,7 @@ export default function LoginForm({ role }: LoginFormProps) {
       if (decoded?.role === 'admin' || (user as any).role === 'admin') {
         dispatch(setTokens({ tokens, userId, role: 'admin' }));
         dispatch(setUser(user));
-        toast.success(`Welcome back, ${user.firstName}!`);
+        toastHelper.success(`Welcome back, ${user.firstName}!`);
         router.push('/admin/dashboard');
         return;
       }
@@ -104,7 +104,7 @@ export default function LoginForm({ role }: LoginFormProps) {
       dispatch(setTokens({ tokens, userId, role: userRole }));
       dispatch(setUser(user));
 
-      toast.success(`Welcome back, ${user.firstName}!`);
+      toastHelper.success(`Welcome back, ${user.firstName}!`);
 
       const next = searchParams.get('next');
       if (next && next.startsWith('/')) {
@@ -120,7 +120,7 @@ export default function LoginForm({ role }: LoginFormProps) {
         router.push('/dashboard');
       }
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     }
   }
 

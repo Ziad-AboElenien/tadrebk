@@ -10,13 +10,13 @@ interface UpdateUserPayload {
   skills?: string[];
   categories?: string[];
   dateOfBirth?: string;
-  gender?: 'male' | 'female' | 'other';
+  gender?: 'male' | 'female';
   address?: string;
+  education?: any[];
+  courses?: { name: string }[];
   profilePicture?: string;
   coverPicture?: string;
   resume?: string;
-  education?: any[];
-  experience?: any[];
 }
 
 interface UploadResponse {
@@ -83,6 +83,23 @@ export const userService = {
 
     const { data } = await api.post<UploadResponse>(
       `/user/upload/resume`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    return data.data.url;
+  },
+
+  async uploadCourseCertificate(courseIndex: number, file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const { data } = await api.post<UploadResponse>(
+      `/user/upload/course-certificate/${courseIndex}`,
       formData,
       {
         headers: {

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import {
   changeEmailSchema,
   type ChangeEmailFormData,
@@ -33,10 +33,10 @@ export default function ChangeEmailForm() {
     try {
       await authService.requestEmailChange({ newEmail: data.newEmail });
       setNewEmail(data.newEmail);
-      toast.success('OTP sent to your new email');
+      toastHelper.success('OTP sent to your new email');
       setStep('otp');
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setSending(false);
     }
@@ -47,10 +47,10 @@ export default function ChangeEmailForm() {
     setConfirming(true);
     try {
       await authService.confirmEmailChange({ otp });
-      toast.success('Email changed successfully!');
+      toastHelper.success('Email changed successfully!');
       router.back();
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setConfirming(false);
     }

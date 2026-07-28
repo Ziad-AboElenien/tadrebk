@@ -11,7 +11,7 @@ import Pagination from '@/components/ui/Pagination';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Link from 'next/link';
 import { getErrorMessage } from '@/lib/axios';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 
 type Tab = 'pending' | 'approved' | 'all';
 
@@ -50,7 +50,7 @@ export default function AdminDashboardScreen() {
       setCompanies(result.companies);
       setTotalPages(result.pagination.pages);
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -63,10 +63,10 @@ export default function AdminDashboardScreen() {
     setActionId(companyId);
     try {
       await adminService.approveCompany(companyId);
-      toast.success('Company approved');
+      toastHelper.success('Company approved');
       fetchCompanies();
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setActionId(null);
     }
@@ -76,10 +76,10 @@ export default function AdminDashboardScreen() {
     setActionId(companyId);
     try {
       await adminService.banCompany(companyId);
-      toast.success('Company banned');
+      toastHelper.success('Company banned');
       fetchCompanies();
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setActionId(null);
     }
@@ -89,10 +89,10 @@ export default function AdminDashboardScreen() {
     setActionId(companyId);
     try {
       await adminService.unbanCompany(companyId);
-      toast.success('Company unbanned');
+      toastHelper.success('Company unbanned');
       fetchCompanies();
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setActionId(null);
     }

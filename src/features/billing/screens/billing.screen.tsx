@@ -7,7 +7,7 @@ import { useAppSelector } from '@/store/store';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import { getErrorMessage } from '@/lib/axios';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 
 export default function BillingScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
@@ -19,7 +19,7 @@ export default function BillingScreen() {
     billingService
       .getCredits(company._id)
       .then(setCredits)
-      .catch((err) => toast.error(getErrorMessage(err)))
+      .catch((err) => toastHelper.error(getErrorMessage(err)))
       .finally(() => setLoading(false));
   }, [company?._id]);
 

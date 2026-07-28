@@ -15,8 +15,9 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import { getErrorMessage } from '@/lib/axios';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
+import { CATEGORY_LABELS } from '@/features/student/types';
 
 export default function PostInternshipScreen() {
   const router = useRouter();
@@ -35,13 +36,17 @@ export default function PostInternshipScreen() {
         setCredits(c);
         if (c === 0) setShowCreditModal(true);
       })
-      .catch(() => toast.error('Failed to check credits'))
+      .catch(() => toastHelper.error('Failed to check credits'))
       .finally(() => setCreditsLoading(false));
   }, [company?._id]);
   const [technicalSkillsStr, setTechnicalSkillsStr] = useState('');
   const [softSkillsStr, setSoftSkillsStr] = useState('');
   const [questions, setQuestions] = useState<InternshipQuestion[]>([]);
   const [preKnowledgeText, setPreKnowledgeText] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [showCategoryInput, setShowCategoryInput] = useState(false);
+  const [categoryText, setCategoryText] = useState('');
+  const [universitiesStr, setUniversitiesStr] = useState('');
 
   const {
     register,
@@ -138,10 +143,15 @@ export default function PostInternshipScreen() {
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean),
+        categories: selectedCategories.length > 0 ? selectedCategories : undefined,
+        universities: universitiesStr
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
       });
       setShowSuccessModal(true);
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -299,6 +309,115 @@ export default function PostInternshipScreen() {
           />
           <p className="text-xs text-gray-400">Enter items separated by commas. Each item will appear as a bullet point in the acceptance email.</p>
         </div>
+
+        {/* Categories */}
+        <div>
+          <label className="text-sm font-semibold text-gray-700 mb-2 block">Categories <span className="text-gray-400 font-normal">(optional, max 4)</span></label>
+
+          {/* Selected chips */}
+          <div className="flex flex-wrap gap-2 mb-2">
+            {selectedCategories.map((cat) => (
+              <span key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-white border border-primary shadow-sm">
+                {CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS] || cat}
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategories((prev) => prev.filter((c) => c !== cat))}
+                  className="w-4 h-4 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors"
+                >
+                  <i className="fas fa-xmark text-[10px]" />
+                </button>
+              </span>
+            ))}
+          </div>
+
+          {/* Suggestion chips */}
+          <div className="flex flex-wrap gap-2">
+            {(Object.entries(CATEGORY_LABELS) as [string, string][]).map(([value, label]) => {
+              const on = selectedCategories.includes(value);
+              const atLimit = selectedCategories.length >= 4;
+              const isOther = value === 'other';
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  disabled={on || (atLimit && !isOther)}
+                  onClick={() => {
+                    if (isOther) { setShowCategoryInput(true); return; }
+                    if (on) setSelectedCategories((prev) => prev.filter((c) => c !== value));
+                    else if (!atLimit) setSelectedCategories((prev) => [...prev, value]);
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                    isOther
+                      ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 cursor-pointer'
+                      : on
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200 cursor-default'
+                        : atLimit
+                          ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-primary/40 hover:text-primary cursor-pointer'
+                  }`}
+                >
+                  {isOther ? <><i className="fas fa-pen text-[10px] mr-1" />{label}</> : on ? <><i className="fas fa-check text-[10px] mr-1" />{label}</> : label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Custom category input */}
+          {showCategoryInput && (
+            <div className="flex items-center gap-2 mt-3 animate-slide-up">
+              <input
+                type="text"
+                value={categoryText}
+                onChange={(e) => setCategoryText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = categoryText.trim();
+                    if (!val) return;
+                    if (!selectedCategories.includes(val) && selectedCategories.length < 4) {
+                      setSelectedCategories((prev) => [...prev, val]);
+                    }
+                    setCategoryText('');
+                    setShowCategoryInput(false);
+                  }
+                }}
+                placeholder="Type your category..."
+                className="flex-1 border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-gray-300 transition-all duration-200"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const val = categoryText.trim();
+                  if (!val) return;
+                  if (!selectedCategories.includes(val) && selectedCategories.length < 4) {
+                    setSelectedCategories((prev) => [...prev, val]);
+                  }
+                  setCategoryText('');
+                  setShowCategoryInput(false);
+                }}
+                className="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center hover:bg-primary-dark transition-colors shrink-0"
+              >
+                <i className="fas fa-plus text-xs" />
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowCategoryInput(false); setCategoryText(''); }}
+                className="w-8 h-8 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors shrink-0"
+              >
+                <i className="fas fa-xmark text-xs" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Universities */}
+        <Input
+          label="Target universities (comma-separated)"
+          value={universitiesStr}
+          onChange={(e) => setUniversitiesStr(e.target.value)}
+          placeholder="e.g. Cairo University, Ain Shams University"
+        />
 
         {/* Questions builder */}
         <div className="space-y-4">

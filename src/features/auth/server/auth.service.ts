@@ -80,7 +80,7 @@ export async function requestEmailChange(data: ChangeEmailRequest) {
 
 // ─── Change Email — Step 2: confirm with OTP ──────────────────
 export async function confirmEmailChange(data: ConfirmChangeEmailRequest) {
-  const res = await api.post('/auth/confirm-change-email', data);
+  const res = await api.patch('/auth/confirm-change-email', data);
   return res.data;
 }
 

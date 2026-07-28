@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
 import { resetPasswordSchema, type ResetPasswordFormData } from '@/features/auth/schemas/auth.schemas';
 import * as authService from '@/features/auth/server/auth.service';
@@ -36,7 +36,7 @@ export default function ResetPasswordPage() {
 
   async function onSubmit(data: ResetPasswordFormData) {
     if (!email) {
-      toast.error('Email not found. Please go back to Forgot Password.');
+      toastHelper.error('Email not found. Please go back to Forgot Password.');
       return;
     }
     try {
@@ -47,11 +47,11 @@ export default function ResetPasswordPage() {
         password: data.password,
         confirmPassword: data.confirmPassword,
       });
-      toast.success('Password reset successfully! Please sign in.');
+      toastHelper.success('Password reset successfully! Please sign in.');
       localStorage.removeItem(LS_PENDING_EMAIL);
       router.push('/login/student');
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toastHelper.error(getErrorMessage(err));
     }
   }
 

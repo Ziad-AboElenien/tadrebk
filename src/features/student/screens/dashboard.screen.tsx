@@ -18,7 +18,7 @@ import Badge from '@/components/ui/Badge';
 import Pagination from '@/components/ui/Pagination';
 import { userService } from '@/features/student/services/user.service';
 import { getErrorMessage } from '@/lib/axios';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 
 const LS_SAVED = 'tadrebk_saved_internships';
 
@@ -71,7 +71,7 @@ export default function StudentDashboardScreen() {
       const result = await applicationService.getUserApplications(userId, params);
       setApplications(result.applications);
       setTotalPages(result.pagination.pages);
-    } catch { toast.error('Failed to load applications'); }
+    } catch { toastHelper.error('Failed to load applications'); }
     finally { setLoadingApps(false); }
   }, [userId, page, filter]);
 
@@ -82,9 +82,9 @@ export default function StudentDashboardScreen() {
     setCancellingId(appId);
     try {
       await applicationService.cancelApplication(companyId, internId, appId);
-      toast.success('Application cancelled');
+      toastHelper.success('Application cancelled');
       fetchApplications();
-    } catch (err) { toast.error(getErrorMessage(err)); }
+    } catch (err) { toastHelper.error(getErrorMessage(err)); }
     finally { setCancellingId(null); }
   }
 
@@ -92,14 +92,14 @@ export default function StudentDashboardScreen() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingResume(true);
-    try { const url = await userService.uploadResume(file); setResumeUrl(url); toast.success('Resume uploaded!'); }
-    catch { toast.error('Failed to upload resume'); } finally { setUploadingResume(false); if (resumeRef.current) resumeRef.current.value = ''; }
+    try { const url = await userService.uploadResume(file); setResumeUrl(url); toastHelper.success('Resume uploaded!'); }
+    catch { toastHelper.error('Failed to upload resume'); } finally { setUploadingResume(false); if (resumeRef.current) resumeRef.current.value = ''; }
   }
 
   const handleSignOut = useCallback(() => {
     dispatch(logout());
     router.push('/');
-    toast.success('Signed out');
+    toastHelper.success('Signed out');
   }, [dispatch, router]);
 
   const displayName = user ? `${user.firstName} ${user.lastName}`.trim() : 'Student';

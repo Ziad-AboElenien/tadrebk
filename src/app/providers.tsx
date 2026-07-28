@@ -5,11 +5,13 @@ import { store } from '@/store/store';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SessionLoader from '@/components/shared/SessionLoader';
+import NotificationPoller from '@/features/notifications/components/NotificationPoller';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
       <SessionLoader>{children}</SessionLoader>
+      <NotificationPoller />
       <ToastContainer
         position="top-right"
         autoClose={4000}
@@ -18,7 +20,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         closeOnClick
         pauseOnHover
         theme="light"
-        toastClassName="!rounded-xl !shadow-lg !font-medium"
+        toastClassName="!rounded-2xl !shadow-xl !font-medium !border !border-gray-100 !bg-white"
+        progressClassName="!bg-emerald-500"
       />
     </Provider>
   );

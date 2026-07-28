@@ -80,6 +80,19 @@ interface ReviewPayload {
   status: 'accepted' | 'rejected';
 }
 
+export interface RatingData {
+  submitted: boolean;
+  score?: number;
+  comment?: string;
+  createdAt?: string;
+}
+
+export interface RatingsResponse {
+  studentRating: RatingData | null;
+  companyRating: RatingData | null;
+  bothSubmitted: boolean;
+}
+
 export const applicationService = {
   async apply(
     companyId: string,
@@ -175,5 +188,17 @@ export const applicationService = {
     await api.post(
       `/company/${companyId}/internships/${internId}/applications/${applicationId}/send-acceptance-email`,
     );
+  },
+
+  async rateApplication(
+    applicationId: string,
+    payload: { score: number; comment?: string },
+  ): Promise<void> {
+    await api.post(`/application/${applicationId}/rate`, payload);
+  },
+
+  async getRatings(applicationId: string): Promise<RatingsResponse> {
+    const { data } = await api.get(`/application/${applicationId}/ratings`);
+    return data.data;
   },
 };
