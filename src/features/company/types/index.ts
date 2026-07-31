@@ -11,6 +11,8 @@ export interface Company {
   description?: string;
   industry?: string;
   address?: string;
+  location?: { lat: number; lng: number };
+  googleMapsUrl?: string;
   companyEmail?: string;
   numberOfEmployees?: string;  // API returns as string
   createdBy: string;           // API uses "createdBy" not "ownerId"
@@ -21,6 +23,15 @@ export interface Company {
   deletedAt?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+/** Parse optional latitude/longitude inputs into a backend location object */
+export function parseLocation(lat?: string, lng?: string): { lat: number; lng: number } | undefined {
+  if (!lat?.trim() || !lng?.trim()) return undefined;
+  const la = Number(lat);
+  const ln = Number(lng);
+  if (!Number.isFinite(la) || !Number.isFinite(ln)) return undefined;
+  return { lat: la, lng: ln };
 }
 
 /** Extract a URL string from either a plain URL or a Cloudinary resource object */
@@ -35,6 +46,7 @@ export interface CreateCompanyRequest {
   description: string;
   industry: string;
   address: string;
+  location?: { lat: number; lng: number };
   numberOfEmployees: string;
   companyEmail: string;
   legalAttachment: File;       // multipart/form-data
@@ -45,6 +57,7 @@ export interface UpdateCompanyRequest {
   description?: string;
   industry?: string;
   address?: string;
+  location?: { lat: number; lng: number };
   companyEmail?: string;
   numberOfEmployees?: string;
 }

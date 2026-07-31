@@ -1,4 +1,5 @@
 import api from '@/lib/axios';
+import type { Education } from '@/features/student/types';
 
 export type Answer = { type: 'mcq'; selectedOption: string } | { type: 'writing'; text: string };
 
@@ -21,6 +22,7 @@ export interface Application {
       secure_url: string;
       _id: string;
     };
+    education?: Education[];
   };
   internshipId: string | PopulatedInternship;
   companyId: string;

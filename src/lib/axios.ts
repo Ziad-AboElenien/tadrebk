@@ -1,5 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { LS_ACCESS_TOKEN, LS_REFRESH_TOKEN, LS_TOKEN_TIMESTAMP } from './constants';
+import { LS_ACCESS_TOKEN, LS_REFRESH_TOKEN, LS_TOKEN_TIMESTAMP, LS_PENDING_ONBOARDING } from './constants';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api/v1';
@@ -82,6 +82,7 @@ function clearAuthStorage() {
     localStorage.removeItem(LS_ACCESS_TOKEN);
     localStorage.removeItem(LS_REFRESH_TOKEN);
     localStorage.removeItem(LS_TOKEN_TIMESTAMP);
+    localStorage.removeItem(LS_PENDING_ONBOARDING);
     document.cookie = 'tadrebk_access_token=; Max-Age=0; path=/';
     document.cookie = 'tadrebk_user_role=; Max-Age=0; path=/';
   }

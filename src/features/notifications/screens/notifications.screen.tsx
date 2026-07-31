@@ -10,6 +10,8 @@ import Spinner from '@/components/ui/Spinner';
 import Pagination from '@/components/ui/Pagination';
 import { toastHelper } from '@/lib/toast';
 
+type FilterTab = 'All' | 'Unread';
+
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -23,30 +25,10 @@ function timeAgo(dateStr: string): string {
 }
 
 function getIcon(type: string): string {
-  switch (type) {
-    case 'application_reviewed': return 'fa-check-circle';
-    case 'application_received':
-    case 'new_application': return 'fa-paper-plane';
-    default: return 'fa-bell';
-  }
-}
-
-function getIconBg(type: string): string {
-  switch (type) {
-    case 'application_reviewed': return 'bg-emerald-100';
-    case 'application_received':
-    case 'new_application': return 'bg-blue-100';
-    default: return 'bg-gray-100';
-  }
-}
-
-function getIconColor(type: string): string {
-  switch (type) {
-    case 'application_reviewed': return 'text-emerald-500';
-    case 'application_received':
-    case 'new_application': return 'text-blue-500';
-    default: return 'text-gray-500';
-  }
+  if (type === 'application_reviewed') return 'fa-check-circle';
+  if (type === 'application_received' || type === 'new_application') return 'fa-paper-plane';
+  if (type === 'message' || type === 'mention' || type === 'new_message') return 'fa-message';
+  return 'fa-bell';
 }
 
 function statusBadge(status?: string) {
@@ -76,6 +58,8 @@ export default function NotificationsScreen() {
   const [totalPages, setTotalPages] = useState(1);
   const [markingAll, setMarkingAll] = useState(false);
   const [markingIds, setMarkingIds] = useState<Set<string>>(new Set());
+  const [filter, setFilter] = useState<FilterTab>('All');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const fetchPage = useCallback(async (p: number) => {
     setLoading(true);
@@ -99,6 +83,24 @@ export default function NotificationsScreen() {
 
   useEffect(() => { refreshCount(); }, [refreshCount]);
 
+  const filtered = items.filter((n) => {
+    if (filter === 'Unread') return !n.read;
+    return true;
+  });
+
+  const allChecked = filtered.length > 0 && filtered.every((n) => selected.has(n._id));
+
+  const toggleSelect = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const toggleAll = () =>
+    setSelected(allChecked ? new Set() : new Set(filtered.map((n) => n._id)));
+
   async function handleMarkAsRead(n: Notification) {
     if (n.read) return;
     setMarkingIds((prev) => new Set(prev).add(n._id));
@@ -108,6 +110,18 @@ export default function NotificationsScreen() {
       await refreshCount();
     } catch { toastHelper.error('Failed to mark as read'); }
     finally { setMarkingIds((prev) => { const next = new Set(prev); next.delete(n._id); return next; }); }
+  }
+
+  async function handleMarkSelectedRead() {
+    if (selected.size === 0) return;
+    setMarkingAll(true);
+    try {
+      await Promise.all([...selected].map((id) => notificationService.markAsRead(id)));
+      await fetchPage(page);
+      await refreshCount();
+      setSelected(new Set());
+    } catch { toastHelper.error('Failed to mark as read'); }
+    finally { setMarkingAll(false); }
   }
 
   async function handleMarkAllRead() {
@@ -120,69 +134,125 @@ export default function NotificationsScreen() {
     finally { setMarkingAll(false); }
   }
 
+  const tabs: FilterTab[] = ['All', 'Unread'];
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      {/* Header */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      {/* Page header + tabs */}
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link href={dashboardHref} className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
             <i className="fas fa-arrow-left text-xs" /> Back to Dashboard
           </Link>
-          <h1 className="text-2xl font-extrabold text-gray-900">Notifications</h1>
+          <h1 className="text-3xl font-extrabold text-gray-900">Notifications</h1>
           <p className="mt-1 text-sm text-gray-400">
             {unreadCount > 0 ? `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up!'}
           </p>
         </div>
-        {items.some((n) => !n.read) && (
-          <button
-            onClick={handleMarkAllRead}
-            disabled={markingAll}
-            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:opacity-50"
-          >
-            {markingAll ? 'Marking...' : 'Mark All as Read'}
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => { setFilter(tab); setSelected(new Set()); }}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                filter === tab ? 'bg-emerald-500 text-white shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-gray-900 px-5 py-3.5">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleAll}
+              className={`flex h-5 w-5 items-center justify-center rounded border-2 transition ${allChecked ? 'border-white bg-white' : 'border-gray-400'}`}
+            >
+              {allChecked && <i className="fas fa-check h-3 w-3 text-gray-900" />}
+            </button>
+            <span className="text-sm font-semibold text-white">
+              {selected.size} {selected.size === 1 ? 'item' : 'items'} selected
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleMarkSelectedRead}
+              disabled={markingAll}
+              className="flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-600 disabled:opacity-50"
+            >
+              {markingAll ? <Spinner size="sm" /> : <i className="fas fa-check h-4 w-4" />} Mark selected as read
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* List */}
       {loading ? (
         <div className="flex justify-center py-20"><Spinner size="lg" /></div>
-      ) : items.length === 0 ? (
-        <div className="flex flex-col items-center py-20 text-gray-400">
-          <i className="fas fa-bell-slash text-4xl mb-4" />
-          <p className="text-lg font-semibold">No notifications yet</p>
-          <p className="mt-1 text-sm">{role === 'company' ? 'When students apply to your internships, you&apos;ll see it here.' : 'When companies respond to your applications, you&apos;ll see it here.'}</p>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 py-20 text-center">
+          <i className="fas fa-bell text-4xl text-gray-300" />
+          <p className="text-sm text-gray-400">
+            {filter === 'Unread'
+              ? "You're all caught up!"
+              : role === 'company'
+                ? 'When students apply to your internships, you&apos;ll see it here.'
+                : 'When companies respond to your applications, you&apos;ll see it here.'}
+          </p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {items.map((n) => {
+        <div className="space-y-3">
+          {filtered.map((n) => {
+            const checked = selected.has(n._id);
             const loadingMark = markingIds.has(n._id);
             return (
-              <button
+              <div
                 key={n._id}
-                onClick={() => handleMarkAsRead(n)}
-                disabled={loadingMark}
-                className={`w-full flex items-start gap-4 rounded-2xl border p-4 text-left transition hover:shadow-sm ${
-                  n.read
-                    ? 'border-gray-100 bg-white'
-                    : 'border-emerald-100 bg-emerald-50/60'
+                className={`flex items-start gap-4 rounded-2xl border px-5 py-5 transition ${
+                  checked ? 'border-emerald-200 bg-emerald-50/40' : 'border-gray-100 bg-white hover:border-gray-200'
                 }`}
               >
-                <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${getIconBg(n.type)}`}>
-                  <i className={`fas ${getIcon(n.type)} text-base ${getIconColor(n.type)}`} />
+                <button
+                  onClick={() => toggleSelect(n._id)}
+                  className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition ${
+                    checked ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300 bg-white hover:border-emerald-400'
+                  }`}
+                >
+                  {checked && <i className="fas fa-check h-3 w-3 text-white" />}
+                </button>
+
+                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-emerald-50">
+                  <i className={`fas ${getIcon(n.type)} text-base text-emerald-500`} />
                 </div>
+
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className={`text-sm ${n.read ? 'text-gray-600' : 'font-bold text-gray-900'}`}>
-                      {n.title}
-                    </p>
-                    {statusBadge(n.data?.status)}
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-extrabold text-gray-900">{n.title}</h3>
+                      {!n.read && (
+                        <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white">NEW</span>
+                      )}
+                      {statusBadge(n.data?.status)}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleMarkAsRead(n)}
+                        disabled={loadingMark || n.read}
+                        className="text-gray-300 transition hover:text-emerald-500 disabled:opacity-40"
+                        title="Mark as read"
+                      >
+                        {loadingMark ? <Spinner size="sm" /> : <i className="fas fa-check h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
-                  <p className={`mt-0.5 text-sm ${n.read ? 'text-gray-400' : 'text-gray-500'}`}>{n.message}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-500">{n.message}</p>
                   {n.data?.internshipId && n.data?.internshipTitle && (
                     <Link
                       href={`/internships/${n.data.internshipId}`}
-                      onClick={(e) => e.stopPropagation()}
                       className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                     >
                       <i className="fas fa-briefcase" />
@@ -190,15 +260,11 @@ export default function NotificationsScreen() {
                       <i className="fas fa-arrow-up-right-from-square text-[9px]" />
                     </Link>
                   )}
-                  <div className="mt-1.5 flex items-center gap-3">
-                    <p className="text-xs font-medium text-gray-300">{timeAgo(n.createdAt)}</p>
-                    {loadingMark && <Spinner size="sm" />}
-                  </div>
+                  <p className="mt-2 flex items-center gap-1.5 text-xs text-gray-400">
+                    <i className="fas fa-clock text-[11px]" />{timeAgo(n.createdAt)}
+                  </p>
                 </div>
-                {!n.read && (
-                  <span className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-emerald-500" />
-                )}
-              </button>
+              </div>
             );
           })}
         </div>
@@ -208,6 +274,19 @@ export default function NotificationsScreen() {
       {totalPages > 1 && !loading && (
         <div className="mt-6 flex justify-center">
           <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
+      )}
+
+      {/* Mark all */}
+      {items.some((n) => !n.read) && selected.size === 0 && (
+        <div className="mt-6 text-center">
+          <button
+            onClick={handleMarkAllRead}
+            disabled={markingAll}
+            className="rounded-full border-2 border-emerald-400 px-8 py-3 text-sm font-bold text-emerald-500 transition hover:bg-emerald-50 disabled:opacity-50"
+          >
+            {markingAll ? 'Marking...' : 'Mark all as read'}
+          </button>
         </div>
       )}
     </div>

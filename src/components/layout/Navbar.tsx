@@ -12,6 +12,7 @@ import Avatar from '@/components/ui/Avatar';
 import { getImgUrl } from '@/features/company/types';
 import { getUserImgUrl } from '@/features/student/types';
 import NotificationBell from '@/features/notifications/components/NotificationBell';
+import { LS_PENDING_ONBOARDING } from '@/lib/constants';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -33,6 +34,12 @@ export default function Navbar() {
     window.addEventListener('scroll', handler);
     return () => window.removeEventListener('scroll', handler);
   }, []);
+
+  // Company user stuck in onboarding → lock all navigation
+  const pendingOnboarding =
+    mounted &&
+    typeof window !== 'undefined' &&
+    localStorage.getItem(LS_PENDING_ONBOARDING) === 'true';
 
   // Close user menu on outside click
   useEffect(() => {
@@ -95,6 +102,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
+        {!pendingOnboarding && (
         <nav className="hidden md:flex items-center gap-8">
           {[
             { href: '/internships', label: 'Internships' },
@@ -117,10 +125,15 @@ export default function Navbar() {
             </Link>
           ))}
         </nav>
+        )}
 
         {/* Right side */}
         <div className="hidden md:flex items-center gap-3">
-          {isAuthenticated && mounted ? (
+          {pendingOnboarding ? (
+            <span className="flex items-center gap-2 text-sm font-semibold text-amber-600">
+              <i className="fas fa-circle-exclamation" /> Complete your company profile
+            </span>
+          ) : isAuthenticated && mounted ? (
             <>
               {(role === 'student' || role === 'company') && <NotificationBell />}
               <div className="relative" ref={userMenuRef}>
@@ -257,7 +270,11 @@ export default function Navbar() {
 
         {/* Mobile right side */}
         <div className="md:hidden flex items-center gap-2">
-          {isAuthenticated && mounted && (
+          {pendingOnboarding ? (
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+              <i className="fas fa-circle-exclamation" /> Complete profile
+            </span>
+          ) : isAuthenticated && mounted && (
             <>
               {(role === 'student' || role === 'company') && <NotificationBell />}
               <div className="relative" ref={userMenuMobileRef}>
@@ -387,6 +404,7 @@ export default function Navbar() {
 
             {/* Navigation links */}
             <div className="flex-1 overflow-y-auto px-5 py-6 space-y-1">
+              {!pendingOnboarding && (<>
               <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-3">Browse</p>
               <Link href="/internships" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                 <i className="fas fa-search w-5 text-center text-gray-400" /> Internships
@@ -445,11 +463,16 @@ export default function Navbar() {
                   )}
                 </>
               )}
+              </>)}
             </div>
 
             {/* Bottom actions */}
             <div className="border-t border-gray-100 px-5 py-4">
-              {isAuthenticated && mounted ? (
+              {pendingOnboarding ? (
+                <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-50 py-3 text-sm font-semibold text-red-500 hover:bg-red-100 transition-all">
+                  <i className="fas fa-sign-out-alt" /> Sign out
+                </button>
+              ) : isAuthenticated && mounted ? (
                 <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-50 py-3 text-sm font-semibold text-red-500 hover:bg-red-100 transition-all">
                   <i className="fas fa-sign-out-alt" /> Sign out
                 </button>

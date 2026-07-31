@@ -76,6 +76,8 @@ export const LS_COMPANY_ID = 'tadrebk_company_id';
 export const LS_TOKEN_TIMESTAMP = 'tadrebk_token_timestamp';
 // Stored temporarily during signup to route user to correct onboarding
 export const LS_PENDING_EMAIL = 'tadrebk_pending_email';
+// Set while a company user has NOT completed onboarding → blocks all other routes
+export const LS_PENDING_ONBOARDING = 'tadrebk_pending_onboarding';
 export const TOKEN_TTL_MS = 86400000; // 1 day
 
 // ============================================================

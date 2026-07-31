@@ -16,9 +16,10 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import ImageMenu from '@/components/ui/ImageMenu';
 import ImageCropperModal from '@/components/ui/ImageCropperModal';
+import LocationPickerField from '@/components/ui/LocationPickerField';
 import { companyService } from '@/features/company/services/company.service';
 import { COMPANY_INDUSTRIES } from '@/lib/constants';
-import { getImgUrl } from '@/features/company/types';
+import { getImgUrl, parseLocation } from '@/features/company/types';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
@@ -47,6 +48,8 @@ export default function CompanySettingsScreen() {
   });
 
   const wIndustry = watch('industry');
+  const wLocLat = watch('location.lat');
+  const wLocLng = watch('location.lng');
 
   useEffect(() => {
     if (company) {
@@ -55,6 +58,10 @@ export default function CompanySettingsScreen() {
         description: company.description || '',
         industry: company.industry || '',
         address: company.address || '',
+        location: {
+          lat: company.location?.lat != null ? String(company.location.lat) : '',
+          lng: company.location?.lng != null ? String(company.location.lng) : '',
+        },
         companyEmail: company.companyEmail || '',
         numberOfEmployees: company.numberOfEmployees || '',
       });
@@ -65,7 +72,15 @@ export default function CompanySettingsScreen() {
     if (!company) return;
     setSaving(true);
     try {
-      const updated = await companyService.updateCompany(company._id, data);
+      const updated = await companyService.updateCompany(company._id, {
+        name: data.name,
+        description: data.description,
+        industry: data.industry,
+        address: data.address,
+        location: parseLocation(data.location?.lat, data.location?.lng),
+        companyEmail: data.companyEmail,
+        numberOfEmployees: data.numberOfEmployees,
+      });
       dispatch(setCompany(updated));
       toastHelper.success('Company settings saved!');
       router.push('/company/profile');
@@ -259,6 +274,19 @@ export default function CompanySettingsScreen() {
                 leftIcon={<i className="fas fa-envelope text-gray-400" />}
                 {...register('companyEmail')}
               />
+            </div>
+
+            <div>
+              <LocationPickerField
+                label="Location on map (optional)"
+                lat={wLocLat}
+                lng={wLocLng}
+                onChange={(la, ln) => {
+                  setValue('location.lat', la, { shouldValidate: true });
+                  setValue('location.lng', ln, { shouldValidate: true });
+                }}
+              />
+              <p className="text-xs text-gray-400 mt-1">Leave empty to remove the Google Maps link from your public profile.</p>
             </div>
 
             <Input

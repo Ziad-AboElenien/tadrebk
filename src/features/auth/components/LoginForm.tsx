@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { loginSchema, type LoginFormData } from '@/features/auth/schemas/auth.schemas';
 import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage } from '@/lib/axios';
-import { LS_COMPANY_ID } from '@/lib/constants';
+import { LS_COMPANY_ID, LS_PENDING_ONBOARDING } from '@/lib/constants';
 import { useAppDispatch } from '@/store/store';
 import { setTokens } from '@/store/authSlice';
 import { setUser } from '@/store/userSlice';
@@ -108,6 +108,10 @@ export default function LoginForm({ role }: LoginFormProps) {
 
       const next = searchParams.get('next');
       if (next && next.startsWith('/')) {
+        // Company-intent user without a company must complete onboarding first
+        if (userRole !== 'company' && next.startsWith('/company/')) {
+          localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
+        }
         router.push(next);
         return;
       }
@@ -115,6 +119,7 @@ export default function LoginForm({ role }: LoginFormProps) {
       if (userRole === 'company') {
         router.push('/company/dashboard');
       } else if (role === 'company') {
+        localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
         router.push('/company/onboarding');
       } else {
         router.push('/dashboard');

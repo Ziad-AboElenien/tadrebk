@@ -41,11 +41,14 @@ export default function PostInternshipScreen() {
   }, [company?._id]);
   const [technicalSkillsStr, setTechnicalSkillsStr] = useState('');
   const [softSkillsStr, setSoftSkillsStr] = useState('');
+  const [technicalError, setTechnicalError] = useState<string | null>(null);
+  const [softError, setSoftError] = useState<string | null>(null);
   const [questions, setQuestions] = useState<InternshipQuestion[]>([]);
   const [preKnowledgeText, setPreKnowledgeText] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showCategoryInput, setShowCategoryInput] = useState(false);
   const [categoryText, setCategoryText] = useState('');
+  const [categoryError, setCategoryError] = useState<string | null>(null);
   const [universitiesStr, setUniversitiesStr] = useState('');
 
   const {
@@ -122,6 +125,26 @@ export default function PostInternshipScreen() {
 
   async function onSubmit(data: InternshipFormValues) {
     if (!company) return;
+    if (selectedCategories.length === 0) {
+      setCategoryError('Select at least one track');
+      toastHelper.error('Please select at least one track');
+      return;
+    }
+    const technicalSkills = technicalSkillsStr.split(',').map((s) => s.trim()).filter(Boolean);
+    const softSkills = softSkillsStr.split(',').map((s) => s.trim()).filter(Boolean);
+    if (technicalSkills.length === 0) {
+      setTechnicalError('Add at least one technical skill');
+      toastHelper.error('Please add at least one technical skill');
+      return;
+    }
+    if (softSkills.length === 0) {
+      setSoftError('Add at least one soft skill');
+      toastHelper.error('Please add at least one soft skill');
+      return;
+    }
+    setCategoryError(null);
+    setTechnicalError(null);
+    setSoftError(null);
     setSubmitting(true);
     try {
       const cleaned = questions.map((q) => {
@@ -130,24 +153,19 @@ export default function PostInternshipScreen() {
       });
       await internshipService.createInternship(company._id, {
         ...data,
-        softSkills: softSkillsStr
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean),
-        technicalSkills: technicalSkillsStr
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean),
+        softSkills,
+        technicalSkills,
         questions: cleaned.length > 0 ? cleaned : undefined,
         preKnowledge: preKnowledgeText
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean),
-        categories: selectedCategories.length > 0 ? selectedCategories : undefined,
-        universities: universitiesStr
+        track: selectedCategories.length > 0 ? selectedCategories : undefined,
+        requiredEducation: universitiesStr
           .split(',')
           .map((s) => s.trim())
-          .filter(Boolean),
+          .filter(Boolean)
+          .map((institution) => ({ institution })),
       });
       setShowSuccessModal(true);
     } catch (err) {
@@ -284,14 +302,16 @@ export default function PostInternshipScreen() {
         <Input
           label="Technical skills (comma-separated)"
           value={technicalSkillsStr}
-          onChange={(e) => setTechnicalSkillsStr(e.target.value)}
+          onChange={(e) => { setTechnicalSkillsStr(e.target.value); if (technicalError) setTechnicalError(null); }}
+          error={technicalError || undefined}
           placeholder="e.g. JavaScript, React, Node.js"
         />
 
         <Input
           label="Soft skills (comma-separated)"
           value={softSkillsStr}
-          onChange={(e) => setSoftSkillsStr(e.target.value)}
+          onChange={(e) => { setSoftSkillsStr(e.target.value); if (softError) setSoftError(null); }}
+          error={softError || undefined}
           placeholder="e.g. Communication, Teamwork, Problem-solving"
         />
 
@@ -310,9 +330,9 @@ export default function PostInternshipScreen() {
           <p className="text-xs text-gray-400">Enter items separated by commas. Each item will appear as a bullet point in the acceptance email.</p>
         </div>
 
-        {/* Categories */}
+        {/* Track */}
         <div>
-          <label className="text-sm font-semibold text-gray-700 mb-2 block">Categories <span className="text-gray-400 font-normal">(optional, max 4)</span></label>
+          <label className="text-sm font-semibold text-gray-700 mb-2 block">Track <span className="text-red-500">*</span> <span className="text-gray-400 font-normal">(select at least one)</span></label>
 
           {/* Selected chips */}
           <div className="flex flex-wrap gap-2 mb-2">
@@ -321,7 +341,7 @@ export default function PostInternshipScreen() {
                 {CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS] || cat}
                 <button
                   type="button"
-                  onClick={() => setSelectedCategories((prev) => prev.filter((c) => c !== cat))}
+                  onClick={() => setSelectedCategories((prev) => { const next = prev.filter((c) => c !== cat); if (next.length > 0) setCategoryError(null); return next; })}
                   className="w-4 h-4 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors"
                 >
                   <i className="fas fa-xmark text-[10px]" />
@@ -334,26 +354,23 @@ export default function PostInternshipScreen() {
           <div className="flex flex-wrap gap-2">
             {(Object.entries(CATEGORY_LABELS) as [string, string][]).map(([value, label]) => {
               const on = selectedCategories.includes(value);
-              const atLimit = selectedCategories.length >= 4;
               const isOther = value === 'other';
               return (
                 <button
                   key={value}
                   type="button"
-                  disabled={on || (atLimit && !isOther)}
+                  disabled={on}
                   onClick={() => {
                     if (isOther) { setShowCategoryInput(true); return; }
                     if (on) setSelectedCategories((prev) => prev.filter((c) => c !== value));
-                    else if (!atLimit) setSelectedCategories((prev) => [...prev, value]);
+                    else { setSelectedCategories((prev) => [...prev, value]); setCategoryError(null); }
                   }}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                     isOther
                       ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 cursor-pointer'
                       : on
                         ? 'bg-emerald-50 text-emerald-600 border-emerald-200 cursor-default'
-                        : atLimit
-                          ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-primary/40 hover:text-primary cursor-pointer'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-primary/40 hover:text-primary cursor-pointer'
                   }`}
                 >
                   {isOther ? <><i className="fas fa-pen text-[10px] mr-1" />{label}</> : on ? <><i className="fas fa-check text-[10px] mr-1" />{label}</> : label}
@@ -361,6 +378,7 @@ export default function PostInternshipScreen() {
               );
             })}
           </div>
+          {categoryError && <p className="text-red-500 text-xs font-medium mt-1.5">{categoryError}</p>}
 
           {/* Custom category input */}
           {showCategoryInput && (
@@ -374,14 +392,15 @@ export default function PostInternshipScreen() {
                     e.preventDefault();
                     const val = categoryText.trim();
                     if (!val) return;
-                    if (!selectedCategories.includes(val) && selectedCategories.length < 4) {
+                    if (!selectedCategories.includes(val)) {
                       setSelectedCategories((prev) => [...prev, val]);
+                      setCategoryError(null);
                     }
                     setCategoryText('');
                     setShowCategoryInput(false);
                   }
                 }}
-                placeholder="Type your category..."
+                placeholder="Type your track..."
                 className="flex-1 border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-gray-300 transition-all duration-200"
                 autoFocus
               />
@@ -390,8 +409,9 @@ export default function PostInternshipScreen() {
                 onClick={() => {
                   const val = categoryText.trim();
                   if (!val) return;
-                  if (!selectedCategories.includes(val) && selectedCategories.length < 4) {
+                  if (!selectedCategories.includes(val)) {
                     setSelectedCategories((prev) => [...prev, val]);
+                    setCategoryError(null);
                   }
                   setCategoryText('');
                   setShowCategoryInput(false);
@@ -413,7 +433,7 @@ export default function PostInternshipScreen() {
 
         {/* Universities */}
         <Input
-          label="Target universities (comma-separated)"
+          label="Target universities (optional, comma-separated)"
           value={universitiesStr}
           onChange={(e) => setUniversitiesStr(e.target.value)}
           placeholder="e.g. Cairo University, Ain Shams University"
