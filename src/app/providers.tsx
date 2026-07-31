@@ -6,12 +6,14 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SessionLoader from '@/components/shared/SessionLoader';
 import NotificationPoller from '@/features/notifications/components/NotificationPoller';
+import OnboardingGate from '@/components/shared/OnboardingGate';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
       <SessionLoader>{children}</SessionLoader>
       <NotificationPoller />
+      <OnboardingGate />
       <ToastContainer
         position="top-right"
         autoClose={4000}

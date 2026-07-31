@@ -87,11 +87,21 @@ export const changeEmailSchema = z.object({
 });
 
 // ─── Company Onboarding (step 2 after signup) ────────────────
+const latLngRefine = (min: number, max: number, message: string) =>
+  z
+    .string()
+    .optional()
+    .or(z.literal(''))
+    .refine((v) => !v || (Number.isFinite(Number(v)) && Number(v) >= min && Number(v) <= max), {
+      message,
+    });
+
 export const companyOnboardingSchema = z.object({
   name: z.string().min(2, 'Company name is required'),
   description: z.string().min(20, 'Description must be at least 20 characters'),
   industry: z.string().min(1, 'Please select an industry'),
   address: z.string().min(5, 'Address is required'),
+  location: z.object({ lat: latLngRefine(-90, 90, 'Latitude must be between -90 and 90'), lng: latLngRefine(-180, 180, 'Longitude must be between -180 and 180') }).optional(),
   numberOfEmployees: z.string().min(1, 'Number of employees is required'),
   companyEmail: z.string().email('Invalid company email'),
   legalAttachment: z
@@ -122,8 +132,6 @@ export const internshipSchema = z.object({
   technicalSkills: z.array(z.string()).default([]),
   questions: z.array(questionSchema).optional(),
   preKnowledge: z.array(z.string()).optional(),
-  categories: z.array(z.string()).optional(),
-  universities: z.array(z.string()).optional(),
 });
 
 // ─── Exported Types ───────────────────────────────────────────
@@ -169,6 +177,7 @@ export const companySettingsSchema = z.object({
   description: z.string().optional(),
   industry: z.string().min(1, 'Please select an industry'),
   address: z.string().optional(),
+  location: z.object({ lat: latLngRefine(-90, 90, 'Latitude must be between -90 and 90'), lng: latLngRefine(-180, 180, 'Longitude must be between -180 and 180') }).optional(),
   companyEmail: z.string().email('Invalid email').optional().or(z.literal('')),
   numberOfEmployees: z.string().optional(),
 });

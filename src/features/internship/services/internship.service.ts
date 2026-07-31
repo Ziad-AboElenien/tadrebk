@@ -1,6 +1,16 @@
 import api from '@/lib/axios';
 import { Internship, InternshipQuestion } from '@/features/internship/types';
 
+// Matches the backend POST /company/{companyId}/internships body schema
+export interface RequiredEducationEntry {
+  institution: string;
+  degree?: string;
+  field?: string;
+  grade?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 interface CreateInternshipPayload {
   title: string;
   description: string;
@@ -10,8 +20,8 @@ interface CreateInternshipPayload {
   technicalSkills: string[];
   questions?: InternshipQuestion[];
   preKnowledge?: string[];
-  categories?: string[];
-  universities?: string[];
+  track?: string[];
+  requiredEducation?: RequiredEducationEntry[];
 }
 
 interface UpdateInternshipPayload extends Partial<CreateInternshipPayload> {

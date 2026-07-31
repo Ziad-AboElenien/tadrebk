@@ -6,6 +6,7 @@ interface CreateCompanyPayload {
   description: string;
   industry: string;
   address: string;
+  location?: { lat: number; lng: number };
   numberOfEmployees: string;
   companyEmail: string;
   legalAttachment: File;
@@ -16,6 +17,7 @@ interface UpdateCompanyPayload {
   description?: string;
   industry?: string;
   address?: string;
+  location?: { lat: number; lng: number };
   numberOfEmployees?: string;
   companyEmail?: string;
   logo?: string;
@@ -94,6 +96,9 @@ export const companyService = {
     formData.append('numberOfEmployees', payload.numberOfEmployees);
     formData.append('companyEmail', payload.companyEmail);
     formData.append('legalAttachment', payload.legalAttachment);
+    if (payload.location) {
+      formData.append('location', JSON.stringify(payload.location));
+    }
 
     const { data } = await api.post<CompanyResponse>('/company/', formData, {
       headers: {

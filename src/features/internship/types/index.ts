@@ -1,4 +1,5 @@
 import type { Company } from '@/features/company/types';
+import type { Education } from '@/features/student/types';
 
 // Matches actual Swagger API schema
 export type InternshipLocation = 'on-site' | 'remote' | 'hybrid';
@@ -27,6 +28,8 @@ export interface Internship {
   technicalSkills?: string[];
   questions?: InternshipQuestion[];
   preKnowledge?: string[];
+  track?: string[];
+  requiredEducation?: Education[];
   categories?: string[];
   universities?: string[];
   companyId: string | Company;
@@ -61,8 +64,8 @@ export interface CreateInternshipRequest {
   technicalSkills?: string[];
   questions?: InternshipQuestion[];
   preKnowledge?: string[];
-  categories?: string[];
-  universities?: string[];
+  track?: string[];
+  requiredEducation?: Education[];
 }
 
 export interface UpdateInternshipRequest extends Partial<CreateInternshipRequest> {

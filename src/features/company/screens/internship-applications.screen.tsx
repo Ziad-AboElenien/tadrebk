@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { applicationService, Application } from '@/features/student/services/application.service';
 import type { RatingData } from '@/features/student/services/application.service';
+import { userService } from '@/features/student/services/user.service';
+import type { User } from '@/features/student/types';
 import { Internship } from '@/features/internship/types';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
@@ -17,6 +19,19 @@ import Link from 'next/link';
 
 type FilterStatus = 'all' | 'pending' | 'accepted' | 'rejected';
 
+const OTHER_VALUE = '__other__';
+
+function collectInstitutions(user: Pick<User, 'education'> | null | undefined): string[] {
+  if (!user?.education?.length) return [];
+  return [
+    ...new Set(
+      user.education
+        .map((e) => e.institution?.trim())
+        .filter((x): x is string => Boolean(x)),
+    ),
+  ];
+}
+
 export default function InternshipApplicationsScreen() {
   const params = useParams();
   const router = useRouter();
@@ -27,6 +42,13 @@ export default function InternshipApplicationsScreen() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterStatus>('all');
+  const [studentUniversities, setStudentUniversities] = useState<Record<string, string[]>>({});
+  const [loadingUniversities, setLoadingUniversities] = useState(false);
+  const [selectedUniversity, setSelectedUniversity] = useState('');
+  const [universityOpen, setUniversityOpen] = useState(false);
+  const [showOtherUniversity, setShowOtherUniversity] = useState(false);
+  const universityRef = useRef<HTMLDivElement>(null);
+  const universityFetchedRef = useRef(false);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
   const [sendingAll, setSendingAll] = useState(false);
@@ -55,6 +77,57 @@ export default function InternshipApplicationsScreen() {
   }, [company, internId, router]);
 
   useEffect(() => { fetchApplications(); }, [fetchApplications]);
+
+  // Gather university names from the applicants' own data (exact same names),
+  // fetching full profiles only when the applications response doesn't include education.
+  useEffect(() => {
+    if (applications.length === 0 || universityFetchedRef.current) return;
+    const students = applications.map((a) => a.studentId).filter(Boolean);
+    let cancelled = false;
+    (async () => {
+      const byId: Record<string, string[]> = {};
+      const missingIds: string[] = [];
+      students.forEach((s) => {
+        if (s.education?.length) byId[s._id] = collectInstitutions(s);
+        else missingIds.push(s._id);
+      });
+      if (missingIds.length > 0) {
+        setLoadingUniversities(true);
+        const results = await Promise.allSettled(missingIds.map((id) => userService.getUserProfile(id)));
+        if (cancelled) return;
+        results.forEach((r, i) => {
+          if (r.status === 'fulfilled') byId[missingIds[i]] = collectInstitutions(r.value);
+        });
+        setLoadingUniversities(false);
+      }
+      universityFetchedRef.current = true;
+      setStudentUniversities(byId);
+    })();
+    return () => { cancelled = true; };
+  }, [applications]);
+
+  // Close university dropdown on outside click / Escape
+  useEffect(() => {
+    if (!universityOpen) return;
+    function handle(e: MouseEvent) {
+      if (universityRef.current && !universityRef.current.contains(e.target as Node)) setUniversityOpen(false);
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setUniversityOpen(false);
+    }
+    document.addEventListener('mousedown', handle);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handle);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [universityOpen]);
+
+  const universities = useMemo(() => {
+    const set = new Set<string>();
+    Object.values(studentUniversities).forEach((insts) => insts.forEach((i) => set.add(i)));
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [studentUniversities]);
 
   useEffect(() => {
     if (applications.length === 0) return;
@@ -150,9 +223,25 @@ export default function InternshipApplicationsScreen() {
     if (failed > 0) toastHelper.error(`${failed} email${failed > 1 ? 's' : ''} failed`);
   }
 
-  const filtered = filter === 'all'
-    ? applications
-    : applications.filter((a) => a.status === filter);
+  const filtered = applications.filter((a) => {
+    const statusOk = filter === 'all' || a.status === filter;
+    if (!statusOk) return false;
+    if (!selectedUniversity) return true;
+    const insts = studentUniversities[a.studentId?._id ?? ''] ?? [];
+    return insts.some((i) => i.toLowerCase() === selectedUniversity.toLowerCase());
+  });
+
+  function pickUniversity(value: string) {
+    if (value === OTHER_VALUE) {
+      setSelectedUniversity('');
+      setShowOtherUniversity(true);
+      setUniversityOpen(false);
+      return;
+    }
+    setShowOtherUniversity(false);
+    setSelectedUniversity(value);
+    setUniversityOpen(false);
+  }
 
   const statusCounts = {
     all: applications.length,
@@ -206,6 +295,87 @@ export default function InternshipApplicationsScreen() {
         ))}
       </div>
 
+      {/* University filter */}
+      <div className="mb-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+            <i className="fas fa-graduation-cap text-primary" /> University:
+          </label>
+          <div ref={universityRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setUniversityOpen((o) => !o)}
+              className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-gray-300 border-gray-200 min-w-[210px]"
+            >
+              <span className={selectedUniversity ? 'text-gray-800 font-medium' : 'text-gray-400'}>
+                {selectedUniversity || 'All universities'}
+              </span>
+              {loadingUniversities && (
+                <span className="ml-auto w-4 h-4 rounded-full border-2 border-gray-200 border-t-primary animate-spin" />
+              )}
+              <i className={`fas fa-chevron-down text-xs text-gray-400 ml-auto transition-transform ${universityOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {universityOpen && (
+              <div className="absolute z-50 mt-1 w-full min-w-[240px] bg-white border border-gray-100 rounded-xl shadow-xl shadow-gray-200/50 py-1 max-h-60 overflow-y-auto">
+                <button
+                  type="button"
+                  onClick={() => pickUniversity('')}
+                  className="w-full text-left px-4 py-2.5 text-sm flex items-center justify-between text-gray-600 hover:bg-gray-50"
+                >
+                  All universities
+                  {selectedUniversity === '' && !showOtherUniversity && <i className="fas fa-check text-emerald-500 text-xs" />}
+                </button>
+                {universities.map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => pickUniversity(u)}
+                    className="w-full text-left px-4 py-2.5 text-sm flex items-center justify-between text-gray-600 hover:bg-gray-50"
+                  >
+                    {u}
+                    {selectedUniversity === u && <i className="fas fa-check text-emerald-500 text-xs" />}
+                  </button>
+                ))}
+                {universities.length === 0 && !loadingUniversities && (
+                  <div className="px-4 py-3 text-sm text-gray-400">No universities found</div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => pickUniversity(OTHER_VALUE)}
+                  className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 text-primary hover:bg-emerald-50 border-t border-gray-50"
+                >
+                  <i className="fas fa-plus text-xs" /> Other
+                </button>
+              </div>
+            )}
+          </div>
+
+          {selectedUniversity && (
+            <button
+              type="button"
+              onClick={() => { setSelectedUniversity(''); setShowOtherUniversity(false); }}
+              className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1"
+            >
+              <i className="fas fa-times" /> Clear
+            </button>
+          )}
+        </div>
+
+        {showOtherUniversity && (
+          <div className="mt-3 max-w-sm">
+            <input
+              type="text"
+              autoFocus
+              value={selectedUniversity}
+              onChange={(e) => setSelectedUniversity(e.target.value)}
+              placeholder="Type a university name..."
+              className="w-full border border-gray-200 rounded-xl bg-white px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+            />
+          </div>
+        )}
+      </div>
+
       {/* Send all button */}
       {filter === 'accepted' && statusCounts.accepted > 0 && (
         <div className="mb-6 flex justify-end">
@@ -226,7 +396,11 @@ export default function InternshipApplicationsScreen() {
             <i className="fas fa-user-plus text-3xl mb-3 block" />
             <p className="font-semibold">No applications</p>
             <p className="text-sm mt-1">
-              {filter === 'all' ? 'No one has applied yet.' : `No ${filter} applications.`}
+              {selectedUniversity
+                ? `No applicants from ${selectedUniversity}.`
+                : filter === 'all'
+                  ? 'No one has applied yet.'
+                  : `No ${filter} applications.`}
             </p>
           </div>
         ) : (
@@ -265,6 +439,12 @@ export default function InternshipApplicationsScreen() {
                           {s ? `${s.firstName} ${s.lastName}` : 'Unknown User'}
                         </Link>
                         <p className="text-sm text-gray-500">{s?.email || ''}</p>
+                        {(studentUniversities[s?._id ?? ''] ?? []).length > 0 && (
+                          <p className="text-sm text-gray-400 mt-0.5 flex items-center gap-1.5">
+                            <i className="fas fa-graduation-cap text-xs text-primary/60" />
+                            {(studentUniversities[s?._id ?? ''] ?? []).join(' · ')}
+                          </p>
+                        )}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 shrink-0">

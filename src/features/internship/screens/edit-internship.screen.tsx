@@ -17,6 +17,7 @@ import Spinner from '@/components/ui/Spinner';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
+import { CATEGORY_LABELS } from '@/features/student/types';
 
 export default function EditInternshipScreen() {
   const router = useRouter();
@@ -27,8 +28,15 @@ export default function EditInternshipScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [technicalSkillsStr, setTechnicalSkillsStr] = useState('');
   const [softSkillsStr, setSoftSkillsStr] = useState('');
+  const [technicalError, setTechnicalError] = useState<string | null>(null);
+  const [softError, setSoftError] = useState<string | null>(null);
   const [questions, setQuestions] = useState<InternshipQuestion[]>([]);
   const [preKnowledgeText, setPreKnowledgeText] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [showCategoryInput, setShowCategoryInput] = useState(false);
+  const [categoryText, setCategoryText] = useState('');
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [universitiesStr, setUniversitiesStr] = useState('');
 
   const {
     register,
@@ -69,6 +77,16 @@ export default function EditInternshipScreen() {
         setTechnicalSkillsStr(intern.technicalSkills?.join(', ') || '');
         setQuestions(intern.questions || []);
         setPreKnowledgeText(intern.preKnowledge?.join(', ') || '');
+        setSelectedCategories(
+          intern.categories?.length
+            ? intern.categories
+            : Array.isArray(intern.track)
+              ? intern.track
+              : (intern.track || '').split(',').map((s) => s.trim()).filter(Boolean),
+        );
+        setUniversitiesStr(
+          (intern.requiredEducation || []).map((e) => e.institution).filter(Boolean).join(', '),
+        );
       })
       .catch(() => {
         toastHelper.error('Failed to load internship');
@@ -119,6 +137,26 @@ export default function EditInternshipScreen() {
 
   async function onSubmit(data: InternshipFormValues) {
     if (!company) return;
+    if (selectedCategories.length === 0) {
+      setCategoryError('Select at least one track');
+      toastHelper.error('Please select at least one track');
+      return;
+    }
+    const technicalSkills = technicalSkillsStr.split(',').map((s) => s.trim()).filter(Boolean);
+    const softSkills = softSkillsStr.split(',').map((s) => s.trim()).filter(Boolean);
+    if (technicalSkills.length === 0) {
+      setTechnicalError('Add at least one technical skill');
+      toastHelper.error('Please add at least one technical skill');
+      return;
+    }
+    if (softSkills.length === 0) {
+      setSoftError('Add at least one soft skill');
+      toastHelper.error('Please add at least one soft skill');
+      return;
+    }
+    setCategoryError(null);
+    setTechnicalError(null);
+    setSoftError(null);
     setSubmitting(true);
     try {
       const cleaned = questions.map((q) => {
@@ -127,10 +165,16 @@ export default function EditInternshipScreen() {
       });
       await internshipService.updateInternship(company._id, internId, {
         ...data,
-        softSkills: softSkillsStr.split(',').map((s) => s.trim()).filter(Boolean),
-        technicalSkills: technicalSkillsStr.split(',').map((s) => s.trim()).filter(Boolean),
+        softSkills,
+        technicalSkills,
         questions: cleaned.length > 0 ? cleaned : undefined,
         preKnowledge: preKnowledgeText.split(',').map((s) => s.trim()).filter(Boolean),
+        track: selectedCategories.length > 0 ? selectedCategories : undefined,
+        requiredEducation: universitiesStr
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .map((institution) => ({ institution })),
       });
       toastHelper.success('Internship updated!');
       router.push('/company/dashboard');
@@ -212,14 +256,125 @@ export default function EditInternshipScreen() {
         <Input
           label="Technical skills (comma-separated)"
           value={technicalSkillsStr}
-          onChange={(e) => setTechnicalSkillsStr(e.target.value)}
+          onChange={(e) => { setTechnicalSkillsStr(e.target.value); if (technicalError) setTechnicalError(null); }}
+          error={technicalError || undefined}
           placeholder="e.g. JavaScript, React, Node.js"
         />
         <Input
           label="Soft skills (comma-separated)"
           value={softSkillsStr}
-          onChange={(e) => setSoftSkillsStr(e.target.value)}
+          onChange={(e) => { setSoftSkillsStr(e.target.value); if (softError) setSoftError(null); }}
+          error={softError || undefined}
           placeholder="e.g. Communication, Teamwork, Problem-solving"
+        />
+
+        {/* Track */}
+        <div>
+          <label className="text-sm font-semibold text-gray-700 mb-2 block">Track <span className="text-red-500">*</span> <span className="text-gray-400 font-normal">(select at least one)</span></label>
+
+          {/* Selected chips */}
+          <div className="flex flex-wrap gap-2 mb-2">
+            {selectedCategories.map((cat) => (
+              <span key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-white border border-primary shadow-sm">
+                {CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS] || cat}
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategories((prev) => { const next = prev.filter((c) => c !== cat); if (next.length > 0) setCategoryError(null); return next; })}
+                  className="w-4 h-4 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors"
+                >
+                  <i className="fas fa-xmark text-[10px]" />
+                </button>
+              </span>
+            ))}
+          </div>
+
+          {/* Suggestion chips */}
+          <div className="flex flex-wrap gap-2">
+            {(Object.entries(CATEGORY_LABELS) as [string, string][]).map(([value, label]) => {
+              const on = selectedCategories.includes(value);
+              const isOther = value === 'other';
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  disabled={on}
+                  onClick={() => {
+                    if (isOther) { setShowCategoryInput(true); return; }
+                    if (on) setSelectedCategories((prev) => prev.filter((c) => c !== value));
+                    else { setSelectedCategories((prev) => [...prev, value]); setCategoryError(null); }
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                    isOther
+                      ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 cursor-pointer'
+                      : on
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200 cursor-default'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-primary/40 hover:text-primary cursor-pointer'
+                  }`}
+                >
+                  {isOther ? <><i className="fas fa-pen text-[10px] mr-1" />{label}</> : on ? <><i className="fas fa-check text-[10px] mr-1" />{label}</> : label}
+                </button>
+              );
+            })}
+          </div>
+          {categoryError && <p className="text-red-500 text-xs font-medium mt-1.5">{categoryError}</p>}
+
+          {/* Custom category input */}
+          {showCategoryInput && (
+            <div className="flex items-center gap-2 mt-3 animate-slide-up">
+              <input
+                type="text"
+                value={categoryText}
+                onChange={(e) => setCategoryText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = categoryText.trim();
+                    if (!val) return;
+                    if (!selectedCategories.includes(val)) {
+                      setSelectedCategories((prev) => [...prev, val]);
+                      setCategoryError(null);
+                    }
+                    setCategoryText('');
+                    setShowCategoryInput(false);
+                  }
+                }}
+                placeholder="Type your track..."
+                className="flex-1 border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-gray-300 transition-all duration-200"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const val = categoryText.trim();
+                  if (!val) return;
+                  if (!selectedCategories.includes(val)) {
+                    setSelectedCategories((prev) => [...prev, val]);
+                    setCategoryError(null);
+                  }
+                  setCategoryText('');
+                  setShowCategoryInput(false);
+                }}
+                className="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center hover:bg-primary-dark transition-colors shrink-0"
+              >
+                <i className="fas fa-plus text-xs" />
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowCategoryInput(false); setCategoryText(''); }}
+                className="w-8 h-8 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors shrink-0"
+              >
+                <i className="fas fa-xmark text-xs" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Universities */}
+        <Input
+          label="Target universities (optional, comma-separated)"
+          value={universitiesStr}
+          onChange={(e) => setUniversitiesStr(e.target.value)}
+          placeholder="e.g. Cairo University, Ain Shams University"
         />
 
         {/* Pre-knowledge to start */}

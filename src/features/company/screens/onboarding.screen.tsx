@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
@@ -10,29 +10,44 @@ import {
   type CompanyOnboardingFormData,
 } from '@/features/auth/schemas/auth.schemas';
 import { companyService } from '@/features/company/services/company.service';
+import { parseLocation } from '@/features/company/types';
 import { getErrorMessage } from '@/lib/axios';
-import { useAppDispatch } from '@/store/store';
+import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setCompany } from '@/store/companySlice';
 import { setRole } from '@/store/authSlice';
+import { LS_PENDING_ONBOARDING, COMPANY_INDUSTRIES } from '@/lib/constants';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
-import { COMPANY_INDUSTRIES } from '@/lib/constants';
+import LocationPickerField from '@/components/ui/LocationPickerField';
 
 export default function CompanyOnboardingScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const company = useAppSelector((s) => s.company.currentCompany);
   const [legalFile, setLegalFile] = useState<File | null>(null);
+
+  // Already have a company → go to dashboard
+  useEffect(() => {
+    if (company?._id) {
+      localStorage.removeItem(LS_PENDING_ONBOARDING);
+      router.replace('/company/dashboard');
+    }
+  }, [company?._id, router]);
 
   const {
     register,
     handleSubmit,
     setValue,
     control,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<CompanyOnboardingFormData>({
     resolver: zodResolver(companyOnboardingSchema),
   });
+
+  const wLocLat = watch('location.lat');
+  const wLocLng = watch('location.lng');
 
   async function onSubmit(data: CompanyOnboardingFormData) {
     if (!legalFile) {
@@ -46,6 +61,7 @@ export default function CompanyOnboardingScreen() {
         description: data.description,
         industry: data.industry,
         address: data.address,
+        location: parseLocation(data.location?.lat, data.location?.lng),
         numberOfEmployees: data.numberOfEmployees,
         companyEmail: data.companyEmail,
         legalAttachment: legalFile,
@@ -53,6 +69,7 @@ export default function CompanyOnboardingScreen() {
 
       dispatch(setCompany(company));
       dispatch(setRole('company'));
+      localStorage.removeItem(LS_PENDING_ONBOARDING);
       toastHelper.success('Company profile created successfully!');
       router.push('/company/dashboard');
     } catch (err) {
@@ -126,6 +143,19 @@ export default function CompanyOnboardingScreen() {
           error={errors.address?.message}
           {...register('address')}
         />
+
+        <div>
+          <LocationPickerField
+            label="Location on map (optional)"
+            lat={wLocLat}
+            lng={wLocLng}
+            onChange={(la, ln) => {
+              setValue('location.lat', la, { shouldValidate: true });
+              setValue('location.lng', ln, { shouldValidate: true });
+            }}
+          />
+          <p className="text-xs text-gray-400 mt-1">Your company will appear with a Google Maps link on your public profile.</p>
+        </div>
 
         <Input
           label="Number of employees"

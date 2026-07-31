@@ -74,6 +74,16 @@ export default function CompanyDetailsScreen() {
           <i className="fas fa-arrow-left text-xs" /> Back to Internships
         </Link>
 
+        {company.bannedAt && (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 flex items-center gap-3">
+            <i className="fas fa-ban text-red-500" />
+            <div>
+              <p className="text-sm font-bold text-red-700">This company is currently unavailable</p>
+              <p className="text-xs text-red-600 mt-0.5">The company profile has been suspended. Open positions may not be active.</p>
+            </div>
+          </div>
+        )}
+
         {/* Cover */}
         <div className="relative h-48 sm:h-56 md:h-64 rounded-3xl overflow-hidden bg-gradient-to-br from-primary/20 via-emerald-500/20 to-teal-500/20">
           {coverUrl ? (
@@ -122,6 +132,16 @@ export default function CompanyDetailsScreen() {
               <span className="flex items-center gap-1.5 max-w-full">
                 <i className="fas fa-location-dot text-gray-300 text-xs shrink-0" /> <span className="break-all">{company.address}</span>
               </span>
+            )}
+            {company.googleMapsUrl && (
+              <a
+                href={company.googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 max-w-full text-primary hover:underline"
+              >
+                <i className="fas fa-map-pin text-gray-300 text-xs shrink-0" /> View on Google Maps
+              </a>
             )}
             {company.numberOfEmployees && (
               <span className="flex items-center gap-1.5 whitespace-nowrap">
@@ -184,6 +204,11 @@ export default function CompanyDetailsScreen() {
             <a href={`mailto:${company.companyEmail}`}>
               <Button variant="primary" leftIcon={<i className="fas fa-envelope text-xs" />}>Send Email</Button>
             </a>
+            {company.googleMapsUrl && (
+              <a href={company.googleMapsUrl} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" leftIcon={<i className="fas fa-map-location-dot text-xs" />}>View Location</Button>
+              </a>
+            )}
             <Link href="/internships">
               <Button variant="outline">Browse More Internships</Button>
             </Link>
