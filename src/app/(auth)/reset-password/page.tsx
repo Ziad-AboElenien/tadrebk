@@ -8,7 +8,7 @@ import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
 import { resetPasswordSchema, type ResetPasswordFormData } from '@/features/auth/schemas/auth.schemas';
 import * as authService from '@/features/auth/server/auth.service';
-import { getErrorMessage } from '@/lib/axios';
+import { getErrorMessage, getErrorStatus } from '@/lib/axios';
 import { LS_PENDING_EMAIL } from '@/lib/constants';
 import Input from '@/components/ui/Input';
 import OTPInput from '@/features/auth/components/OTPInput';
@@ -51,6 +51,11 @@ export default function ResetPasswordPage() {
       localStorage.removeItem(LS_PENDING_EMAIL);
       router.push('/login/student');
     } catch (err) {
+      if (getErrorStatus(err) === 429) {
+        toastHelper.error('Too many failed attempts. Please request a new code.');
+        router.push('/forgot-password');
+        return;
+      }
       toastHelper.error(getErrorMessage(err));
     }
   }

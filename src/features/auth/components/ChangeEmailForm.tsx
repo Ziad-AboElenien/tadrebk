@@ -10,7 +10,7 @@ import {
   type ChangeEmailFormData,
 } from '@/features/auth/schemas/auth.schemas';
 import * as authService from '@/features/auth/server/auth.service';
-import { getErrorMessage } from '@/lib/axios';
+import { getErrorMessage, getErrorStatus } from '@/lib/axios';
 import Input from '@/components/ui/Input';
 import OTPInput from '@/features/auth/components/OTPInput';
 import Button from '@/components/ui/Button';
@@ -50,6 +50,12 @@ export default function ChangeEmailForm() {
       toastHelper.success('Email changed successfully!');
       router.back();
     } catch (err) {
+      if (getErrorStatus(err) === 429) {
+        toastHelper.error('Too many failed attempts. Please request a new OTP.');
+        setOtp('');
+        setStep('email');
+        return;
+      }
       toastHelper.error(getErrorMessage(err));
     } finally {
       setConfirming(false);

@@ -53,6 +53,24 @@ function matchesCategory(internship: Internship, categories: Category[]): boolea
   });
 }
 
+// Normalize category/track names for case-insensitive matching ("Data Science" -> "datascience", "UI/UX" -> "uiux")
+function normalizeToken(s: string): string {
+  return s.toLowerCase().trim().replace(/[\s_\-\/\.]+/g, '');
+}
+
+function matchesTrack(internship: Internship, categories: Category[]): boolean {
+  if (!categories || categories.length === 0) return false;
+  if (categories.includes('other')) return true;
+  const catTokens = categories.map(normalizeToken);
+  const tracks = (internship.track || []).map(normalizeToken);
+  if (tracks.length === 0) return matchesCategory(internship, categories);
+  return tracks.some((t) =>
+    catTokens.some(
+      (c) => t === c || (c.length >= 3 && t.includes(c)) || (t.length >= 3 && c.includes(t))
+    )
+  );
+}
+
 function isSaved(id: string): boolean {
   if (typeof window === 'undefined') return false;
   try { return JSON.parse(localStorage.getItem(LS_SAVED) || '[]').includes(id); }
@@ -183,8 +201,8 @@ function InternshipsContent() {
       // Prioritize internships matching user categories when no active search/filters
       const hasActiveSearch = filters.title || filters.type || filters.location;
       if (!hasActiveSearch && !cityFilter && userCategories && userCategories.length > 0) {
-        const matching = filtered.filter((i) => matchesCategory(i, userCategories));
-        const rest = filtered.filter((i) => !matchesCategory(i, userCategories));
+        const matching = filtered.filter((i) => matchesTrack(i, userCategories));
+        const rest = filtered.filter((i) => !matchesTrack(i, userCategories));
         filtered = [...matching, ...rest];
       }
 

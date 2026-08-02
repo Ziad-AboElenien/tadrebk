@@ -21,6 +21,7 @@ export default function CompanyDashboardScreen() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [showPendingModal, setShowPendingModal] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!company?._id) { setLoading(false); return; }
@@ -125,11 +126,17 @@ export default function CompanyDashboardScreen() {
       <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
         <div className="p-6 sm:p-8 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-lg font-bold text-dark">Internships</h2>
-          <Link href="/company/post-internship">
-            <Button size="sm" leftIcon={<i className="fas fa-plus text-xs" />}>
+          {company.approvedByAdmin ? (
+            <Link href="/company/post-internship">
+              <Button size="sm" leftIcon={<i className="fas fa-plus text-xs" />}>
+                Post internship
+              </Button>
+            </Link>
+          ) : (
+            <Button size="sm" leftIcon={<i className="fas fa-plus text-xs" />} onClick={() => setShowPendingModal(true)}>
               Post internship
             </Button>
-          </Link>
+          )}
         </div>
 
         {loading ? (
@@ -208,6 +215,27 @@ export default function CompanyDashboardScreen() {
               <Button variant="outline" onClick={() => setDeleteTarget(null)}>
                 Cancel
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Pending approval modal */}
+      {showPendingModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowPendingModal(false)} />
+          <div className="relative bg-white rounded-[2rem] p-10 shadow-2xl max-w-md w-full mx-4 text-center animate-scale-in">
+            <div className="w-16 h-16 rounded-[1.25rem] bg-amber-50 flex items-center justify-center mx-auto mb-5">
+              <i className="fas fa-clock text-2xl text-amber-500" />
+            </div>
+            <h2 className="text-xl font-black text-dark mb-2">Account pending approval</h2>
+            <p className="text-sm text-gray-500 mb-8">
+              Your company account is still under review. You can post internships once it has been approved by the admin.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button onClick={() => setShowPendingModal(false)}>Got it</Button>
+              <Link href="/company/settings">
+                <Button variant="outline">Edit company profile</Button>
+              </Link>
             </div>
           </div>
         </div>

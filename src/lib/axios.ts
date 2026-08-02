@@ -27,10 +27,37 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// ─── Response interceptor — auto-refresh on 401 ────────────────────────────
+// ─── Response interceptor — auto-refresh on 401 / role-promotion 403 ────────
 interface RetryConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
+  _retry403?: boolean;
 }
+
+/** Exchange the stored refresh token for fresh tokens (role may have been promoted). */
+export async function refreshAuthTokens(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  const refreshToken = localStorage.getItem(LS_REFRESH_TOKEN);
+  if (!refreshToken) return false;
+  try {
+    const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+      refreshToken,
+    });
+    const tokens = data?.data?.tokens;
+    if (tokens) {
+      localStorage.setItem(LS_ACCESS_TOKEN, tokens.accessToken);
+      localStorage.setItem(LS_REFRESH_TOKEN, tokens.refreshToken);
+      localStorage.setItem(LS_TOKEN_TIMESTAMP, String(Date.now()));
+      return true;
+    }
+  } catch {
+    // fall through
+  }
+  return false;
+}
+
+// Backend now gates internship + billing routes behind `role: "company_owner"`;
+// a freshly-created company owner still holds a stale "student" JWT → 403.
+const COMPANY_GATED_PATTERNS = [/\/internships/, /\/billing/];
 
 api.interceptors.response.use(
   (response) => response,
@@ -40,36 +67,42 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest?._retry) {
       originalRequest._retry = true;
 
-      try {
-        const refreshToken =
+      const refreshed = await refreshAuthTokens();
+      if (refreshed) {
+        const token =
           typeof window !== 'undefined'
-            ? localStorage.getItem(LS_REFRESH_TOKEN)
+            ? localStorage.getItem(LS_ACCESS_TOKEN)
             : null;
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return api(originalRequest);
+      }
 
-        if (!refreshToken) {
-          // No refresh token → clear state and reject
-          clearAuthStorage();
-          return Promise.reject(error);
-        }
+      clearAuthStorage();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login/student';
+      }
+    }
 
-        const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          refreshToken,
-        });
+    if (
+      error.response?.status === 403 &&
+      !originalRequest?._retry403 &&
+      COMPANY_GATED_PATTERNS.some((re) => re.test(originalRequest?.url || ''))
+    ) {
+      originalRequest._retry403 = true;
 
-        const tokens = data?.data?.tokens;
-        if (tokens) {
-          localStorage.setItem(LS_ACCESS_TOKEN, tokens.accessToken);
-          localStorage.setItem(LS_REFRESH_TOKEN, tokens.refreshToken);
-          localStorage.setItem(LS_TOKEN_TIMESTAMP, String(Date.now()));
-          originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
-          return api(originalRequest);
-        }
-      } catch {
-        clearAuthStorage();
-        // Redirect to login
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login/student';
-        }
+      const refreshed = await refreshAuthTokens();
+      if (refreshed) {
+        const token =
+          typeof window !== 'undefined'
+            ? localStorage.getItem(LS_ACCESS_TOKEN)
+            : null;
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return api(originalRequest);
+      }
+
+      clearAuthStorage();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login/company';
       }
     }
 
@@ -89,6 +122,11 @@ function clearAuthStorage() {
 }
 
 // ─── Error message helper ───────────────────────────────────────────────────
+export function getErrorStatus(error: unknown): number | null {
+  if (axios.isAxiosError(error)) return error.response?.status ?? null;
+  return null;
+}
+
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as any;

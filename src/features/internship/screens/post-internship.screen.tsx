@@ -123,6 +123,23 @@ export default function PostInternshipScreen() {
     );
   }
 
+  if (!company.approvedByAdmin) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+        <div className="w-20 h-20 rounded-3xl bg-amber-50 flex items-center justify-center mx-auto mb-6">
+          <i className="fas fa-clock text-3xl text-amber-500" />
+        </div>
+        <h1 className="text-2xl font-black text-dark mb-3">Account pending approval</h1>
+        <p className="text-gray-500 mb-8 max-w-md mx-auto">
+          Your company account is still under review. You can post internships once it has been approved by the admin.
+        </p>
+        <Link href="/company/dashboard">
+          <Button>Back to Dashboard</Button>
+        </Link>
+      </div>
+    );
+  }
+
   async function onSubmit(data: InternshipFormValues) {
     if (!company) return;
     if (selectedCategories.length === 0) {

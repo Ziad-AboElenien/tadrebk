@@ -11,7 +11,7 @@ import { Internship } from '@/features/internship/types';
 import { getCompanyIdFromInternship } from '@/features/internship/types';
 import { getImgUrl } from '@/features/company/types';
 import { getUserImgUrl } from '@/features/student/types';
-import { getFileProxyUrl } from '@/lib/file-proxy';
+import { openFileProxy } from '@/lib/file-proxy';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
@@ -314,14 +314,13 @@ export default function StudentDashboardScreen() {
                         )}
 
                         {app.resume?.secure_url && (
-                          <a
-                            href={getFileProxyUrl(app.resume.secure_url)!}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
+                            onClick={() => openFileProxy(app.resume?.secure_url)}
                             className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-red-500 hover:text-red-600 transition-colors"
                           >
                             <i className="fas fa-file-pdf text-xs" /> View Resume
-                          </a>
+                          </button>
                         )}
 
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs text-gray-400">
