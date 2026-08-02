@@ -8,7 +8,7 @@ import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
 import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/features/auth/schemas/auth.schemas';
 import * as authService from '@/features/auth/server/auth.service';
-import { getErrorMessage } from '@/lib/axios';
+import { getErrorMessage, getErrorStatus } from '@/lib/axios';
 import { LS_PENDING_EMAIL } from '@/lib/constants';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -16,6 +16,7 @@ import Button from '@/components/ui/Button';
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [sent, setSent] = useState(false);
+  const [socialAccount, setSocialAccount] = useState(false);
 
   const {
     register,
@@ -33,8 +34,32 @@ export default function ForgotPasswordPage() {
       setSent(true);
       toastHelper.success('OTP sent to your email!');
     } catch (err) {
+      if (getErrorStatus(err) === 400 && /social login/i.test(getErrorMessage(err))) {
+        setSocialAccount(true);
+        return;
+      }
       toastHelper.error(getErrorMessage(err));
     }
+  }
+
+  if (socialAccount) {
+    return (
+      <div className="w-full max-w-md text-center">
+        <div className="w-20 h-20 bg-sky-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+          <i className="fas fa-google text-3xl text-sky-500" />
+        </div>
+        <h1 className="text-3xl font-black text-dark mb-3">No password to reset</h1>
+        <p className="text-gray-400 text-sm mb-8 leading-relaxed">
+          This account uses Google sign-in and has no password to reset. Sign in
+          with Google to access your account instead.
+        </p>
+        <Link href="/login/student">
+          <Button fullWidth size="lg" leftIcon={<i className="fas fa-google text-sm" />}>
+            Go to Sign In
+          </Button>
+        </Link>
+      </div>
+    );
   }
 
   if (sent) {

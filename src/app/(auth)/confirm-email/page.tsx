@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toastHelper } from '@/lib/toast';
 import * as authService from '@/features/auth/server/auth.service';
-import { getErrorMessage } from '@/lib/axios';
+import { getErrorMessage, getErrorStatus } from '@/lib/axios';
 import { LS_PENDING_EMAIL, LS_INTENDED_ROLE } from '@/lib/constants';
 import OTPInput from '@/features/auth/components/OTPInput';
 import Button from '@/components/ui/Button';
@@ -52,7 +52,13 @@ export default function ConfirmEmailPage() {
         router.push('/login/student');
       }
     } catch (err) {
-      toastHelper.error(getErrorMessage(err));
+      if (getErrorStatus(err) === 429) {
+        toastHelper.error('Too many failed attempts. A new OTP has been sent.');
+        setOtp('');
+        void handleResend();
+      } else {
+        toastHelper.error(getErrorMessage(err));
+      }
     } finally {
       setIsSubmitting(false);
     }

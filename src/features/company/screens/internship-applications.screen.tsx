@@ -13,7 +13,7 @@ import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import { getErrorMessage } from '@/lib/axios';
-import { getFileProxyUrl } from '@/lib/file-proxy';
+import { openFileProxy } from '@/lib/file-proxy';
 import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
 
@@ -534,16 +534,15 @@ export default function InternshipApplicationsScreen() {
 
                     {app.resume?.secure_url && (
                       <div className="mt-3">
-                        <a
-                          href={getFileProxyUrl(app.resume.secure_url) ?? '#'}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 hover:bg-red-100 transition-colors"
+                        <button
+                          type="button"
+                          onClick={() => openFileProxy(app.resume?.secure_url)}
+                          className="inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 hover:bg-red-100 transition-colors w-full"
                         >
                           <i className="fas fa-file-pdf text-red-500" />
                           <span className="text-sm font-semibold text-gray-900">Application CV</span>
                           <i className="fas fa-external-link-alt text-xs text-red-400 ml-auto" />
-                        </a>
+                        </button>
                       </div>
                     )}
 

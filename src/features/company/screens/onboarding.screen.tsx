@@ -11,7 +11,7 @@ import {
 } from '@/features/auth/schemas/auth.schemas';
 import { companyService } from '@/features/company/services/company.service';
 import { parseLocation } from '@/features/company/types';
-import { getErrorMessage } from '@/lib/axios';
+import { getErrorMessage, refreshAuthTokens } from '@/lib/axios';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setCompany } from '@/store/companySlice';
 import { setRole } from '@/store/authSlice';
@@ -69,6 +69,9 @@ export default function CompanyOnboardingScreen() {
 
       dispatch(setCompany(company));
       dispatch(setRole('company'));
+      // Backend just promoted this user to company_owner; the current JWT is stale
+      // ("student") and would 403 on internship/billing routes. Swap it now.
+      await refreshAuthTokens();
       localStorage.removeItem(LS_PENDING_ONBOARDING);
       toastHelper.success('Company profile created successfully!');
       router.push('/company/dashboard');

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { userService } from '@/features/student/services/user.service';
 import { User, getUserImgUrl } from '@/features/student/types';
-import { getFileProxyUrl } from '@/lib/file-proxy';
+import { openFileProxy } from '@/lib/file-proxy';
 import Spinner from '@/components/ui/Spinner';
 import Button from '@/components/ui/Button';
 import { getErrorMessage } from '@/lib/axios';
@@ -189,11 +189,10 @@ export default function ApplicantProfileScreen() {
         {getUserImgUrl(user.resume) && (
           <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
             <h2 className="font-bold text-dark text-lg mb-4 flex items-center gap-2"><i className="fas fa-file-pdf text-primary text-base" />Resume</h2>
-            <a
-              href={getFileProxyUrl(user.resume)!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 rounded-xl bg-red-50 p-4 hover:bg-red-100 transition-colors"
+            <button
+              type="button"
+              onClick={() => openFileProxy(user.resume)}
+              className="inline-flex items-center gap-3 rounded-xl bg-red-50 p-4 hover:bg-red-100 transition-colors w-full text-left"
             >
               <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 text-red-500">
                 <i className="fas fa-file-pdf" />
@@ -203,7 +202,7 @@ export default function ApplicantProfileScreen() {
                 <p className="text-xs text-gray-400">Click to open PDF</p>
               </div>
               <i className="fas fa-external-link-alt text-red-400 ml-auto" />
-            </a>
+            </button>
           </div>
         )}
 
