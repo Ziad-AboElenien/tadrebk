@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { Company } from '@/features/company/types';
-import Badge from '@/components/ui/Badge';
 
 interface CompanyCardProps {
   company: Company;
@@ -53,11 +52,6 @@ export default function CompanyCard({
               <p className="text-xs text-slate-500">{company.industry}</p>
             </div>
           </div>
-          {!company.approvedByAdmin && (
-            <Badge variant="warning" className="ml-2">
-              Pending
-            </Badge>
-          )}
         </div>
 
         <p className="text-sm text-slate-600 mb-4 line-clamp-2">

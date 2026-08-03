@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-toastify';
 import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage } from '@/lib/axios';
@@ -11,6 +11,7 @@ import { setUser } from '@/store/userSlice';
 import { setCompany } from '@/store/companySlice';
 import { companyService } from '@/features/company/services/company.service';
 import { userService } from '@/features/student/services/user.service';
+import { LS_PENDING_ONBOARDING } from '@/lib/constants';
 
 function parseJwt(token: string) {
   try {
@@ -30,7 +31,9 @@ const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 export function useGoogleAuth() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const initialized = useRef(false);
+  const inFlight = useRef(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
   useEffect(() => {
@@ -53,11 +56,16 @@ export function useGoogleAuth() {
 
   const handleGoogleCredential = useCallback(
     async (response: { credential: string }) => {
+      if (inFlight.current) return;
+      inFlight.current = true;
       try {
         const { tokens } = await authService.googleAuth({ idToken: response.credential });
 
         const decoded = parseJwt(tokens.accessToken);
         const userId: string = decoded?.id;
+        if (!userId) {
+          throw new Error('Could not read session from server response. Please try again.');
+        }
 
         const user = await userService.getUserProfile(userId);
 
@@ -90,6 +98,16 @@ export function useGoogleAuth() {
 
         toast.success(`Welcome, ${user.firstName}!`);
 
+        const next = searchParams.get('next');
+        // Same-origin relative paths only — never "//evil.com" or "\evil.com"
+        if (next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\')) {
+          if (role !== 'company' && next.startsWith('/company/')) {
+            localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
+          }
+          router.push(next);
+          return;
+        }
+
         if (role === 'company') {
           router.push('/company/dashboard');
         } else {
@@ -97,9 +115,11 @@ export function useGoogleAuth() {
         }
       } catch (err) {
         toast.error(getErrorMessage(err));
+      } finally {
+        inFlight.current = false;
       }
     },
-    [dispatch, router],
+    [dispatch, router, searchParams],
   );
 
   const signInWithGoogle = useCallback(() => {

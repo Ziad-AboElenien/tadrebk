@@ -1,5 +1,15 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { LS_ACCESS_TOKEN, LS_REFRESH_TOKEN, LS_TOKEN_TIMESTAMP, LS_PENDING_ONBOARDING } from './constants';
+import {
+  LS_ACCESS_TOKEN,
+  LS_REFRESH_TOKEN,
+  LS_USER_ROLE,
+  LS_USER_ID,
+  LS_COMPANY_ID,
+  LS_TOKEN_TIMESTAMP,
+  LS_PENDING_ONBOARDING,
+  LS_PENDING_EMAIL,
+  LS_INTENDED_ROLE,
+} from './constants';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api/v1';
@@ -52,15 +62,19 @@ interface RetryConfig extends InternalAxiosRequestConfig {
   _retry403?: boolean;
 }
 
-/** Exchange the stored refresh token for fresh tokens (role may have been promoted). */
-export async function refreshAuthTokens(): Promise<boolean> {
+/** Shared in-flight refresh — concurrent 401s must not each rotate the token. */
+let refreshInFlight: Promise<boolean> | null = null;
+
+async function doRefresh(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
   const refreshToken = localStorage.getItem(LS_REFRESH_TOKEN);
   if (!refreshToken) return false;
   try {
-    const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-      refreshToken,
-    });
+    const { data } = await axios.post(
+      `${API_BASE_URL}/auth/refresh`,
+      { refreshToken },
+      { timeout: 15000 },
+    );
     const tokens = data?.data?.tokens;
     if (tokens) {
       localStorage.setItem(LS_ACCESS_TOKEN, tokens.accessToken);
@@ -74,9 +88,33 @@ export async function refreshAuthTokens(): Promise<boolean> {
   return false;
 }
 
-// Backend now gates internship + billing routes behind `role: "company_owner"`;
+/** Exchange the stored refresh token for fresh tokens (role may have been promoted). */
+export function refreshAuthTokens(): Promise<boolean> {
+  if (typeof window === 'undefined') return Promise.resolve(false);
+  if (!refreshInFlight) {
+    refreshInFlight = doRefresh().finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
+}
+
+// Backend gates internship + billing ROUTES behind `role: "company_owner"`;
 // a freshly-created company owner still holds a stale "student" JWT → 403.
-const COMPANY_GATED_PATTERNS = [/\/internships/, /\/billing/];
+// Match ONLY company-management endpoints — never the public read endpoints,
+// otherwise students browsing the public listing get force-logged-out.
+const COMPANY_GATED_PATTERNS = [
+  /\/company\/[^/]+\/internships(\/|$|\?)/,
+  /\/company\/[^/]+\/billing(\/|$|\?)/,
+];
+
+// Endpoints that can legitimately return 401 for bad user input (e.g. wrong
+// current password / invalid OTP) rather than session expiry. Never clear the
+// session for these — surface the error to the form instead.
+const NON_SESSION_401_PATTERNS = [
+  /\/auth\/change-password(\/|$|\?)/,
+  /\/auth\/confirm-change-email(\/|$|\?)/,
+];
 
 // Auth pages — never hard-redirect here or we'd reload into the same page (loop).
 const AUTH_PAGE_PATTERN = /^\/(login|get-started|signup|forgot-password|confirm-email|reset-password)(\/|$)/;
@@ -100,7 +138,13 @@ api.interceptors.response.use(
         typeof originalRequest?.headers?.Authorization === 'string' &&
         String(originalRequest.headers.Authorization).startsWith('Bearer');
 
-      if (hadAuth) {
+      // Auth flows that 401 on bad input must NOT wipe the session.
+      const isNonSession401 = NON_SESSION_401_PATTERNS.some((re) =>
+        re.test(originalRequest?.url || ''),
+      );
+      const isSessionExpiry = hadAuth && !isNonSession401;
+
+      if (isSessionExpiry) {
         const refreshed = await refreshAuthTokens();
         if (refreshed) {
           const token =
@@ -110,11 +154,11 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${token}`;
           return api(originalRequest);
         }
-      }
 
-      clearAuthStorage();
-      if (!isOnAuthPage()) {
-        window.location.href = '/login/student';
+        clearAuthStorage();
+        if (!isOnAuthPage()) {
+          window.location.href = '/login/student';
+        }
       }
     }
 
@@ -147,10 +191,17 @@ api.interceptors.response.use(
 
 function clearAuthStorage() {
   if (typeof window !== 'undefined') {
+    // Wipe ALL account-scoped keys — a stale LS_COMPANY_ID / LS_USER_ID here
+    // leaks the previous user's company into the next login (cross-account bleed).
     localStorage.removeItem(LS_ACCESS_TOKEN);
     localStorage.removeItem(LS_REFRESH_TOKEN);
+    localStorage.removeItem(LS_USER_ROLE);
+    localStorage.removeItem(LS_USER_ID);
+    localStorage.removeItem(LS_COMPANY_ID);
     localStorage.removeItem(LS_TOKEN_TIMESTAMP);
     localStorage.removeItem(LS_PENDING_ONBOARDING);
+    localStorage.removeItem(LS_PENDING_EMAIL);
+    localStorage.removeItem(LS_INTENDED_ROLE);
     document.cookie = 'tadrebk_access_token=; Max-Age=0; path=/';
     document.cookie = 'tadrebk_user_role=; Max-Age=0; path=/';
   }

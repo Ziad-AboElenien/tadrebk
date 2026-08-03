@@ -60,9 +60,14 @@ export default function InternshipDetailsScreen() {
     const userId = user._id;
     applicationService.getUserApplications(userId, { limit: 50 })
       .then((res) => {
-        if (res.applications.some((a) => a.internshipId === internId)) {
-          setAlreadyApplied(true);
-        }
+        const applied = res.applications.some((a) => {
+          const aid =
+            typeof a.internshipId === 'string'
+              ? a.internshipId
+              : a.internshipId?._id;
+          return aid === internId;
+        });
+        if (applied) setAlreadyApplied(true);
       })
       .catch(() => {});
   }, [isAuthenticated, internId, user]);
@@ -134,6 +139,14 @@ export default function InternshipDetailsScreen() {
         a.type === 'mcq' ? a.selectedOption : a.text?.trim(),
       );
       if (hasAnswers) {
+        // Don't silently send partially-answered questions — the server rejects them.
+        const incomplete = answers.some((a) =>
+          a.type === 'mcq' ? !a.selectedOption : !a.text?.trim(),
+        );
+        if (incomplete) {
+          toastHelper.error('Please answer all application questions');
+          return;
+        }
         payload.answers = answers;
       }
       if (resume) payload.resume = resume;
@@ -142,6 +155,11 @@ export default function InternshipDetailsScreen() {
       setShowApplySuccess(true);
     } catch (err: any) {
       const msg = getErrorMessage(err);
+      // Terminal states — close the modal.
+      const terminal =
+        msg.includes('already applied') ||
+        msg.includes('closed') ||
+        msg.includes('Invalid internship id');
       if (msg.includes('already applied')) {
         toastHelper.info('You already applied to this internship');
       } else if (msg.includes('resume') || msg.includes('CV')) {
@@ -156,7 +174,9 @@ export default function InternshipDetailsScreen() {
       } else {
         toastHelper.error(msg);
       }
-      setShowApplyModal(false);
+      // Keep the modal open on fixable errors (resume/questions/server) so the
+      // user doesn't lose their typed cover letter and answers.
+      if (terminal) setShowApplyModal(false);
     } finally {
       setApplying(false);
     }

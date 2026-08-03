@@ -61,16 +61,21 @@ interface UploadResponse {
   msg: string;
 }
 
+// Single, consistent interpretation of approval: missing field = NOT approved.
+// (Previously listCompanies defaulted missing → true while detail endpoints
+// defaulted → false, so the same company flipped between approved/pending
+// depending on which call populated the store.)
+function withApproval(c: Company): Company {
+  return { ...c, approvedByAdmin: c.approvedByAdmin ?? false };
+}
+
 export const companyService = {
   async listCompanies(params?: ListCompaniesParams): Promise<{
     companies: Company[];
     pagination: { page: number; limit: number; total: number; pages: number };
   }> {
     const { data } = await api.get<CompanyListResponse>('/company/', { params });
-    const companies = data.data.companies.map((c) => ({
-      ...c,
-      approvedByAdmin: c.approvedByAdmin ?? true,
-    })) as Company[];
+    const companies = data.data.companies.map(withApproval) as Company[];
     return {
       companies,
       pagination: data.data.pagination,
@@ -79,12 +84,12 @@ export const companyService = {
 
   async getCompanyById(companyId: string): Promise<Company> {
     const { data } = await api.get<CompanyResponse>(`/company/${companyId}`);
-    return { ...data.data.company, approvedByAdmin: data.data.company.approvedByAdmin ?? false };
+    return withApproval(data.data.company);
   },
 
   async getCompanyByName(name: string): Promise<Company> {
     const { data } = await api.get<CompanyResponse>(`/company/name/${name}`);
-    return { ...data.data.company, approvedByAdmin: data.data.company.approvedByAdmin ?? false };
+    return withApproval(data.data.company);
   },
 
   async createCompany(payload: CreateCompanyPayload): Promise<Company> {
