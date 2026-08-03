@@ -11,7 +11,7 @@ import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage } from '@/lib/axios';
 import { LS_COMPANY_ID, LS_PENDING_ONBOARDING } from '@/lib/constants';
 import { useAppDispatch } from '@/store/store';
-import { setTokens } from '@/store/authSlice';
+import { setTokens, setRole } from '@/store/authSlice';
 import { setUser } from '@/store/userSlice';
 import { setCompany } from '@/store/companySlice';
 import Input from '@/components/ui/Input';
@@ -61,12 +61,16 @@ export default function LoginForm({ role }: LoginFormProps) {
 
       console.log('JWT payload:', decoded);
 
+      // Persist the fresh tokens immediately so any authenticated call after
+      // this uses them instead of a stale token left in localStorage.
+      dispatch(setTokens({ tokens, userId, role: 'student' }));
+
       const user = await userService.getUserProfile(userId);
       console.log('User profile:', user);
 
       // Check if JWT says admin, OR user profile has admin role
-      if (decoded?.role === 'admin' || (user as any).role === 'admin') {
-        dispatch(setTokens({ tokens, userId, role: 'admin' }));
+      if (decoded?.role === 'admin' || (user as { role?: string }).role === 'admin') {
+        dispatch(setRole('admin'));
         dispatch(setUser(user));
         toastHelper.success(`Welcome back, ${user.firstName}!`);
         router.push('/admin/dashboard');
@@ -101,7 +105,7 @@ export default function LoginForm({ role }: LoginFormProps) {
         }
       }
 
-      dispatch(setTokens({ tokens, userId, role: userRole }));
+      dispatch(setRole(userRole));
       dispatch(setUser(user));
 
       toastHelper.success(`Welcome back, ${user.firstName}!`);
@@ -222,7 +226,7 @@ export default function LoginForm({ role }: LoginFormProps) {
 
       {/* Sign up link */}
       <p className="text-center text-gray-400 text-sm mt-6">
-        Don't have an account?{' '}
+        Don&apos;t have an account?{' '}
         <Link href="/get-started" className="text-primary font-semibold hover:underline">
           Sign up free
         </Link>
