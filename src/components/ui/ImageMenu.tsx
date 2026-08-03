@@ -6,9 +6,10 @@ interface Props {
   onEdit: () => void;
   onDelete?: () => void;
   loading?: boolean;
+  inputId?: string;
 }
 
-export default function ImageMenu({ onEdit, onDelete, loading }: Props) {
+export default function ImageMenu({ onEdit, onDelete, loading, inputId }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -41,13 +42,24 @@ export default function ImageMenu({ onEdit, onDelete, loading }: Props) {
 
       {open && (
         <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 min-w-[160px] animate-scale-in">
-          <button
-            onClick={() => { setOpen(false); onEdit(); }}
-            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            <i className="fas fa-pen-to-square text-emerald-500 text-xs w-4 text-center" />
-            Change photo
-          </button>
+          {inputId ? (
+            <label
+              htmlFor={inputId}
+              onClick={() => setOpen(false)}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              <i className="fas fa-pen-to-square text-emerald-500 text-xs w-4 text-center" />
+              Change photo
+            </label>
+          ) : (
+            <button
+              onClick={() => { setOpen(false); onEdit(); }}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <i className="fas fa-pen-to-square text-emerald-500 text-xs w-4 text-center" />
+              Change photo
+            </button>
+          )}
           {onDelete && (
             <button
               onClick={() => { setOpen(false); onDelete(); }}
