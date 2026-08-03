@@ -172,8 +172,9 @@ export default function CompanySettingsScreen() {
           )}
           <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
           <div className="absolute top-4 right-4 z-10">
-            <input ref={coverRef} type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'cover')} className="hidden" />
+            <input ref={coverRef} id="company-cover-input" type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'cover')} className="hidden" />
             <ImageMenu
+              inputId="company-cover-input"
               onEdit={() => coverRef.current?.click()}
               onDelete={coverUrl ? () => handleRemoveImage('cover') : undefined}
               loading={uploadingCover}
@@ -192,9 +193,10 @@ export default function CompanySettingsScreen() {
                   <span className="text-2xl font-bold text-white select-none">{initials}</span>
                 )}
               </div>
-              <input ref={logoRef} type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'logo')} className="hidden" />
+              <input ref={logoRef} id="company-logo-input" type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'logo')} className="hidden" />
               <div className="absolute -bottom-1 -right-1">
                 <ImageMenu
+                  inputId="company-logo-input"
                   onEdit={() => logoRef.current?.click()}
                   onDelete={logoUrl ? () => handleRemoveImage('logo') : undefined}
                   loading={uploadingLogo}

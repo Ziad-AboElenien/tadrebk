@@ -228,8 +228,9 @@ export default function StudentProfileScreen() {
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10" />
           )}
           <div className="absolute top-4 right-4 z-10">
-            <input ref={coverRef} type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'cover')} className="hidden" />
+            <input ref={coverRef} id="cover-photo-input" type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'cover')} className="hidden" />
             <ImageMenu
+              inputId="cover-photo-input"
               onEdit={() => coverRef.current?.click()}
               onDelete={getUserImgUrl(user.coverPicture) ? () => handleRemoveImage('cover') : undefined}
               loading={uploadingCover}
@@ -251,9 +252,10 @@ export default function StudentProfileScreen() {
                     <span className="text-4xl font-bold text-white select-none">{displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}</span>
                   </div>
                 )}
-                <input ref={profileRef} type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'profile')} className="hidden" />
+                <input ref={profileRef} id="profile-photo-input" type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'profile')} className="hidden" />
                 <div className="absolute -bottom-1 -right-1">
                   <ImageMenu
+                    inputId="profile-photo-input"
                     onEdit={() => profileRef.current?.click()}
                     onDelete={getUserImgUrl(user.profilePicture) ? () => handleRemoveImage('profile') : undefined}
                     loading={uploadingProfile}
@@ -296,7 +298,16 @@ export default function StudentProfileScreen() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="Phone" type="tel" error={errors.phone?.message} {...register('phone')} />
-              <Select label="Gender" error={errors.gender?.message} {...register('gender')}><option value="">Prefer not to say</option><option value="male">Male</option><option value="female">Female</option></Select>
+              <Select
+                label="Gender"
+                error={errors.gender?.message}
+                value={watch('gender') ?? ''}
+                onChange={(e) => setValue('gender', e.target.value, { shouldValidate: true })}
+              >
+                <option value="">Prefer not to say</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </Select>
               <Input label="Address" error={errors.address?.message} {...register('address')} />
               <Input label="Date of birth" type="date" error={errors.dateOfBirth?.message} {...register('dateOfBirth')} />
             </div>
