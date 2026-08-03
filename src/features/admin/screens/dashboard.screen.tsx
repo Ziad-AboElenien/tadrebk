@@ -36,15 +36,15 @@ export default function AdminDashboardScreen() {
       } else if (tab === 'approved') {
         result = await adminService.getAllCompanies(page, 50, true);
       } else {
-        // All tab: get approved (has approvedByAdmin=true forced) + pending (full data from admin endpoint)
+        // All tab: get approved + pending, prefer the pending source so a
+        // genuinely-pending company is never relabeled "Approved".
         const [approved, pending] = await Promise.all([
           adminService.getAllCompanies(1, 200, true),
           adminService.getPendingCompanies(1, 200),
         ]);
-        // Use a Map: pending first, then approved overrides same IDs
         const merged = new Map<string, Company>();
-        for (const c of pending.companies) merged.set(c._id, c);
         for (const c of approved.companies) merged.set(c._id, c);
+        for (const c of pending.companies) merged.set(c._id, c);
         result = { companies: Array.from(merged.values()), pagination: { pages: 1 } };
       }
       setCompanies(result.companies);

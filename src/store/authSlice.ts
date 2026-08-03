@@ -8,6 +8,8 @@ import {
   LS_COMPANY_ID,
   LS_TOKEN_TIMESTAMP,
   LS_PENDING_ONBOARDING,
+  LS_PENDING_EMAIL,
+  LS_INTENDED_ROLE,
   TOKEN_TTL_MS,
 } from '@/lib/constants';
 
@@ -33,6 +35,8 @@ function clearAuthStorage() {
   localStorage.removeItem(LS_COMPANY_ID);
   localStorage.removeItem(LS_TOKEN_TIMESTAMP);
   localStorage.removeItem(LS_PENDING_ONBOARDING);
+  localStorage.removeItem(LS_PENDING_EMAIL);
+  localStorage.removeItem(LS_INTENDED_ROLE);
   document.cookie = 'tadrebk_access_token=; Max-Age=0; path=/';
   document.cookie = 'tadrebk_user_role=; Max-Age=0; path=/';
 }
@@ -106,6 +110,11 @@ const authSlice = createSlice({
         localStorage.setItem(LS_USER_ROLE, role);
         localStorage.setItem(LS_USER_ID, userId);
         localStorage.setItem(LS_TOKEN_TIMESTAMP, String(Date.now()));
+        // A stale company id from a previous account on this browser would
+        // misclassify this session as 'company' — drop it unless it belongs here.
+        if (role !== 'company') localStorage.removeItem(LS_COMPANY_ID);
+        localStorage.removeItem(LS_PENDING_EMAIL);
+        localStorage.removeItem(LS_INTENDED_ROLE);
         document.cookie = `tadrebk_access_token=${tokens.accessToken}; path=/; max-age=${TOKEN_TTL_MS / 1000}`;
         document.cookie = `tadrebk_user_role=${role}; path=/; max-age=${TOKEN_TTL_MS / 1000}`;
       }

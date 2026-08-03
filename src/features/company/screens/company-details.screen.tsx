@@ -113,11 +113,6 @@ export default function CompanyDetailsScreen() {
                     {company.industry}
                   </span>
                 )}
-                {!company.approvedByAdmin && (
-                  <span className="px-3 py-1 bg-amber-50 text-amber-600 text-sm font-semibold rounded-full border border-amber-100">
-                    Pending Approval
-                  </span>
-                )}
               </div>
             </div>
           </div>

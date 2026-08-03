@@ -15,16 +15,23 @@ export default function NotificationPoller() {
   const isAuthRef = useRef(false);
   const lastCountRef = useRef(0);
   const mountedRef = useRef(false);
+  // Skip the "new notification" toast on the first poll after login —
+  // pre-existing unread mail is not "new" for this session.
+  const firstPollRef = useRef(true);
 
   useEffect(() => {
     isAuthRef.current = isAuthenticated;
+    if (!isAuthenticated) {
+      lastCountRef.current = 0;
+      firstPollRef.current = true;
+    }
   }, [isAuthenticated]);
 
   const fetchCount = useCallback(async () => {
     if (!isAuthRef.current) return;
     try {
       const count = await notificationService.getUnreadCount();
-      if (mountedRef.current && count > lastCountRef.current) {
+      if (mountedRef.current && !firstPollRef.current && count > lastCountRef.current) {
         const diff = count - lastCountRef.current;
         toast(
           <div className="flex items-center gap-3">
@@ -43,15 +50,18 @@ export default function NotificationPoller() {
           }
         );
       }
+      firstPollRef.current = false;
       lastCountRef.current = count;
       dispatch(setUnreadCount(count));
     } catch { /* ignore */ }
   }, [dispatch]);
 
   useEffect(() => {
+    // Re-arm on every mount; a previous unmount's cleanup must not permanently
+    // disable the badge updates for the rest of the session.
+    mountedRef.current = true;
     if (globalInitialized) return;
     globalInitialized = true;
-    mountedRef.current = true;
 
     fetchCount();
     globalIntervalId = setInterval(fetchCount, 30000);

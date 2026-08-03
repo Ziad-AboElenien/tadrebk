@@ -26,7 +26,6 @@ export async function signup(data: SignupRequest): Promise<SignupResponse> {
     ...(data.phone ? { phone: data.phone } : {}),
     ...(data.education ? { education: data.education } : {}),
   });
-  console.log('Signup response:', res); // Log the response data
   return res.data;
 }
 

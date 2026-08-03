@@ -7,6 +7,7 @@ import { setCompany } from '@/store/companySlice';
 import { setRole } from '@/store/authSlice';
 import { userService } from '@/features/student/services/user.service';
 import { companyService } from '@/features/company/services/company.service';
+import { LS_USER_ROLE } from '@/lib/constants';
 
 /**
  * On mount, if auth tokens exist but currentUser / currentCompany are null,
@@ -37,7 +38,7 @@ export default function SessionLoader({ children }: { children: React.ReactNode 
         }
 
         // Fallback: check localStorage
-        const storedRole = localStorage.getItem('tadrebk_user_role');
+        const storedRole = localStorage.getItem(LS_USER_ROLE);
         if (storedRole === 'admin') {
           dispatch(setRole('admin'));
           return;

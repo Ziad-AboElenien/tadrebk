@@ -58,15 +58,15 @@ export default function LoginForm({ role }: LoginFormProps) {
 
       const decoded = parseJwt(tokens.accessToken);
       const userId: string = decoded?.id;
-
-      console.log('JWT payload:', decoded);
+      if (!userId) {
+        throw new Error('Could not read session from server response. Please try again.');
+      }
 
       // Persist the fresh tokens immediately so any authenticated call after
       // this uses them instead of a stale token left in localStorage.
       dispatch(setTokens({ tokens, userId, role: 'student' }));
 
       const user = await userService.getUserProfile(userId);
-      console.log('User profile:', user);
 
       // Check if JWT says admin, OR user profile has admin role
       if (decoded?.role === 'admin' || (user as { role?: string }).role === 'admin') {
@@ -111,7 +111,8 @@ export default function LoginForm({ role }: LoginFormProps) {
       toastHelper.success(`Welcome back, ${user.firstName}!`);
 
       const next = searchParams.get('next');
-      if (next && next.startsWith('/')) {
+      // Only allow same-origin relative paths — reject "//evil.com" and "\evil.com"
+      if (next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\')) {
         // Company-intent user without a company must complete onboarding first
         if (userRole !== 'company' && next.startsWith('/company/')) {
           localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
