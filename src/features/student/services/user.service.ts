@@ -20,9 +20,11 @@ interface UpdateUserPayload {
 }
 
 interface UploadResponse {
-  data: {
-    url: string;
+  data?: {
+    url?: string;
+    secure_url?: string;
   };
+  url?: string;
   msg: string;
 }
 
@@ -57,7 +59,13 @@ export const userService = {
       }
     );
 
-    return data.data.url;
+    // Upload persists the picture server-side; the response URL is only used
+    // for an optimistic UI update before the profile is refetched.
+    return data?.data?.url ?? data?.url ?? data?.data?.secure_url ?? '';
+  },
+
+  async deleteProfilePicture(): Promise<void> {
+    await api.delete(`/user/profilePicture`);
   },
 
   async uploadCoverPicture(file: File): Promise<string> {
@@ -74,7 +82,11 @@ export const userService = {
       }
     );
 
-    return data.data.url;
+    return data?.data?.url ?? data?.url ?? data?.data?.secure_url ?? '';
+  },
+
+  async deleteCoverPicture(): Promise<void> {
+    await api.delete(`/user/coverPicture`);
   },
 
   async uploadResume(file: File): Promise<string> {
@@ -91,7 +103,7 @@ export const userService = {
       }
     );
 
-    return data.data.url;
+    return data?.data?.url ?? data?.url ?? data?.data?.secure_url ?? '';
   },
 
   async uploadCourseCertificate(courseIndex: number, file: File): Promise<string> {
@@ -108,7 +120,7 @@ export const userService = {
       }
     );
 
-    return data.data.url;
+    return data?.data?.url ?? data?.url ?? data?.data?.secure_url ?? '';
   },
 
   async deleteAccount(userId: string): Promise<void> {

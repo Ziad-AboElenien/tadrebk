@@ -52,6 +52,16 @@ export default function StudentProfileScreen() {
   const coverRef = useRef<HTMLInputElement>(null);
   const resumeRef = useRef<HTMLInputElement>(null);
 
+  // Open the file pickers. The menu items and the Media section buttons both
+  // go through these, so there is exactly one hidden input per target and no
+  // shared ref / native-label forwarding issues.
+  const openProfilePicker = useCallback(() => {
+    document.getElementById('profile-photo-input')?.click();
+  }, []);
+  const openCoverPicker = useCallback(() => {
+    document.getElementById('cover-photo-input')?.click();
+  }, []);
+
   const {
     register, handleSubmit, reset, watch, setValue,
     formState: { errors },
@@ -128,17 +138,22 @@ export default function StudentProfileScreen() {
     if (target === 'profile') {
       setUploadingProfile(true);
       try {
+        // The upload endpoint persists the picture on the user server-side;
+        // PATCH /user/{id} does NOT accept profilePicture, so we refetch the
+        // canonical profile instead of trying to set the field.
         const url = await userService.uploadProfilePicture(file);
-        await userService.updateProfile(userId!, { profilePicture: url });
-        dispatch(updateUser({ profilePicture: url }));
+        if (url) dispatch(updateUser({ profilePicture: url }));
+        const fresh = await userService.getUserProfile(userId!);
+        dispatch(setUser(fresh));
         toastHelper.success('Profile picture updated!');
       } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setUploadingProfile(false); }
     } else {
       setUploadingCover(true);
       try {
         const url = await userService.uploadCoverPicture(file);
-        await userService.updateProfile(userId!, { coverPicture: url });
-        dispatch(updateUser({ coverPicture: url }));
+        if (url) dispatch(updateUser({ coverPicture: url }));
+        const fresh = await userService.getUserProfile(userId!);
+        dispatch(setUser(fresh));
         toastHelper.success('Cover picture updated!');
       } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setUploadingCover(false); }
     }
@@ -149,15 +164,17 @@ export default function StudentProfileScreen() {
     if (target === 'profile') {
       setUploadingProfile(true);
       try {
-        await userService.updateProfile(userId, { profilePicture: '' });
-        dispatch(updateUser({ profilePicture: '' }));
+        await userService.deleteProfilePicture();
+        const fresh = await userService.getUserProfile(userId);
+        dispatch(setUser(fresh));
         toastHelper.success('Profile picture removed');
       } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setUploadingProfile(false); }
     } else {
       setUploadingCover(true);
       try {
-        await userService.updateProfile(userId, { coverPicture: '' });
-        dispatch(updateUser({ coverPicture: '' }));
+        await userService.deleteCoverPicture();
+        const fresh = await userService.getUserProfile(userId);
+        dispatch(setUser(fresh));
         toastHelper.success('Cover picture removed');
       } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setUploadingCover(false); }
     }
@@ -230,8 +247,7 @@ export default function StudentProfileScreen() {
           <div className="absolute top-4 right-4 z-10">
             <input ref={coverRef} id="cover-photo-input" type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'cover')} className="hidden" />
             <ImageMenu
-              inputId="cover-photo-input"
-              onEdit={() => coverRef.current?.click()}
+              onEdit={openCoverPicker}
               onDelete={getUserImgUrl(user.coverPicture) ? () => handleRemoveImage('cover') : undefined}
               loading={uploadingCover}
             />
@@ -255,8 +271,7 @@ export default function StudentProfileScreen() {
                 <input ref={profileRef} id="profile-photo-input" type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'profile')} className="hidden" />
                 <div className="absolute -bottom-1 -right-1">
                   <ImageMenu
-                    inputId="profile-photo-input"
-                    onEdit={() => profileRef.current?.click()}
+                    onEdit={openProfilePicker}
                     onDelete={getUserImgUrl(user.profilePicture) ? () => handleRemoveImage('profile') : undefined}
                     loading={uploadingProfile}
                   />
@@ -594,10 +609,8 @@ export default function StudentProfileScreen() {
             <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
               <h2 className="font-bold text-dark text-lg mb-4 flex items-center gap-2"><i className="fas fa-cloud-arrow-up text-primary text-base" />Media</h2>
               <div className="flex flex-wrap gap-3">
-                <input ref={profileRef} type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'profile')} className="hidden" />
-                <Button variant="outline" size="sm" loading={uploadingProfile} onClick={() => profileRef.current?.click()}><i className="fas fa-image text-xs" /> Change photo</Button>
-                <input ref={coverRef} type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'cover')} className="hidden" />
-                <Button variant="outline" size="sm" loading={uploadingCover} onClick={() => coverRef.current?.click()}><i className="fas fa-image text-xs" /> Change cover</Button>
+                <Button variant="outline" size="sm" loading={uploadingProfile} onClick={openProfilePicker}><i className="fas fa-image text-xs" /> Change photo</Button>
+                <Button variant="outline" size="sm" loading={uploadingCover} onClick={openCoverPicker}><i className="fas fa-image text-xs" /> Change cover</Button>
                 <input ref={resumeRef} type="file" accept=".pdf" onChange={handleResumeUpload} className="hidden" />
                 <Button variant="outline" size="sm" loading={uploadingResume} onClick={() => resumeRef.current?.click()}><i className="fas fa-file-pdf text-xs" /> {resumeUrl ? 'Replace resume' : 'Upload resume'}</Button>
               </div>
