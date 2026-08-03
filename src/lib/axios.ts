@@ -13,13 +13,32 @@ const api = axios.create({
 });
 
 // ─── Request interceptor — attach access token ─────────────────────────────
+// Public auth endpoints — never attach the (possibly stale) token, otherwise
+// the backend auth middleware can reject the request with "Invalid token".
+const PUBLIC_AUTH_ENDPOINTS = [
+  '/auth/login',
+  '/auth/signup',
+  '/auth/refresh',
+  '/auth/google',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/resend-otp',
+  '/auth/confirm-email',
+];
+
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Read from localStorage (works after page refresh too)
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem(LS_ACCESS_TOKEN);
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      const url = config.url || '';
+      const isPublicAuth = PUBLIC_AUTH_ENDPOINTS.some(
+        (ep) => url === ep || url.startsWith(`${ep}?`) || url.startsWith(`${ep}/`),
+      );
+      if (!isPublicAuth) {
+        const token = localStorage.getItem(LS_ACCESS_TOKEN);
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
       }
     }
     return config;
