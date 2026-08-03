@@ -59,6 +59,14 @@ export async function refreshAuthTokens(): Promise<boolean> {
 // a freshly-created company owner still holds a stale "student" JWT → 403.
 const COMPANY_GATED_PATTERNS = [/\/internships/, /\/billing/];
 
+// Auth pages — never hard-redirect here or we'd reload into the same page (loop).
+const AUTH_PAGE_PATTERN = /^\/(login|get-started|signup|forgot-password|confirm-email|reset-password)(\/|$)/;
+
+function isOnAuthPage(): boolean {
+  if (typeof window === 'undefined') return false;
+  return AUTH_PAGE_PATTERN.test(window.location.pathname);
+}
+
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -67,18 +75,26 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest?._retry) {
       originalRequest._retry = true;
 
-      const refreshed = await refreshAuthTokens();
-      if (refreshed) {
-        const token =
-          typeof window !== 'undefined'
-            ? localStorage.getItem(LS_ACCESS_TOKEN)
-            : null;
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-        return api(originalRequest);
+      // Only treat it as a session-expiry if the request actually carried a token;
+      // otherwise the request was anonymous (e.g. a public poll) — don't touch auth.
+      const hadAuth =
+        typeof originalRequest?.headers?.Authorization === 'string' &&
+        String(originalRequest.headers.Authorization).startsWith('Bearer');
+
+      if (hadAuth) {
+        const refreshed = await refreshAuthTokens();
+        if (refreshed) {
+          const token =
+            typeof window !== 'undefined'
+              ? localStorage.getItem(LS_ACCESS_TOKEN)
+              : null;
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest);
+        }
       }
 
       clearAuthStorage();
-      if (typeof window !== 'undefined') {
+      if (!isOnAuthPage()) {
         window.location.href = '/login/student';
       }
     }
@@ -101,7 +117,7 @@ api.interceptors.response.use(
       }
 
       clearAuthStorage();
-      if (typeof window !== 'undefined') {
+      if (!isOnAuthPage()) {
         window.location.href = '/login/company';
       }
     }
@@ -129,7 +145,9 @@ export function getErrorStatus(error: unknown): number | null {
 
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as any;
+    const data = error.response?.data as
+      | { message?: unknown; errMsg?: unknown; msg?: unknown }
+      | undefined;
     const msg = data?.message || data?.errMsg || data?.msg;
     if (Array.isArray(msg)) return msg.join(', ');
     if (typeof msg === 'string') return msg;

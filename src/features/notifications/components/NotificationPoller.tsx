@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { useAppDispatch } from '@/store/store';
+import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setUnreadCount } from '@/store/notificationSlice';
 import { notificationService } from '@/features/notifications/server/notification.service';
 import { toast } from 'react-toastify';
@@ -11,10 +11,17 @@ let globalInitialized = false;
 
 export default function NotificationPoller() {
   const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
+  const isAuthRef = useRef(false);
   const lastCountRef = useRef(0);
   const mountedRef = useRef(false);
 
+  useEffect(() => {
+    isAuthRef.current = isAuthenticated;
+  }, [isAuthenticated]);
+
   const fetchCount = useCallback(async () => {
+    if (!isAuthRef.current) return;
     try {
       const count = await notificationService.getUnreadCount();
       if (mountedRef.current && count > lastCountRef.current) {
