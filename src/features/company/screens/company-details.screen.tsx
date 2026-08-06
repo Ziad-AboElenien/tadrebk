@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Company, getImgUrl } from '@/features/company/types';
+import { Company, getCompanyImgUrl } from '@/features/company/types';
 import { Internship } from '@/features/internship/types';
 import InternshipCard from '@/features/company/components/InternshipCard';
 import Button from '@/components/ui/Button';
@@ -11,6 +11,7 @@ import Spinner from '@/components/ui/Spinner';
 import EmptyState from '@/components/ui/EmptyState';
 import { companyService } from '@/features/company/services/company.service';
 import { internshipService } from '@/features/internship/services/internship.service';
+import { useBlankImage } from '@/lib/use-blank-image';
 import { toastHelper } from '@/lib/toast';
 
 function formatDate(dateStr?: string): string {
@@ -29,6 +30,8 @@ export default function CompanyDetailsScreen() {
   const [loading, setLoading] = useState(true);
   const [totalInternships, setTotalInternships] = useState(0);
   const [logoError, setLogoError] = useState(false);
+  const coverBlank = useBlankImage(company ? getCompanyImgUrl(company.coverPicture) : null);
+  const logoBlank = useBlankImage(company ? getCompanyImgUrl(company.logo) : null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,8 +66,8 @@ export default function CompanyDetailsScreen() {
     );
   }
 
-  const logoUrl = getImgUrl(company.logo);
-  const coverUrl = getImgUrl(company.coverPicture);
+  const logoUrl = getCompanyImgUrl(company.logo);
+  const coverUrl = getCompanyImgUrl(company.coverPicture);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -86,8 +89,8 @@ export default function CompanyDetailsScreen() {
 
         {/* Cover */}
         <div className="relative h-48 sm:h-56 md:h-64 rounded-3xl overflow-hidden bg-gradient-to-br from-primary/20 via-emerald-500/20 to-teal-500/20">
-          {coverUrl ? (
-            <img src={coverUrl} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+          {coverBlank.showImage ? (
+            <img src={coverUrl!} alt="Cover" className="absolute inset-0 w-full h-full object-cover" onLoad={coverBlank.onImgLoad} />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-emerald-500/10 to-teal-500/10" />
           )}
@@ -96,13 +99,13 @@ export default function CompanyDetailsScreen() {
         {/* Avatar + header */}
         <div className="relative px-4 sm:px-6 -mt-14 mb-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-3 sm:gap-4">
-            {logoUrl && !logoError ? (
+            {logoBlank.showImage && !logoError ? (
               <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl shrink-0 bg-white">
-                <img src={logoUrl} alt="" className="w-full h-full object-contain p-2" onError={() => setLogoError(true)} />
+                <img src={logoUrl!} alt="" className="w-full h-full object-contain p-2" onLoad={logoBlank.onImgLoad} onError={() => setLogoError(true)} />
               </div>
             ) : (
-              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center ring-4 ring-white shadow-xl shrink-0">
-                <i className="fas fa-building text-2xl sm:text-3xl text-white" />
+              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-gray-100 flex items-center justify-center ring-4 ring-white shadow-xl shrink-0">
+                <i className="fas fa-building text-2xl sm:text-3xl text-gray-300" />
               </div>
             )}
             <div className="text-center sm:text-left pb-1">

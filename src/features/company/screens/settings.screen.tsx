@@ -19,7 +19,8 @@ import ImageCropperModal from '@/components/ui/ImageCropperModal';
 import LocationPickerField from '@/components/ui/LocationPickerField';
 import { companyService } from '@/features/company/services/company.service';
 import { COMPANY_INDUSTRIES } from '@/lib/constants';
-import { getImgUrl, parseLocation } from '@/features/company/types';
+import { useBlankImage } from '@/lib/use-blank-image';
+import { getCompanyImgUrl, parseLocation } from '@/features/company/types';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
@@ -35,6 +36,8 @@ export default function CompanySettingsScreen() {
 
   const logoRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
+  const coverBlank = useBlankImage(company ? getCompanyImgUrl(company.coverPicture) : null);
+  const logoBlank = useBlankImage(company ? getCompanyImgUrl(company.logo) : null);
 
   const {
     register,
@@ -125,15 +128,19 @@ export default function CompanySettingsScreen() {
     if (target === 'logo') {
       setUploadingLogo(true);
       try {
-        await companyService.updateCompany(company._id, { logo: '' });
-        dispatch(setCompany({ ...company, logo: '' }));
+        const url = await companyService.clearLogo(company._id);
+        dispatch(setCompany({ ...company, logo: url }));
+        const fresh = await companyService.getCompanyById(company._id);
+        dispatch(setCompany(fresh));
         toastHelper.success('Logo removed');
       } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setUploadingLogo(false); }
     } else {
       setUploadingCover(true);
       try {
-        await companyService.updateCompany(company._id, { coverPicture: '' });
-        dispatch(setCompany({ ...company, coverPicture: '' }));
+        const url = await companyService.clearCoverPicture(company._id);
+        dispatch(setCompany({ ...company, coverPicture: url }));
+        const fresh = await companyService.getCompanyById(company._id);
+        dispatch(setCompany(fresh));
         toastHelper.success('Cover image removed');
       } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setUploadingCover(false); }
     }
@@ -150,9 +157,8 @@ export default function CompanySettingsScreen() {
     );
   }
 
-  const logoUrl = getImgUrl(company.logo);
-  const coverUrl = getImgUrl(company.coverPicture);
-  const initials = company.name.substring(0, 2).toUpperCase();
+  const logoUrl = getCompanyImgUrl(company.logo);
+  const coverUrl = getCompanyImgUrl(company.coverPicture);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -165,8 +171,8 @@ export default function CompanySettingsScreen() {
 
         {/* ── Cover Hero ── */}
         <div className="relative h-44 sm:h-52 rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20">
-          {coverUrl ? (
-            <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
+          {coverBlank.showImage ? (
+            <img src={coverUrl!} alt="Cover" className="w-full h-full object-cover" onLoad={coverBlank.onImgLoad} />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-cyan-500/5" />
           )}
@@ -185,11 +191,11 @@ export default function CompanySettingsScreen() {
         <div className="relative px-4 sm:px-6 -mt-10 mb-8">
           <div className="flex items-end gap-4">
             <div className="relative group shrink-0">
-              <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
-                {logoUrl ? (
-                  <img src={logoUrl} alt={company.name} className="w-full h-full object-cover" />
+              <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl bg-gray-100 flex items-center justify-center">
+                {logoBlank.showImage ? (
+                  <img src={logoUrl!} alt={company.name} className="w-full h-full object-cover" onLoad={logoBlank.onImgLoad} />
                 ) : (
-                  <span className="text-2xl font-bold text-white select-none">{initials}</span>
+                  <i className="fas fa-building text-3xl text-gray-300" />
                 )}
               </div>
               <input ref={logoRef} id="company-logo-input" type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'logo')} className="hidden" />

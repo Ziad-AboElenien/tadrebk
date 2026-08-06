@@ -1,12 +1,145 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useAppSelector } from '@/store/store';
+import type { UserRole } from '@/features/auth/types';
+
+interface FooterLink {
+  label: string;
+  href: string;
+}
+
+interface FooterColumn {
+  title: string;
+  links: FooterLink[];
+}
+
+const explore: FooterColumn = {
+  title: 'Explore',
+  links: [
+    { label: 'Browse Internships', href: '/internships' },
+    { label: 'How It Works', href: '/how-it-works' },
+    { label: 'For Companies', href: '/companies' },
+    { label: 'About Us', href: '/about' },
+  ],
+};
+
+const studentColumns: FooterColumn[] = [
+  {
+    title: 'Student',
+    links: [
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'My Profile', href: '/profile' },
+      { label: 'My Applications', href: '/my-applications' },
+      { label: 'Notifications', href: '/notifications' },
+      { label: 'Change Password', href: '/change-password' },
+    ],
+  },
+  explore,
+];
+
+const companyColumns: FooterColumn[] = [
+  {
+    title: 'Company',
+    links: [
+      { label: 'Dashboard', href: '/company/dashboard' },
+      { label: 'Post an Internship', href: '/company/post-internship' },
+      { label: 'Company Profile', href: '/company/profile' },
+      { label: 'Billing', href: '/company/billing' },
+      { label: 'Settings', href: '/company/settings' },
+    ],
+  },
+  explore,
+];
+
+const adminColumns: FooterColumn[] = [
+  {
+    title: 'Admin',
+    links: [
+      { label: 'Dashboard', href: '/admin/dashboard' },
+      { label: 'My Profile', href: '/profile' },
+      { label: 'Change Password', href: '/change-password' },
+    ],
+  },
+  {
+    title: 'Explore',
+    links: [
+      { label: 'Browse Internships', href: '/internships' },
+      { label: 'For Companies', href: '/companies' },
+      { label: 'How It Works', href: '/how-it-works' },
+      { label: 'About Us', href: '/about' },
+    ],
+  },
+];
+
+const guestColumns: FooterColumn[] = [
+  {
+    title: 'Explore',
+    links: [
+      { label: 'Browse Internships', href: '/internships' },
+      { label: 'How It Works', href: '/how-it-works' },
+      { label: 'About Us', href: '/about' },
+    ],
+  },
+  {
+    title: 'Students',
+    links: [
+      { label: 'Get Started', href: '/get-started' },
+      { label: 'Create Account', href: '/signup/student' },
+      { label: 'Sign In', href: '/login/student' },
+    ],
+  },
+  {
+    title: 'Companies',
+    links: [
+      { label: 'Register Your Company', href: '/signup/company' },
+      { label: 'Company Sign In', href: '/login/company' },
+      { label: 'View All Companies', href: '/companies' },
+    ],
+  },
+];
+
+const support: FooterColumn = {
+  title: 'Support',
+  links: [
+    { label: 'Help Center', href: '/help' },
+    { label: 'Contact Us', href: '/contact' },
+    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Terms of Service', href: '/terms' },
+    { label: 'FAQ', href: '/faq' },
+  ],
+};
+
+function columnsFor(role: UserRole | 'guest'): FooterColumn[] {
+  if (role === 'student') return [...studentColumns, support];
+  if (role === 'company') return [...companyColumns, support];
+  if (role === 'admin') return [...adminColumns, support];
+  return [...guestColumns, support];
+}
 
 export default function Footer() {
+  const { isAuthenticated, role } = useAppSelector((s) => s.auth);
+  const [mounted, setMounted] = useState(false);
   const year = new Date().getFullYear();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const current: UserRole | 'guest' =
+    mounted && isAuthenticated ? role : 'guest';
+  const columns = columnsFor(current);
+  const gridClass =
+    current === 'guest'
+      ? 'lg:grid-cols-6'
+      : 'lg:grid-cols-5';
+
   return (
     <footer className="bg-gray-900 pt-16 pb-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Top */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 mb-14">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${gridClass} gap-10 mb-14`}>
           {/* Brand */}
           <div className="lg:col-span-2">
             <h2 className="text-white text-2xl font-black mb-4">Tadrebk</h2>
@@ -32,65 +165,21 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* For Students */}
-          <div>
-            <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wider">Students</h4>
-            <ul className="space-y-3 text-sm text-gray-400">
-              {[
-                { label: 'Browse Internships', href: '/internships' },
-                { label: 'How It Works', href: '/how-it-works' },
-                { label: 'Student Dashboard', href: '/dashboard' },
-                { label: 'My Profile', href: '/profile' },
-                { label: 'My Applications', href: '/my-applications' },
-              ].map((l) => (
-                <li key={l.label}>
-                  <Link href={l.href} className="hover:text-primary transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* For Companies */}
-          <div>
-            <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wider">Companies</h4>
-            <ul className="space-y-3 text-sm text-gray-400">
-              {[
-                { label: 'Post an Internship', href: '/company/post-internship' },
-                { label: 'Company Dashboard', href: '/company/dashboard' },
-                { label: 'Company Profile', href: '/company/profile' },
-                { label: 'Company Settings', href: '/company/settings' },
-                { label: 'View All Companies', href: '/companies' },
-              ].map((l) => (
-                <li key={l.label}>
-                  <Link href={l.href} className="hover:text-primary transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wider">Support</h4>
-            <ul className="space-y-3 text-sm text-gray-400">
-              {[
-                { label: 'Help Center', href: '#' },
-                { label: 'Contact Us', href: '#' },
-                { label: 'Privacy Policy', href: '#' },
-                { label: 'Terms of Service', href: '#' },
-                { label: 'FAQ', href: '#' },
-              ].map((l) => (
-                <li key={l.label}>
-                  <Link href={l.href} className="hover:text-primary transition-colors">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Dynamic columns */}
+          {columns.map((col) => (
+            <div key={col.title}>
+              <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wider">{col.title}</h4>
+              <ul className="space-y-3 text-sm text-gray-400">
+                {col.links.map((l) => (
+                  <li key={l.label}>
+                    <Link href={l.href} className="hover:text-primary transition-colors">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
         {/* Newsletter */}
@@ -119,9 +208,9 @@ export default function Footer() {
             © {year} Tadrebk. All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-xs text-gray-500">
-            <Link href="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
+            <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
             <span className="text-gray-700">|</span>
-            <Link href="#" className="hover:text-primary transition-colors">Terms of Service</Link>
+            <Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
             <span className="text-gray-700">|</span>
             <span className="flex items-center gap-1">
               Made with <i className="fas fa-heart text-red-400" /> in Egypt

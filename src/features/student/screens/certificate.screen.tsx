@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { internshipService } from '@/features/internship/services/internship.service';
-import { getImgUrl } from '@/features/company/types';
+import { getCompanyImgUrl } from '@/features/company/types';
 import type { Internship } from '@/features/internship/types';
 import Spinner from '@/components/ui/Spinner';
+import { useBlankImage } from '@/lib/use-blank-image';
 
 export default function CertificateScreen() {
   const searchParams = useSearchParams();
@@ -24,6 +25,11 @@ export default function CertificateScreen() {
       .finally(() => setLoading(false));
   }, [internshipId]);
 
+  const logoUrl = internship
+    ? getCompanyImgUrl((((internship.companyId as any)?._id ? internship.companyId as any : internship.company) || {}).logo)
+    : null;
+  const logoBlank = useBlankImage(logoUrl);
+
   if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>;
   if (!internship) return <div className="text-center py-20 text-gray-500">Invalid certificate link.</div>;
 
@@ -31,7 +37,6 @@ export default function CertificateScreen() {
     ? (internship.companyId as any)
     : internship.company || {};
   const companyName = company.name || 'Company';
-  const logoUrl = getImgUrl(company.logo);
 
   return (
     <div className="min-h-screen bg-[#f0ebe3] flex items-center justify-center p-8">
@@ -56,16 +61,17 @@ export default function CertificateScreen() {
               {/* Top section: Logo left, title right */}
               <div className="flex items-start justify-between mb-12">
                 <div className="flex-shrink-0">
-                  {logoUrl ? (
+                  {logoBlank.showImage ? (
                     <img
-                      src={logoUrl}
+                      src={logoUrl!}
                       alt=""
+                      onLoad={logoBlank.onImgLoad}
                       className="h-20 w-20 rounded-full object-cover border-2 border-amber-300/50 shadow-md"
                       style={{ borderRadius: '50%' }}
                     />
                   ) : (
-                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center text-2xl font-black text-amber-700 shadow-md">
-                      {companyName.charAt(0)}
+                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-amber-200 to-orange-300 flex items-center justify-center shadow-md">
+                      <i className="fas fa-building text-2xl text-amber-700" />
                     </div>
                   )}
                 </div>

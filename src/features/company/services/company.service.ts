@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { Company } from '@/features/company/types';
+import { Company, rememberBlankCompanyMarker } from '@/features/company/types';
 
 interface CreateCompanyPayload {
   name: string;
@@ -59,6 +59,18 @@ interface UploadResponse {
     url: string;
   };
   msg: string;
+}
+
+// The backend has no DELETE endpoint for company logo/cover, so "removing"
+// an image is done by re-uploading a blank 1x1 transparent PNG over the old
+// one; its URL is remembered as a marker so it renders as "no image".
+function createEmptyImageFile(): File {
+  const base64 =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY/j//z8DAAj8Av6IXwbgAAAAAElFTkSuQmCC';
+  const byteString = atob(base64.split(',')[1]);
+  const bytes = new Uint8Array(byteString.length);
+  for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i);
+  return new File([bytes], 'blank.png', { type: 'image/png' });
 }
 
 // Single, consistent interpretation of approval: missing field = NOT approved.
@@ -151,5 +163,17 @@ export const companyService = {
     );
 
     return data.data.url;
+  },
+
+  async clearLogo(companyId: string): Promise<string> {
+    const url = await this.uploadLogo(companyId, createEmptyImageFile());
+    rememberBlankCompanyMarker(url);
+    return url;
+  },
+
+  async clearCoverPicture(companyId: string): Promise<string> {
+    const url = await this.uploadCoverPicture(companyId, createEmptyImageFile());
+    rememberBlankCompanyMarker(url);
+    return url;
   },
 };

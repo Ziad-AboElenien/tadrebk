@@ -6,7 +6,8 @@ import { useAppSelector } from '@/store/store';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { billingService } from '@/features/billing/services/billing.service';
 import { Internship } from '@/features/internship/types';
-import { getImgUrl } from '@/features/company/types';
+import { getCompanyImgUrl } from '@/features/company/types';
+import { useBlankImage } from '@/lib/use-blank-image';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
@@ -22,6 +23,7 @@ export default function CompanyDashboardScreen() {
   const [logoError, setLogoError] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [showPendingModal, setShowPendingModal] = useState(false);
+  const logoBlank = useBlankImage(getCompanyImgUrl(company?.logo));
 
   const fetchData = useCallback(async () => {
     if (!company?._id) { setLoading(false); return; }
@@ -79,13 +81,13 @@ export default function CompanyDashboardScreen() {
       <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 mb-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            {getImgUrl(company.logo) && !logoError ? (
+            {logoBlank.showImage && !logoError ? (
               <div className="w-14 h-14 rounded-xl overflow-hidden bg-white ring-2 ring-gray-100 shrink-0">
-                <img src={getImgUrl(company.logo)!} alt="" className="w-full h-full object-contain p-1.5" onError={() => setLogoError(true)} />
+                <img src={getCompanyImgUrl(company.logo)!} alt="" className="w-full h-full object-contain p-1.5" onLoad={logoBlank.onImgLoad} onError={() => setLogoError(true)} />
               </div>
             ) : (
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shrink-0">
-                <i className="fas fa-building text-white text-lg" />
+              <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+                <i className="fas fa-building text-lg text-gray-300" />
               </div>
             )}
             <div>

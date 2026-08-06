@@ -80,14 +80,3 @@ export const LS_PENDING_EMAIL = 'tadrebk_pending_email';
 export const LS_PENDING_ONBOARDING = 'tadrebk_pending_onboarding';
 export const TOKEN_TTL_MS = 86400000; // 1 day
 
-// ============================================================
-// Avatar gradient fallbacks
-// ============================================================
-export const AVATAR_GRADIENTS = [
-  'from-emerald-400 to-teal-600',
-  'from-violet-400 to-purple-600',
-  'from-amber-400 to-orange-600',
-  'from-rose-400 to-pink-600',
-  'from-sky-400 to-blue-600',
-  'from-lime-400 to-green-600',
-] as const;

@@ -9,7 +9,7 @@ import { clearUser } from '@/store/userSlice';
 import { clearCompany } from '@/store/companySlice';
 import * as authService from '@/features/auth/server/auth.service';
 import Avatar from '@/components/ui/Avatar';
-import { getImgUrl } from '@/features/company/types';
+import { getCompanyImgUrl } from '@/features/company/types';
 import { getUserImgUrl } from '@/features/student/types';
 import NotificationBell from '@/features/notifications/components/NotificationBell';
 import { LS_PENDING_ONBOARDING } from '@/lib/constants';
@@ -147,11 +147,12 @@ export default function Navbar() {
                 <Avatar
                   src={
                     role === 'company'
-                      ? (getImgUrl(currentCompany?.logo) ?? null)
+                      ? (getCompanyImgUrl(currentCompany?.logo) ?? null)
                       : (getUserImgUrl(currentUser?.profilePicture) ?? null)
                   }
                   name={displayName || 'User'}
                   size="sm"
+                  icon={role === 'company' ? 'fa-building' : 'fa-user'}
                 />
                 <span className="text-sm font-semibold text-dark max-w-[120px] truncate">
                   {displayName || 'My Account'}
@@ -287,11 +288,12 @@ export default function Navbar() {
                 <Avatar
                   src={
                     role === 'company'
-                      ? (getImgUrl(currentCompany?.logo) ?? null)
+                      ? (getCompanyImgUrl(currentCompany?.logo) ?? null)
                       : (getUserImgUrl(currentUser?.profilePicture) ?? null)
                   }
                   name={displayName || 'User'}
                   size="sm"
+                  icon={role === 'company' ? 'fa-building' : 'fa-user'}
                 />
                 <i className={`fas fa-chevron-${userMenuOpen ? 'up' : 'down'} text-xs text-gray-400`} />
               </button>

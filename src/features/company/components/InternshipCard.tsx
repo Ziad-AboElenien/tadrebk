@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Internship } from '@/features/internship/types';
 import type { Company } from '@/features/company/types';
-import { getImgUrl } from '@/features/company/types';
+import { getCompanyImgUrl } from '@/features/company/types';
+import MediaImage from '@/components/ui/MediaImage';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { useState, useEffect, useCallback } from 'react';
@@ -47,7 +48,7 @@ export default function InternshipCard({
   const [saved, setSaved] = useState(false);
   const company = companyFromInternship(internship);
   const companyId = company?._id || (typeof internship.companyId === 'string' ? internship.companyId : null);
-  const logoUrl = company ? getImgUrl(company.logo) : null;
+  const logoUrl = company ? getCompanyImgUrl(company.logo) : null;
 
   useEffect(() => { setSaved(isSaved(internship._id)); }, [internship._id]);
 
@@ -95,11 +96,13 @@ export default function InternshipCard({
 
           {company && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-              {logoUrl ? (
-                <img src={logoUrl} alt="" className="w-5 h-5 rounded object-cover" />
-              ) : (
-                <div className="w-5 h-5 rounded bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-500">{company.name[0]}</div>
-              )}
+              <MediaImage
+                src={logoUrl}
+                alt=""
+                boxClassName="w-5 h-5 rounded overflow-hidden shrink-0"
+                imgClassName="w-full h-full object-cover"
+                iconClassName="fas fa-building text-[9px] text-gray-400"
+              />
               <span className="text-xs text-slate-500">{company.name}</span>
             </div>
           )}
@@ -118,11 +121,13 @@ export default function InternshipCard({
 
       {company && companyId && (
         <Link href={`/companies/${companyId}`} className="inline-flex items-center gap-2 mb-3 hover:opacity-80 transition-opacity">
-          {logoUrl ? (
-            <img src={logoUrl} alt="" className="w-6 h-6 rounded object-cover" />
-          ) : (
-            <div className="w-6 h-6 rounded bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-700">{company.name[0]}</div>
-          )}
+          <MediaImage
+            src={logoUrl}
+            alt=""
+            boxClassName="w-6 h-6 rounded overflow-hidden shrink-0"
+            imgClassName="w-full h-full object-cover"
+            iconClassName="fas fa-building text-[10px] text-gray-400"
+          />
           <span className="text-sm text-slate-600">{company.name}</span>
         </Link>
       )}
