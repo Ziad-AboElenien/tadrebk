@@ -17,10 +17,12 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import ImageMenu from '@/components/ui/ImageMenu';
 import ImageCropperModal from '@/components/ui/ImageCropperModal';
+import CourseModal from '@/components/ui/CourseModal';
 import { userService } from '@/features/student/services/user.service';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 import ImageLightbox from '@/features/student/components/ImageLightbox';
+import { useBlankImage } from '@/lib/use-blank-image';
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '';
@@ -47,7 +49,8 @@ export default function StudentProfileScreen() {
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [otherText, setOtherText] = useState('');
   const [showOtherInput, setShowOtherInput] = useState(false);
-  const [courseCerts, setCourseCerts] = useState<Record<number, { loading: boolean; done: boolean; file: File | null }>>({});
+  const [courseModalOpen, setCourseModalOpen] = useState(false);
+  const [courseAdding, setCourseAdding] = useState(false);
   const profileRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const resumeRef = useRef<HTMLInputElement>(null);
@@ -89,7 +92,6 @@ export default function StudentProfileScreen() {
     if (!userId) return;
     setSaving(true);
     try {
-      console.log('Sending courses:', JSON.stringify(data.courses));
       await userService.updateProfile(userId, {
         firstName: data.firstName || undefined,
         lastName: data.lastName || undefined,
@@ -107,21 +109,19 @@ export default function StudentProfileScreen() {
       dispatch(setUser(fresh));
       setEditing(false);
       toastHelper.success('Profile updated!');
-
-      // Upload pending certificates after saving courses
-      const pendingIndices = Object.entries(courseCerts).filter(([, v]) => v.file).map(([k]) => Number(k));
-      for (const i of pendingIndices) {
-        const file = courseCerts[i]?.file;
-        if (!file) continue;
-        try {
-          await userService.uploadCourseCertificate(i, file);
-          setCourseCerts((prev) => ({ ...prev, [i]: { ...prev[i], loading: false, done: true, file: null } }));
-        } catch {
-          toastHelper.error(`Failed to upload certificate for course ${i + 1}`);
-          setCourseCerts((prev) => ({ ...prev, [i]: { ...prev[i], loading: false, done: false, file: null } }));
-        }
-      }
     } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setSaving(false); }
+  }
+
+  async function handleAddCourse(name: string, file?: File) {
+    if (!userId) return;
+    setCourseAdding(true);
+    try {
+      await userService.addCourse(name, file);
+      const fresh = await userService.getUserProfile(userId);
+      dispatch(setUser(fresh));
+      setCourseModalOpen(false);
+      toastHelper.success('Course added!');
+    } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setCourseAdding(false); }
   }
 
   function onFileSelect(e: React.ChangeEvent<HTMLInputElement>, target: 'profile' | 'cover') {
@@ -164,7 +164,7 @@ export default function StudentProfileScreen() {
     if (target === 'profile') {
       setUploadingProfile(true);
       try {
-        await userService.deleteProfilePicture();
+        await userService.clearProfilePicture();
         const fresh = await userService.getUserProfile(userId);
         dispatch(setUser(fresh));
         toastHelper.success('Profile picture removed');
@@ -172,7 +172,7 @@ export default function StudentProfileScreen() {
     } else {
       setUploadingCover(true);
       try {
-        await userService.deleteCoverPicture();
+        await userService.clearCoverPicture();
         const fresh = await userService.getUserProfile(userId);
         dispatch(setUser(fresh));
         toastHelper.success('Cover picture removed');
@@ -218,6 +218,10 @@ export default function StudentProfileScreen() {
   }, [dispatch, router]);
 
   const displayName = user ? `${user.firstName} ${user.lastName}`.trim() : 'Student';
+  const profileUrl = getUserImgUrl(user?.profilePicture);
+  const coverUrl = getUserImgUrl(user?.coverPicture);
+  const profileBlank = useBlankImage(profileUrl);
+  const coverBlank = useBlankImage(coverUrl);
 
   if (!user) {
     return (
@@ -237,9 +241,9 @@ export default function StudentProfileScreen() {
 
         {/* Cover */}
         <div className="relative h-48 sm:h-56 md:h-64 rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20">
-          {getUserImgUrl(user.coverPicture) ? (
-            <button onClick={() => setLightbox(getUserImgUrl(user.coverPicture)!)} className="absolute inset-0 w-full h-full">
-              <img src={getUserImgUrl(user.coverPicture)!} alt="Cover" className="w-full h-full object-cover" />
+          {coverBlank.showImage ? (
+            <button onClick={() => setLightbox(coverUrl!)} className="absolute inset-0 w-full h-full">
+              <img src={coverUrl!} alt="Cover" className="w-full h-full object-cover" onLoad={coverBlank.onImgLoad} />
             </button>
           ) : (
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10" />
@@ -248,7 +252,7 @@ export default function StudentProfileScreen() {
             <input ref={coverRef} id="cover-photo-input" type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'cover')} className="hidden" />
             <ImageMenu
               onEdit={openCoverPicker}
-              onDelete={getUserImgUrl(user.coverPicture) ? () => handleRemoveImage('cover') : undefined}
+              onDelete={coverUrl ? () => handleRemoveImage('cover') : undefined}
               loading={uploadingCover}
             />
           </div>
@@ -259,20 +263,20 @@ export default function StudentProfileScreen() {
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div className="flex items-end gap-4">
               <div className="relative shrink-0">
-                {getUserImgUrl(user.profilePicture) ? (
-                  <button onClick={() => setLightbox(getUserImgUrl(user.profilePicture)!)} className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-white shadow-xl cursor-pointer">
-                    <img src={getUserImgUrl(user.profilePicture)!} alt={displayName} className="w-full h-full object-cover" />
+                {profileBlank.showImage ? (
+                  <button onClick={() => setLightbox(profileUrl!)} className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-white shadow-xl cursor-pointer">
+                    <img src={profileUrl!} alt={displayName} className="w-full h-full object-cover" onLoad={profileBlank.onImgLoad} />
                   </button>
                 ) : (
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center ring-4 ring-white shadow-xl">
-                    <span className="text-4xl font-bold text-white select-none">{displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}</span>
+                  <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center ring-4 ring-white shadow-xl">
+                    <i className="fas fa-user text-6xl text-gray-300" />
                   </div>
                 )}
                 <input ref={profileRef} id="profile-photo-input" type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'profile')} className="hidden" />
                 <div className="absolute -bottom-1 -right-1">
                   <ImageMenu
                     onEdit={openProfilePicker}
-                    onDelete={getUserImgUrl(user.profilePicture) ? () => handleRemoveImage('profile') : undefined}
+                    onDelete={profileUrl ? () => handleRemoveImage('profile') : undefined}
                     loading={uploadingProfile}
                   />
                 </div>
@@ -447,7 +451,7 @@ export default function StudentProfileScreen() {
               <div className="space-y-4">
                 {(watch('courses') || []).map((_, i) => (
                   <div key={i} className="border border-gray-100 rounded-2xl p-4 bg-gray-50/50">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2">
                       <input
                         {...register(`courses.${i}.name`)}
                         placeholder="Course name..."
@@ -464,54 +468,10 @@ export default function StudentProfileScreen() {
                         <i className="fas fa-trash text-xs" />
                       </button>
                     </div>
-                    <input id={`cert-upload-${i}`} type="file" accept="image/*,.pdf" onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setCourseCerts((prev) => ({ ...prev, [i]: { loading: false, done: true, file } }));
-                      e.target.value = '';
-                    }} className="hidden" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        (document.getElementById(`cert-upload-${i}`) as HTMLInputElement)?.click();
-                      }}
-                      disabled={courseCerts[i]?.loading}
-                      className={`flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl border transition-all ${
-                        courseCerts[i]?.done
-                          ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                          : courseCerts[i]?.loading
-                            ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-wait'
-                            : 'bg-white text-amber-600 border-amber-200 hover:bg-amber-50'
-                      }`}
-                    >
-                      {courseCerts[i]?.loading ? (
-                        <>
-                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                          </svg>
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <i className={`fas ${courseCerts[i]?.done ? 'fa-check-circle' : 'fa-upload'} text-xs`} />
-                          {courseCerts[i]?.done ? 'Certificate selected' : 'Upload your certificate'}
-                        </>
-                      )}
-                    </button>
                   </div>
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const current = (watch('courses') || []) as { name: string }[];
-                  setValue('courses', [...current, { name: '' }] as any, { shouldValidate: true });
-                }}
-                className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-dark transition-colors"
-              >
-                <i className="fas fa-plus" /> Add course
-              </button>
+              <p className="mt-2 text-xs text-gray-400">To add a new course, close editing and use the &quot;Add course&quot; button.</p>
             </div>
 
             <div className="flex gap-4 pt-4 border-t border-gray-100">
@@ -586,9 +546,12 @@ export default function StudentProfileScreen() {
                 ))}</div>
               </div>
             )}
-            {user.courses && user.courses.length > 0 && (
-              <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
-                <h2 className="font-bold text-dark text-lg mb-4 flex items-center gap-2"><i className="fas fa-certificate text-primary text-base" />Courses</h2>
+            <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-bold text-dark text-lg flex items-center gap-2"><i className="fas fa-certificate text-primary text-base" />Courses</h2>
+                <Button size="sm" onClick={() => setCourseModalOpen(true)}><i className="fas fa-plus text-xs" /> Add course</Button>
+              </div>
+              {user.courses && user.courses.length > 0 ? (
                 <div className="space-y-3">{user.courses.map((course: any, i: number) => (
                   <div key={i} className="flex items-center gap-3 justify-between">
                     <div className="flex items-center gap-3 min-w-0">
@@ -604,8 +567,10 @@ export default function StudentProfileScreen() {
                     )}
                   </div>
                 ))}</div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-gray-400">No courses yet. Add your first course to show it on your profile.</p>
+              )}
+            </div>
             <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
               <h2 className="font-bold text-dark text-lg mb-4 flex items-center gap-2"><i className="fas fa-cloud-arrow-up text-primary text-base" />Media</h2>
               <div className="flex flex-wrap gap-3">
@@ -636,6 +601,15 @@ export default function StudentProfileScreen() {
         )}
 
         {lightbox && <ImageLightbox src={lightbox} alt="Profile image" onClose={() => setLightbox(null)} />}
+
+        {courseModalOpen && (
+          <CourseModal
+            open={courseModalOpen}
+            adding={courseAdding}
+            onAdd={handleAddCourse}
+            onClose={() => setCourseModalOpen(false)}
+          />
+        )}
 
         {/* Settings button */}
         <div className="mt-8 text-center">

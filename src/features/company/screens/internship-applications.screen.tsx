@@ -8,6 +8,8 @@ import { applicationService, Application } from '@/features/student/services/app
 import type { RatingData } from '@/features/student/services/application.service';
 import { userService } from '@/features/student/services/user.service';
 import type { User } from '@/features/student/types';
+import { getUserImgUrl } from '@/features/student/types';
+import MediaImage from '@/components/ui/MediaImage';
 import { Internship } from '@/features/internship/types';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
@@ -407,7 +409,7 @@ export default function InternshipApplicationsScreen() {
           <div className="divide-y divide-gray-50">
             {filtered.map((app) => {
               const s = app.studentId;
-              const profilePic = s?.profilePicture?.secure_url;
+              const profilePic = getUserImgUrl(s?.profilePicture);
               const studentId = s?._id;
               return (
               <div key={app._id} className="p-6 sm:p-8">
@@ -416,17 +418,13 @@ export default function InternshipApplicationsScreen() {
                     href={`/company/applicants/${studentId || '#'}`}
                     className="shrink-0"
                   >
-                    {profilePic ? (
-                      <img
-                        src={profilePic}
-                        alt={`${s.firstName} ${s.lastName}`}
-                        className="w-14 h-14 rounded-full object-cover border-2 border-gray-100"
-                      />
-                    ) : (
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white font-bold">
-                        {s ? `${s.firstName[0]}${s.lastName[0]}`.toUpperCase() : '?'}
-                      </div>
-                    )}
+                    <MediaImage
+                      src={profilePic}
+                      alt={`${s.firstName} ${s.lastName}`}
+                      boxClassName="w-14 h-14 rounded-full border-2 border-gray-100 overflow-hidden"
+                      imgClassName="w-full h-full object-cover"
+                      iconClassName="fas fa-user text-xl text-gray-400"
+                    />
                   </Link>
 
                   <div className="flex-1 min-w-0">

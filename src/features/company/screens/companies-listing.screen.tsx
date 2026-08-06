@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { companyService } from '@/features/company/services/company.service';
-import { getImgUrl } from '@/features/company/types';
+import { getCompanyImgUrl } from '@/features/company/types';
 import type { Company } from '@/features/company/types';
+import MediaImage from '@/components/ui/MediaImage';
 import Spinner from '@/components/ui/Spinner';
 import Select from '@/components/ui/Select';
 
@@ -110,7 +111,7 @@ export default function CompaniesListingScreen() {
           <p className="text-sm text-gray-400 mb-6">{filtered.length} company{filtered.length !== 1 ? 'ies' : 'y'} found</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((company) => {
-              const logoUrl = getImgUrl(company.logo);
+              const logoUrl = getCompanyImgUrl(company.logo);
               return (
                 <Link
                   key={company._id}
@@ -118,15 +119,13 @@ export default function CompaniesListingScreen() {
                   className="group bg-white p-6 rounded-2xl border border-gray-50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 flex items-center justify-center shrink-0 overflow-hidden">
-                      {logoUrl ? (
-                        <img src={logoUrl} alt={company.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-xl font-bold text-emerald-500">
-                          {company.name.substring(0, 2).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
+                    <MediaImage
+                      src={logoUrl}
+                      alt={company.name}
+                      boxClassName="w-16 h-16 rounded-xl shrink-0 overflow-hidden"
+                      imgClassName="w-full h-full object-cover"
+                      iconClassName="fas fa-building text-2xl text-gray-300"
+                    />
                     <div className="min-w-0">
                       <h3 className="font-bold text-[#1a2e35] group-hover:text-emerald-600 transition-colors truncate">
                         {company.name}

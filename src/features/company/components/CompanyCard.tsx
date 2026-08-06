@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Company } from '@/features/company/types';
+import { Company, getCompanyImgUrl } from '@/features/company/types';
+import MediaImage from '@/components/ui/MediaImage';
 
 interface CompanyCardProps {
   company: Company;
@@ -12,39 +13,20 @@ export default function CompanyCard({
   company,
   internshipCount = 0,
 }: CompanyCardProps) {
-  // Generate fallback gradient avatar from company name
-  const generateGradient = (name: string) => {
-    const colors = [
-      'from-blue-400 to-blue-600',
-      'from-purple-400 to-purple-600',
-      'from-pink-400 to-pink-600',
-      'from-green-400 to-green-600',
-      'from-orange-400 to-orange-600',
-      'from-red-400 to-red-600',
-    ];
-    const index = name.charCodeAt(0) % colors.length;
-    return colors[index];
-  };
-
-  const initials = company.name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  const logoUrl = getCompanyImgUrl(company.logo);
 
   return (
     <Link href={`/companies/${company._id}`}>
       <div className="p-6 border border-slate-200 rounded-lg hover:shadow-lg transition-all duration-200">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3 flex-1">
-            <div
-              className={`w-12 h-12 rounded-lg bg-gradient-to-br ${generateGradient(
-                company.name
-              )} flex items-center justify-center text-white font-bold text-lg`}
-            >
-              {initials}
-            </div>
+            <MediaImage
+              src={logoUrl}
+              alt={company.name}
+              boxClassName="w-12 h-12 rounded-lg overflow-hidden shrink-0"
+              imgClassName="w-full h-full object-cover"
+              iconClassName="fas fa-building text-xl text-gray-300"
+            />
             <div className="flex-1">
               <h3 className="font-bold text-slate-900 line-clamp-1">
                 {company.name}

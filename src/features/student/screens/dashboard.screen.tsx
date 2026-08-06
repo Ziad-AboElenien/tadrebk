@@ -9,8 +9,9 @@ import { applicationService, Application } from '@/features/student/services/app
 import { internshipService } from '@/features/internship/services/internship.service';
 import { Internship } from '@/features/internship/types';
 import { getCompanyIdFromInternship } from '@/features/internship/types';
-import { getImgUrl } from '@/features/company/types';
+import { getCompanyImgUrl } from '@/features/company/types';
 import { getUserImgUrl } from '@/features/student/types';
+import { useBlankImage } from '@/lib/use-blank-image';
 import { openFileProxy } from '@/lib/file-proxy';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
@@ -106,6 +107,7 @@ export default function StudentDashboardScreen() {
   const firstName = user?.firstName || 'there';
   const education = user?.education?.[0];
   const savedCount = savedInternships.length;
+  const profileBlank = useBlankImage(getUserImgUrl(user?.profilePicture));
 
   if (!user) {
     return (
@@ -156,7 +158,7 @@ export default function StudentDashboardScreen() {
               <div className="-mt-10 flex flex-wrap items-end justify-between gap-4">
                 <div className="flex items-end gap-4 flex-wrap">
                   <div className="relative h-20 w-20 flex-shrink-0 rounded-2xl border-4 border-white bg-gray-900 overflow-hidden flex items-center justify-center text-white text-2xl font-bold">
-                    {getUserImgUrl(user?.profilePicture) ? <img src={getUserImgUrl(user.profilePicture)!} alt="" className="w-full h-full object-cover" /> : displayName.charAt(0).toUpperCase()}
+                    {profileBlank.showImage ? <img src={getUserImgUrl(user.profilePicture)!} alt="" className="w-full h-full object-cover" onLoad={profileBlank.onImgLoad} /> : <i className="fas fa-user text-2xl text-gray-200" />}
                     <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
                   </div>
                   <div className="pb-1">
@@ -248,7 +250,7 @@ export default function StudentDashboardScreen() {
                   const workingTime = intern?.workingTime || '';
                   const companyName = (intern as any)?.companyId?.name || '';
                   const companyLogo = (intern as any)?.companyId?.logo;
-                  const logoUrl = typeof companyLogo === 'string' ? companyLogo : companyLogo?.secure_url || '';
+                  const logoUrl = getCompanyImgUrl(companyLogo);
                   return (
                   <div key={app._id} className="p-6 sm:p-8">
                     <div className="flex items-start gap-4">
@@ -375,7 +377,7 @@ export default function StudentDashboardScreen() {
                 const cid = getCompanyIdFromInternship(intern);
                 const companyObj = typeof intern.companyId === 'object' ? (intern.companyId as any) : null;
                 const companyName = companyObj?.name || '';
-                const logoUrl = companyObj ? getImgUrl(companyObj.logo) : null;
+                const logoUrl = companyObj ? getCompanyImgUrl(companyObj.logo) : null;
                 return (
                 <Link key={intern._id} href={`/internships/${intern._id}`}>
                   <div className="rounded-2xl bg-white p-5 shadow-sm hover:shadow-md transition cursor-pointer h-full flex flex-col">

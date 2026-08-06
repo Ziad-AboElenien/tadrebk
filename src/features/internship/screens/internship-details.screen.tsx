@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Internship, getCompanyIdFromInternship } from '@/features/internship/types';
-import { Company, getImgUrl } from '@/features/company/types';
+import { Company, getCompanyImgUrl } from '@/features/company/types';
+import MediaImage from '@/components/ui/MediaImage';
 import Spinner from '@/components/ui/Spinner';
 import EmptyState from '@/components/ui/EmptyState';
 import Button from '@/components/ui/Button';
@@ -222,13 +223,13 @@ export default function InternshipDetailsScreen() {
             <div className="flex gap-5">
               {company ? (
                 <Link href={`/companies/${company._id}`}>
-                  <div className="h-16 w-16 flex-shrink-0 rounded-2xl overflow-hidden bg-gradient-to-br from-pink-200 via-yellow-100 to-sky-200 flex items-center justify-center text-gray-700 font-bold text-xl">
-                    {getImgUrl(company.logo) ? (
-                      <img src={getImgUrl(company.logo)!} alt={company.name} className="w-full h-full object-cover" />
-                    ) : (
-                      company.name.substring(0, 2).toUpperCase()
-                    )}
-                  </div>
+                  <MediaImage
+                    src={getCompanyImgUrl(company.logo)}
+                    alt={company.name}
+                    boxClassName="h-16 w-16 flex-shrink-0 rounded-2xl overflow-hidden"
+                    imgClassName="w-full h-full object-cover"
+                    iconClassName="fas fa-building text-xl text-gray-300"
+                  />
                 </Link>
               ) : (
                 <div className="h-16 w-16 flex-shrink-0 rounded-2xl bg-gradient-to-br from-pink-200 via-yellow-100 to-sky-200" />
@@ -438,13 +439,13 @@ export default function InternshipDetailsScreen() {
           <div className="mt-6 overflow-hidden rounded-2xl bg-white shadow-sm">
             <div className="flex items-center justify-between bg-gray-900 px-6 py-5 sm:px-8">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 flex-shrink-0 rounded-2xl overflow-hidden bg-gradient-to-br from-pink-200 via-yellow-100 to-sky-200 flex items-center justify-center text-gray-700 font-bold">
-                  {getImgUrl(company.logo) ? (
-                    <img src={getImgUrl(company.logo)!} alt={company.name} className="w-full h-full object-cover" />
-                  ) : (
-                    company.name.substring(0, 2).toUpperCase()
-                  )}
-                </div>
+                <MediaImage
+                  src={getCompanyImgUrl(company.logo)}
+                  alt={company.name}
+                  boxClassName="h-12 w-12 flex-shrink-0 rounded-2xl overflow-hidden"
+                  imgClassName="w-full h-full object-cover"
+                  iconClassName="fas fa-building text-lg text-gray-300"
+                />
                 <div>
                   <h3 className="text-lg font-extrabold text-white">About {company.name}</h3>
                   <div className="mt-1 flex items-center gap-4 text-xs text-gray-300">

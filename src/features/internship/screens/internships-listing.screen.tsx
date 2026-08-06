@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Internship } from '@/features/internship/types';
 import type { Company } from '@/features/company/types';
-import { getImgUrl } from '@/features/company/types';
+import { getCompanyImgUrl } from '@/features/company/types';
+import MediaImage from '@/components/ui/MediaImage';
 import Spinner from '@/components/ui/Spinner';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { companyService } from '@/features/company/services/company.service';
@@ -458,7 +459,7 @@ function InternshipsContent() {
                 <div className="grid grid-cols-1 gap-x-3 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
                   {internships.map((internship) => {
                     const company = companyFromInternship(internship);
-                    const logoUrl = company ? getImgUrl(company.logo) : null;
+                    const logoUrl = company ? getCompanyImgUrl(company.logo) : null;
                     const saved = savedIds.has(internship._id);
 
                     return (
@@ -470,15 +471,13 @@ function InternshipsContent() {
                           <div className="p-5 pb-0 flex-1">
                             {/* Logo + badges row */}
                             <div className="flex items-start justify-between mb-4">
-                              <div className="h-12 w-12 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-pink-200 via-yellow-100 to-sky-200 flex items-center justify-center text-gray-700 font-bold ring-2 ring-gray-50 group-hover:ring-emerald-200 transition-all">
-                                {logoUrl ? (
-                                  <img src={logoUrl} alt="" className="w-full h-full object-cover" />
-                                ) : company ? (
-                                  company.name.substring(0, 2).toUpperCase()
-                                ) : (
-                                  <i className="fas fa-building text-gray-400" />
-                                )}
-                              </div>
+                              <MediaImage
+                                src={logoUrl}
+                                alt=""
+                                boxClassName="h-12 w-12 flex-shrink-0 rounded-xl overflow-hidden ring-2 ring-gray-50 group-hover:ring-emerald-200 transition-all"
+                                imgClassName="w-full h-full object-cover"
+                                iconClassName="fas fa-building text-lg text-gray-300"
+                              />
                               <div className="flex gap-1.5 flex-wrap justify-end">
                                 {internship.location && (
                                   <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
@@ -577,7 +576,7 @@ function InternshipsContent() {
                   <div className="space-y-4">
                     {internships.map((internship) => {
                       const company = companyFromInternship(internship);
-                      const logoUrl = company ? getImgUrl(company.logo) : null;
+                      const logoUrl = company ? getCompanyImgUrl(company.logo) : null;
                       const saved = savedIds.has(internship._id);
                       return (
                         <div
@@ -586,15 +585,13 @@ function InternshipsContent() {
                         >
                           {/* Logo */}
                           <Link href={`/internships/${internship._id}`} className="shrink-0">
-                            <div className="h-14 w-14 rounded-xl overflow-hidden bg-gradient-to-br from-pink-200 via-yellow-100 to-sky-200 flex items-center justify-center text-gray-700 font-bold ring-2 ring-gray-50">
-                              {logoUrl ? (
-                                <img src={logoUrl} alt="" className="w-full h-full object-cover" />
-                              ) : company ? (
-                                company.name.substring(0, 2).toUpperCase()
-                              ) : (
-                                <i className="fas fa-building text-gray-400" />
-                              )}
-                            </div>
+                            <MediaImage
+                              src={logoUrl}
+                              alt=""
+                              boxClassName="h-14 w-14 rounded-xl overflow-hidden ring-2 ring-gray-50"
+                              imgClassName="w-full h-full object-cover"
+                              iconClassName="fas fa-building text-lg text-gray-300"
+                            />
                           </Link>
 
                           {/* Info */}

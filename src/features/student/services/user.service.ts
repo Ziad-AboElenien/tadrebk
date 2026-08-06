@@ -1,5 +1,6 @@
 import api from '@/lib/axios';
 import { User } from '@/features/student/types';
+import { rememberBlankPictureMarker } from '@/features/student/types';
 
 interface UpdateUserPayload {
   firstName?: string;
@@ -34,6 +35,17 @@ interface UserResponse {
   };
 }
 
+// The backend has no DELETE endpoint for profile/cover pictures, so "removing"
+// a picture is done by re-uploading a blank 1x1 transparent PNG over the old one.
+function createEmptyImageFile(): File {
+  const base64 =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY/j//z8DAAj8Av6IXwbgAAAAAElFTkSuQmCC';
+  const byteString = atob(base64.split(',')[1]);
+  const bytes = new Uint8Array(byteString.length);
+  for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i);
+  return new File([bytes], 'blank.png', { type: 'image/png' });
+}
+
 export const userService = {
   async getUserProfile(userId: string): Promise<User> {
     const { data } = await api.get<UserResponse>(`/user/${userId}`);
@@ -64,8 +76,10 @@ export const userService = {
     return data?.data?.url ?? data?.url ?? data?.data?.secure_url ?? '';
   },
 
-  async deleteProfilePicture(): Promise<void> {
-    await api.delete(`/user/profilePicture`);
+  async clearProfilePicture(): Promise<string> {
+    const url = await this.uploadProfilePicture(createEmptyImageFile());
+    rememberBlankPictureMarker(url);
+    return url;
   },
 
   async uploadCoverPicture(file: File): Promise<string> {
@@ -85,8 +99,10 @@ export const userService = {
     return data?.data?.url ?? data?.url ?? data?.data?.secure_url ?? '';
   },
 
-  async deleteCoverPicture(): Promise<void> {
-    await api.delete(`/user/coverPicture`);
+  async clearCoverPicture(): Promise<string> {
+    const url = await this.uploadCoverPicture(createEmptyImageFile());
+    rememberBlankPictureMarker(url);
+    return url;
   },
 
   async uploadResume(file: File): Promise<string> {
@@ -106,21 +122,16 @@ export const userService = {
     return data?.data?.url ?? data?.url ?? data?.data?.secure_url ?? '';
   },
 
-  async uploadCourseCertificate(courseIndex: number, file: File): Promise<string> {
+  async addCourse(name: string, file?: File): Promise<void> {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('name', name);
+    if (file) formData.append('file', file);
 
-    const { data } = await api.post<UploadResponse>(
-      `/user/upload/course-certificate/${courseIndex}`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
-
-    return data?.data?.url ?? data?.url ?? data?.data?.secure_url ?? '';
+    await api.post('/user/courses', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   },
 
   async deleteAccount(userId: string): Promise<void> {

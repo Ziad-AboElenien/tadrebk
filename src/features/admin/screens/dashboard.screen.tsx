@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAppSelector } from '@/store/store';
 import { adminService } from '@/features/admin/services/admin.service';
-import { Company } from '@/features/company/types';
+import { Company, getCompanyImgUrl } from '@/features/company/types';
+import MediaImage from '@/components/ui/MediaImage';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
@@ -151,9 +152,13 @@ export default function AdminDashboardScreen() {
               <div key={company._id} className="p-6 sm:p-8 hover:bg-gray-50/50 transition-colors">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white font-bold shrink-0">
-                      {company.name.substring(0, 2).toUpperCase()}
-                    </div>
+                    <MediaImage
+                      src={getCompanyImgUrl(company.logo)}
+                      alt={company.name}
+                      boxClassName="w-12 h-12 rounded-xl shrink-0 overflow-hidden"
+                      imgClassName="w-full h-full object-cover"
+                      iconClassName="fas fa-building text-lg text-gray-300"
+                    />
                     <div className="min-w-0">
                       <h3 className="font-bold text-dark truncate">{company.name}</h3>
                       <p className="text-sm text-gray-500 truncate">

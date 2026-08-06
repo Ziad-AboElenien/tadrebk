@@ -13,24 +13,8 @@ import { LS_PENDING_EMAIL } from '@/lib/constants';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
+import UniversityAutocomplete from '@/components/ui/UniversityAutocomplete';
 import { useGoogleAuth } from '@/features/auth/hooks/useGoogleAuth';
-
-const universityOptions = [
-  { value: 'Cairo University', label: 'Cairo University' },
-  { value: 'Ain Shams University', label: 'Ain Shams University' },
-  { value: 'Alexandria University', label: 'Alexandria University' },
-  { value: 'Helwan University', label: 'Helwan University' },
-  { value: 'Mansoura University', label: 'Mansoura University' },
-  { value: 'Assiut University', label: 'Assiut University' },
-  { value: 'Zagazig University', label: 'Zagazig University' },
-  { value: 'Suez Canal University', label: 'Suez Canal University' },
-  { value: 'AUC', label: 'American University in Cairo (AUC)' },
-  { value: 'GUC', label: 'German University in Cairo (GUC)' },
-  { value: 'BUE', label: 'British University in Egypt (BUE)' },
-  { value: 'MTI University', label: 'MTI University' },
-  { value: 'MIU', label: 'Misr International University' },
-  { value: 'Other', label: 'Other' },
-];
 
 const fieldOfStudyOptions = [
   { value: 'Computer Science', label: 'Computer Science' },
@@ -108,7 +92,6 @@ export default function SignupForm({ role }: SignupFormProps) {
     if (!isCompany) {
       const missing: string[] = [];
       if (!data.university) missing.push('University');
-      if (data.university === 'Other' && !data.universityOther) missing.push('University name');
       if (!data.fieldOfStudy) missing.push('Field of Study');
       if (data.fieldOfStudy === 'Other' && !data.fieldOfStudyOther) missing.push('Field of Study name');
       if (!data.degree) missing.push('Degree');
@@ -129,7 +112,7 @@ export default function SignupForm({ role }: SignupFormProps) {
         phone: data.phone || undefined,
         education: !isCompany && data.university
           ? [{
-              institution: data.university === 'Other' && data.universityOther ? data.universityOther : data.university,
+              institution: data.university,
               degree: data.degree!,
               field: data.fieldOfStudy === 'Other' && data.fieldOfStudyOther ? data.fieldOfStudyOther : data.fieldOfStudy!,
               grade: data.grade!,
@@ -275,24 +258,14 @@ export default function SignupForm({ role }: SignupFormProps) {
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Academic Information</p>
             </div>
 
-            <Select
+            <UniversityAutocomplete
               label="University"
               id="signup-university"
-              placeholder="Select your university"
-              options={universityOptions}
+              placeholder="Type to search your university"
               error={errors.university?.message}
               value={watch('university') ?? ''}
-              onChange={(e) => setValue('university', e.target.value, { shouldValidate: true })}
+              onChange={(v) => setValue('university', v, { shouldValidate: true })}
             />
-            {watch('university') === 'Other' && (
-              <Input
-                label="University name"
-                id="signup-universityOther"
-                placeholder="Enter your university"
-                error={errors.universityOther?.message}
-                {...register('universityOther')}
-              />
-            )}
 
             <Select
               label="Field of Study"

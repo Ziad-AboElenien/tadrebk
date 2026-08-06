@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
+import { useBlankImage } from '@/lib/use-blank-image';
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '';
@@ -40,6 +41,9 @@ export default function ApplicantProfileScreen() {
     })();
   }, [userId, router]);
 
+  const profileBlank = useBlankImage(user ? getUserImgUrl(user.profilePicture) : null);
+  const coverBlank = useBlankImage(user ? getUserImgUrl(user.coverPicture) : null);
+
   if (loading) {
     return <div className="flex justify-center py-20"><Spinner /></div>;
   }
@@ -47,6 +51,8 @@ export default function ApplicantProfileScreen() {
   if (!user) return null;
 
   const displayName = `${user.firstName} ${user.lastName}`.trim();
+  const profileUrl = getUserImgUrl(user.profilePicture);
+  const coverUrl = getUserImgUrl(user.coverPicture);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -57,8 +63,8 @@ export default function ApplicantProfileScreen() {
 
         {/* Cover */}
         <div className="relative h-48 sm:h-56 md:h-64 rounded-3xl overflow-hidden bg-gradient-to-r from-sky-500/20 via-blue-500/20 to-indigo-500/20">
-            {getUserImgUrl(user.coverPicture) ? (
-            <img src={getUserImgUrl(user.coverPicture)!} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+            {coverBlank.showImage ? (
+            <img src={coverUrl!} alt="Cover" className="absolute inset-0 w-full h-full object-cover" onLoad={coverBlank.onImgLoad} />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-r from-sky-500/10 via-blue-500/10 to-indigo-500/10" />
           )}
@@ -67,15 +73,13 @@ export default function ApplicantProfileScreen() {
         {/* Avatar + header */}
         <div className="relative px-4 sm:px-6 -mt-14 mb-8">
           <div className="flex items-end gap-4 flex-wrap">
-            {getUserImgUrl(user.profilePicture) ? (
+            {profileBlank.showImage ? (
               <div className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-white shadow-xl shrink-0">
-                <img src={getUserImgUrl(user.profilePicture)!} alt={displayName} className="w-full h-full object-cover" />
+                <img src={profileUrl!} alt={displayName} className="w-full h-full object-cover" onLoad={profileBlank.onImgLoad} />
               </div>
             ) : (
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center ring-4 ring-white shadow-xl shrink-0">
-                <span className="text-4xl font-bold text-white select-none">
-                  {displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                </span>
+              <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center ring-4 ring-white shadow-xl shrink-0">
+                <i className="fas fa-user text-6xl text-gray-300" />
               </div>
             )}
             <div className="pb-1">

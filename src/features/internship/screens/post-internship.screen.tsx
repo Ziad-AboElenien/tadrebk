@@ -14,6 +14,7 @@ import type { InternshipQuestion } from '@/features/internship/types';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
+import UniversityAutocomplete from '@/components/ui/UniversityAutocomplete';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
@@ -49,7 +50,7 @@ export default function PostInternshipScreen() {
   const [showCategoryInput, setShowCategoryInput] = useState(false);
   const [categoryText, setCategoryText] = useState('');
   const [categoryError, setCategoryError] = useState<string | null>(null);
-  const [universitiesStr, setUniversitiesStr] = useState('');
+  const [universities, setUniversities] = useState<string[]>([]);
 
   const {
     register,
@@ -178,11 +179,7 @@ export default function PostInternshipScreen() {
           .map((s) => s.trim())
           .filter(Boolean),
         track: selectedCategories.length > 0 ? selectedCategories : undefined,
-        requiredEducation: universitiesStr
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean)
-          .map((institution) => ({ institution })),
+        requiredEducation: universities.map((institution) => ({ institution })),
       });
       setShowSuccessModal(true);
     } catch (err) {
@@ -449,11 +446,13 @@ export default function PostInternshipScreen() {
         </div>
 
         {/* Universities */}
-        <Input
-          label="Target universities (optional, comma-separated)"
-          value={universitiesStr}
-          onChange={(e) => setUniversitiesStr(e.target.value)}
-          placeholder="e.g. Cairo University, Ain Shams University"
+        <UniversityAutocomplete
+          label="Target universities (optional)"
+          placeholder="Type to search universities..."
+          hint="Pick the universities you want interns from."
+          multiple
+          values={universities}
+          onMultiChange={setUniversities}
         />
 
         {/* Questions builder */}

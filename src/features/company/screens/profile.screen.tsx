@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useAppSelector } from '@/store/store';
-import { getImgUrl } from '@/features/company/types';
+import { getCompanyImgUrl } from '@/features/company/types';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import { companyService } from '@/features/company/services/company.service';
 import { internshipService } from '@/features/internship/services/internship.service';
+import { useBlankImage } from '@/lib/use-blank-image';
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return '';
@@ -20,6 +21,8 @@ export default function CompanyProfileScreen() {
   const c = useAppSelector((s) => s.company.currentCompany);
   const [totalInternships, setTotalInternships] = useState(0);
   const [logoError, setLogoError] = useState(false);
+  const coverBlank = useBlankImage(c ? getCompanyImgUrl(c.coverPicture) : null);
+  const logoBlank = useBlankImage(c ? getCompanyImgUrl(c.logo) : null);
 
   useEffect(() => {
     if (c?._id) {
@@ -37,16 +40,16 @@ export default function CompanyProfileScreen() {
     );
   }
 
-  const logoUrl = getImgUrl(c.logo);
-  const coverUrl = getImgUrl(c.coverPicture);
+  const logoUrl = getCompanyImgUrl(c.logo);
+  const coverUrl = getCompanyImgUrl(c.coverPicture);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="mx-auto max-w-4xl px-4 sm:px-8 py-8">
         {/* Cover */}
         <div className="relative h-48 sm:h-56 md:h-64 rounded-3xl overflow-hidden bg-gradient-to-br from-primary/20 via-emerald-500/20 to-teal-500/20">
-          {coverUrl ? (
-            <img src={coverUrl} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+          {coverBlank.showImage ? (
+            <img src={coverUrl!} alt="Cover" className="absolute inset-0 w-full h-full object-cover" onLoad={coverBlank.onImgLoad} />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-emerald-500/10 to-teal-500/10" />
           )}
@@ -63,13 +66,13 @@ export default function CompanyProfileScreen() {
         <div className="relative px-4 sm:px-6 -mt-14 mb-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div className="flex items-end gap-4 mt-3">
-              {logoUrl && !logoError ? (
+              {logoBlank.showImage && !logoError ? (
                 <div className="w-28 h-28 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl shrink-0 bg-white">
-                  <img src={logoUrl} alt="" className="w-full h-full object-contain p-2" onError={() => setLogoError(true)} />
+                  <img src={logoUrl!} alt="" className="w-full h-full object-contain p-2" onLoad={logoBlank.onImgLoad} onError={() => setLogoError(true)} />
                 </div>
               ) : (
-                <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center ring-4 ring-white shadow-xl shrink-0">
-                  <i className="fas fa-building text-3xl text-white" />
+                <div className="w-28 h-28 rounded-2xl bg-gray-100 flex items-center justify-center ring-4 ring-white shadow-xl shrink-0">
+                  <i className="fas fa-building text-3xl text-gray-300" />
                 </div>
               )}
               <div className="pb-1">
