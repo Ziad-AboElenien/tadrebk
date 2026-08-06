@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'Auth',
@@ -13,9 +14,9 @@ export default function AuthLayout({
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30 flex flex-col">
       {/* Minimal header */}
-      <header className="px-6 py-5 flex items-center justify-between">
-        <Link href="/" className="text-xl font-black text-primary tracking-tight">
-          Tadrebk
+      <header className="px-6 py-2 flex items-center justify-between">
+        <Link href="/" className="flex items-center">
+          <Image src="/images/logoandfav.png" alt="Tadrebk" width={232} height={193} className="h-32 w-auto" priority />
         </Link>
         <Link href="/" className="text-sm text-gray-400 hover:text-dark transition-colors flex items-center gap-1.5">
           <i className="fas fa-arrow-left text-xs" />
