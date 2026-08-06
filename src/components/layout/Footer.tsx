@@ -142,7 +142,7 @@ export default function Footer() {
         <div className={`grid grid-cols-1 sm:grid-cols-2 ${gridClass} gap-10 mb-14`}>
           {/* Brand */}
           <div className="lg:col-span-2">
-            <h2 className="text-white text-2xl font-black mb-4">Tadrebk</h2>
+            <h2 className="text-white text-2xl font-black tracking-tight mb-4">TADREBK</h2>
             <p className="text-gray-400 text-sm leading-relaxed max-w-xs mb-6">
               Connecting Egypt&apos;s brightest university students with the future of work. Your career starts here.
             </p>

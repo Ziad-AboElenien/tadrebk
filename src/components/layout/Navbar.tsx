@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { logout } from '@/store/authSlice';
@@ -89,16 +90,23 @@ export default function Navbar() {
   return (
     <header
       className={[
-        'sticky top-0 z-50 transition-all duration-300',
+        'sticky top-0 z-50 transition-[background-color,padding] duration-500',
         scrolled
-          ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100'
+          ? 'px-3 pt-2 bg-transparent'
           : 'bg-white border-b border-gray-50',
       ].join(' ')}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-6">
+      <div
+        className={[
+          'max-w-7xl mx-auto h-18 flex items-center justify-between gap-6 px-4 sm:px-6 transition-[background-color,border-color,border-radius,box-shadow] duration-500',
+          scrolled
+            ? 'rounded-full bg-white/40 backdrop-blur-xl border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.10)]'
+            : 'border border-transparent',
+        ].join(' ')}
+      >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <span className="text-2xl font-black text-primary tracking-tight">Tadrebk</span>
+          <Image src="/images/logoandfav.png" alt="Tadrebk" width={232} height={193} className="h-28 w-auto" priority />
         </Link>
 
         {/* Desktop Nav */}
@@ -391,10 +399,10 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
           />
           {/* Panel */}
-          <div className="fixed right-2 top-18 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col animate-grow-from-btn origin-top-right">
+          <div className={`fixed right-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col animate-grow-from-btn origin-top-right ${scrolled ? 'top-20' : 'top-18'}`}>
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-5 border-b border-gray-100">
-              <span className="text-xl font-black text-primary tracking-tight">Tadrebk</span>
+            <div className="flex items-center justify-between px-5 py-2 border-b border-gray-100">
+              <Image src="/images/logoandfav.png" alt="Tadrebk" width={232} height={193} className="h-28 w-auto" />
               <button
                 onClick={() => setMenuOpen(false)}
                 className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors"
