@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Internship, getCompanyIdFromInternship } from '@/features/internship/types';
+import { Internship, getCompanyIdFromInternship, getInternshipTracks } from '@/features/internship/types';
 import { Company, getCompanyImgUrl } from '@/features/company/types';
 import MediaImage from '@/components/ui/MediaImage';
 import Spinner from '@/components/ui/Spinner';
@@ -13,6 +13,7 @@ import ApplyModal from '@/features/internship/components/ApplyModal';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { applicationService, Answer } from '@/features/student/services/application.service';
 import { useAppSelector } from '@/store/store';
+import { CATEGORY_LABELS } from '@/features/student/types';
 import { getErrorMessage, getErrorUrl } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
@@ -327,6 +328,26 @@ export default function InternshipDetailsScreen() {
                 {internship.description}
               </p>
             </section>
+
+            {/* Tracks */}
+            {getInternshipTracks(internship).length > 0 && (
+              <section>
+                <h2 className="flex items-center gap-2 text-xl font-extrabold text-gray-900">
+                  <i className="fas fa-tags text-emerald-500 text-lg" />
+                  Tracks
+                </h2>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {getInternshipTracks(internship).map((track) => (
+                    <span
+                      key={track}
+                      className="inline-flex items-center rounded-full bg-emerald-50 px-4 py-1.5 text-xs font-semibold text-emerald-700 border border-emerald-100"
+                    >
+                      {CATEGORY_LABELS[track as keyof typeof CATEGORY_LABELS] || track}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Requirements */}
             {(internship.technicalSkills?.length || internship.softSkills?.length) && (

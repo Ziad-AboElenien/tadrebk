@@ -48,10 +48,16 @@ export default function CompanyOnboardingScreen() {
 
   const wLocLat = watch('location.lat');
   const wLocLng = watch('location.lng');
+  const wIndustry = watch('industry');
 
   async function onSubmit(data: CompanyOnboardingFormData) {
     if (!legalFile) {
       toastHelper.error('Legal document is required');
+      return;
+    }
+    const industry = data.industry === 'Other' ? data.customIndustry?.trim() : data.industry;
+    if (data.industry === 'Other' && !industry) {
+      toastHelper.error('Please specify your industry');
       return;
     }
 
@@ -59,7 +65,7 @@ export default function CompanyOnboardingScreen() {
       const company = await companyService.createCompany({
         name: data.name,
         description: data.description,
-        industry: data.industry,
+        industry: industry || data.industry,
         address: data.address,
         location: parseLocation(data.location?.lat, data.location?.lng),
         numberOfEmployees: data.numberOfEmployees,
@@ -139,6 +145,15 @@ export default function CompanyOnboardingScreen() {
             />
           )}
         />
+
+        {wIndustry === 'Other' && (
+          <Input
+            label="Specify your industry"
+            placeholder="e.g. Logistics, Construction, Tourism..."
+            error={errors.customIndustry?.message}
+            {...register('customIndustry')}
+          />
+        )}
 
         <Input
           label="Address"

@@ -73,12 +73,17 @@ export default function CompanySettingsScreen() {
 
   async function onSubmit(data: CompanySettingsFormData) {
     if (!company) return;
+    const industry = data.industry === 'Other' ? data.customIndustry?.trim() : data.industry;
+    if (data.industry === 'Other' && !industry) {
+      toastHelper.error('Please specify your industry');
+      return;
+    }
     setSaving(true);
     try {
       const updated = await companyService.updateCompany(company._id, {
         name: data.name,
         description: data.description,
-        industry: data.industry,
+        industry: industry || data.industry,
         address: data.address,
         location: parseLocation(data.location?.lat, data.location?.lng),
         companyEmail: data.companyEmail,
@@ -252,6 +257,15 @@ export default function CompanySettingsScreen() {
                 options={COMPANY_INDUSTRIES.map((ind) => ({ value: ind.value, label: ind.label }))}
               />
             </div>
+
+            {wIndustry === 'Other' && (
+              <Input
+                label="Specify your industry"
+                placeholder="e.g. Logistics, Construction, Tourism..."
+                error={errors.customIndustry?.message}
+                {...register('customIndustry')}
+              />
+            )}
 
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-semibold text-gray-700">Description</label>

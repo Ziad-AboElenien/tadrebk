@@ -106,7 +106,7 @@ export default function Navbar() {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <Image src="/images/logoandfav.png" alt="Tadrebk" width={232} height={193} className="h-28 w-auto" priority />
+          <Image src="/images/logoandfav.png" alt="Tadrebk" width={232} height={193} className="h-12 w-auto" priority />
         </Link>
 
         {/* Desktop Nav */}
@@ -402,7 +402,7 @@ export default function Navbar() {
           <div className={`fixed right-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col animate-grow-from-btn origin-top-right ${scrolled ? 'top-20' : 'top-18'}`}>
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-2 border-b border-gray-100">
-              <Image src="/images/logoandfav.png" alt="Tadrebk" width={232} height={193} className="h-28 w-auto" />
+              <Image src="/images/logoandfav.png" alt="Tadrebk" width={232} height={193} className="h-12 w-auto" />
               <button
                 onClick={() => setMenuOpen(false)}
                 className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors"

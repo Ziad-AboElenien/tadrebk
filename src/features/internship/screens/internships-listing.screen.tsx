@@ -478,7 +478,7 @@ function InternshipsContent() {
                                 imgClassName="w-full h-full object-cover"
                                 iconClassName="fas fa-building text-lg text-gray-300"
                               />
-                              <div className="flex gap-1.5 flex-wrap justify-end">
+                              <div className="flex flex-col items-end gap-1.5">
                                 {internship.location && (
                                   <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                                     internship.location === 'remote' ? 'bg-violet-50 text-violet-600' :
@@ -541,8 +541,35 @@ function InternshipsContent() {
                           </div>
                         </Link>
 
+                        {/* Tracks */}
+                        {(() => {
+                          const tracks = Array.isArray(internship.track) && internship.track.length
+                            ? internship.track
+                            : internship.categories || [];
+                          if (tracks.length === 0) return null;
+                          const visible = tracks.slice(0, 2);
+                          const rest = tracks.length - visible.length;
+                          return (
+                            <div className="flex flex-wrap gap-1.5 px-5 pt-3 mb-4">
+                              {visible.map((track) => (
+                                <span
+                                  key={track}
+                                  className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-100"
+                                >
+                                  {CATEGORY_LABELS[track as Category] || track}
+                                </span>
+                              ))}
+                              {rest > 0 && (
+                                <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-500">
+                                  +{rest}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
+
                         {/* Actions */}
-                        <div className="flex items-center gap-2 px-5 py-4 border-t border-gray-100 mt-auto">
+                        <div className="flex items-center gap-2 px-5 pt-5 pb-4 border-t border-gray-100 mt-auto">
                           <Link
                             href={canApply ? `/internships/${internship._id}` : '#'}
                             className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-center transition-all ${
@@ -622,6 +649,31 @@ function InternshipsContent() {
                                 </span>
                               )}
                             </div>
+                            {(() => {
+                              const tracks = Array.isArray(internship.track) && internship.track.length > 0
+                                ? internship.track
+                                : internship.categories || [];
+                              if (tracks.length === 0) return null;
+                              const visible = tracks.slice(0, 2);
+                              const rest = tracks.length - visible.length;
+                              return (
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                  {visible.map((track) => (
+                                    <span
+                                      key={track}
+                                      className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-100"
+                                    >
+                                      {CATEGORY_LABELS[track as Category] || track}
+                                    </span>
+                                  ))}
+                                  {rest > 0 && (
+                                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-500">
+                                      +{rest}
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </Link>
 
                           {/* Actions */}

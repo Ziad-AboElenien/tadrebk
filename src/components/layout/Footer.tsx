@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAppSelector } from '@/store/store';
 import type { UserRole } from '@/features/auth/types';
 
@@ -142,7 +143,7 @@ export default function Footer() {
         <div className={`grid grid-cols-1 sm:grid-cols-2 ${gridClass} gap-10 mb-14`}>
           {/* Brand */}
           <div className="lg:col-span-2">
-            <h2 className="text-white text-2xl font-black tracking-tight mb-4">TADREBK</h2>
+            <Image src="/images/footerlogo.png" alt="Tadrebk" width={251} height={207} className="h-16 w-auto mb-4" />
             <p className="text-gray-400 text-sm leading-relaxed max-w-xs mb-6">
               Connecting Egypt&apos;s brightest university students with the future of work. Your career starts here.
             </p>
