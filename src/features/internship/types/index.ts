@@ -55,6 +55,17 @@ export function getCompanyIdFromInternship(internship: Internship): string | nul
   return null;
 }
 
+/** Extract the track list from an Internship (supports array or comma-separated string, falls back to categories) */
+export function getInternshipTracks(internship: Internship): string[] {
+  if (Array.isArray(internship.track) && internship.track.length) return internship.track;
+  const trackStr = internship.track as unknown as string | undefined;
+  if (typeof trackStr === 'string' && trackStr.trim()) {
+    return trackStr.split(',').map((s) => s.trim()).filter(Boolean);
+  }
+  if (Array.isArray(internship.categories) && internship.categories.length) return internship.categories;
+  return [];
+}
+
 export interface CreateInternshipRequest {
   title: string;
   description: string;

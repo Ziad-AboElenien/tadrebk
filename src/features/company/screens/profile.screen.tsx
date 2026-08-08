@@ -124,7 +124,7 @@ export default function CompanyProfileScreen() {
             <Link href="/company/settings" className="text-xs font-semibold text-primary hover:underline">Edit</Link>
           </div>
           {c.description ? (
-            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{c.description}</p>
+            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap break-words">{c.description}</p>
           ) : (
             <p className="text-gray-400 italic">No description yet. <Link href="/company/settings" className="text-primary hover:underline">Add one</Link></p>
           )}

@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Internship } from '@/features/internship/types';
+import { Internship, getInternshipTracks } from '@/features/internship/types';
 import type { Company } from '@/features/company/types';
 import { getCompanyImgUrl } from '@/features/company/types';
+import { CATEGORY_LABELS } from '@/features/student/types';
 import MediaImage from '@/components/ui/MediaImage';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -49,6 +50,7 @@ export default function InternshipCard({
   const company = companyFromInternship(internship);
   const companyId = company?._id || (typeof internship.companyId === 'string' ? internship.companyId : null);
   const logoUrl = company ? getCompanyImgUrl(company.logo) : null;
+  const tracks = getInternshipTracks(internship);
 
   useEffect(() => { setSaved(isSaved(internship._id)); }, [internship._id]);
 
@@ -85,6 +87,18 @@ export default function InternshipCard({
           <p className="text-sm text-slate-600 line-clamp-2 mb-3">
             {internship.description}
           </p>
+          {tracks.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-3">
+              {tracks.slice(0, 2).map((track) => (
+                <span key={track} className="inline-block px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded">
+                  {CATEGORY_LABELS[track as keyof typeof CATEGORY_LABELS] || track}
+                </span>
+              ))}
+              {tracks.length > 2 && (
+                <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-500 rounded">+{tracks.length - 2}</span>
+              )}
+            </div>
+          )}
           <div className="flex flex-wrap gap-1">
             {internship.technicalSkills?.slice(0, 2)?.map((skill) => (
               <span key={skill} className="inline-block px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded">{skill}</span>
@@ -143,6 +157,17 @@ export default function InternshipCard({
           {internship.closed && <Badge variant="danger">Closed</Badge>}
         </div>
       </Link>
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        {tracks.slice(0, 2).map((track) => (
+          <span key={track} className="inline-block px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded">
+            {CATEGORY_LABELS[track as keyof typeof CATEGORY_LABELS] || track}
+          </span>
+        ))}
+        {tracks.length > 2 && (
+          <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-500 rounded">+{tracks.length - 2}</span>
+        )}
+      </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
         {internship.technicalSkills?.slice(0, 3)?.map((skill) => (
