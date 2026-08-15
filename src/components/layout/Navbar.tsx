@@ -31,7 +31,7 @@ export default function Navbar() {
 
   useEffect(() => {
     setMounted(true);
-    const handler = () => setScrolled(window.scrollY > 10);
+    const handler = () => setScrolled(window.scrollY > 0);
     window.addEventListener('scroll', handler);
     return () => window.removeEventListener('scroll', handler);
   }, []);
@@ -115,9 +115,7 @@ export default function Navbar() {
           {[
             { href: '/internships', label: 'Internships' },
             { href: '/how-it-works', label: 'How it works' },
-            { href: '/companies', label: 'For Companies' },
-            ...(mounted && role === 'company' ? [{ href: '/company/billing/plans' as const, label: 'Plans' }] : []),
-            { href: '/about', label: 'About Us' },
+            { href: '/companies', label: 'Our Partners' },
           ].map((link) => (
             <Link
               key={link.href}
@@ -140,6 +138,11 @@ export default function Navbar() {
           {pendingOnboarding ? (
             <span className="flex items-center gap-2 text-sm font-semibold text-amber-600">
               <i className="fas fa-circle-exclamation" /> Complete your company profile
+            </span>
+          ) : !mounted ? (
+            <span className="flex items-center gap-3 px-2" aria-hidden="true">
+              <span className="h-9 w-9 rounded-full bg-gray-100 animate-pulse" />
+              <span className="h-3.5 w-24 rounded-full bg-gray-100 animate-pulse" />
             </span>
           ) : isAuthenticated && mounted ? (
             <>
@@ -216,6 +219,14 @@ export default function Navbar() {
                         <i className="fas fa-paper-plane w-4 text-center text-gray-400" />
                         My Applications
                       </Link>
+                      <Link
+                        href="/activity"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                      >
+                        <i className="fas fa-chart-line w-4 text-center text-gray-400" />
+                        Activity
+                      </Link>
                     </>
                   )}
                   {role === 'company' && (
@@ -229,12 +240,12 @@ export default function Navbar() {
                         My Profile
                       </Link>
                       <Link
-                        href="/company/billing"
+                        href="/company/activity"
                         onClick={() => setUserMenuOpen(false)}
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
                       >
-                        <i className="fas fa-coins w-4 text-center text-gray-400" />
-                        Billing
+                        <i className="fas fa-chart-line w-4 text-center text-gray-400" />
+                        Activity
                       </Link>
                       <Link
                         href="/company/settings"
@@ -283,6 +294,8 @@ export default function Navbar() {
             <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-600">
               <i className="fas fa-circle-exclamation" /> Complete profile
             </span>
+          ) : !mounted ? (
+            <span className="h-9 w-9 rounded-full bg-gray-100 animate-pulse" aria-hidden="true" />
           ) : isAuthenticated && mounted && (
             <>
               {(role === 'student' || role === 'company') && <NotificationBell />}
@@ -333,6 +346,14 @@ export default function Navbar() {
                         <i className="fas fa-paper-plane w-4 text-center text-gray-400" />
                         My Applications
                       </Link>
+                      <Link
+                        href="/activity"
+                        onClick={() => { setUserMenuOpen(false); setMenuOpen(false); }}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
+                      >
+                        <i className="fas fa-chart-line w-4 text-center text-gray-400" />
+                        Activity
+                      </Link>
                     </>
                   )}
                   {role === 'company' && (
@@ -346,12 +367,12 @@ export default function Navbar() {
                         My Profile
                       </Link>
                       <Link
-                        href="/company/billing"
+                        href="/company/activity"
                         onClick={() => { setUserMenuOpen(false); setMenuOpen(false); }}
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
                       >
-                        <i className="fas fa-coins w-4 text-center text-gray-400" />
-                        Billing
+                        <i className="fas fa-chart-line w-4 text-center text-gray-400" />
+                        Activity
                       </Link>
                       <Link
                         href="/company/settings"
@@ -422,13 +443,8 @@ export default function Navbar() {
               <Link href="/how-it-works" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                 <i className="fas fa-circle-question w-5 text-center text-gray-400" /> How it works
               </Link>
-              {mounted && role === 'company' && (
-                <Link href="/company/billing/plans" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
-                  <i className="fas fa-credit-card w-5 text-center text-gray-400" /> Plans
-                </Link>
-              )}
-              <Link href="/about" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
-                <i className="fas fa-people-group w-5 text-center text-gray-400" /> About Us
+              <Link href="/companies" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
+                <i className="fas fa-handshake w-5 text-center text-gray-400" /> Our Partners
               </Link>
 
               {isAuthenticated && mounted && (
@@ -446,6 +462,9 @@ export default function Navbar() {
                       <Link href="/my-applications" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                         <i className="fas fa-paper-plane w-5 text-center text-gray-400" /> My Applications
                       </Link>
+                      <Link href="/activity" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
+                        <i className="fas fa-chart-line w-5 text-center text-gray-400" /> Activity
+                      </Link>
                     </>
                   )}
                   {role === 'company' && (
@@ -453,8 +472,8 @@ export default function Navbar() {
                       <Link href="/company/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                         <i className="fas fa-building w-5 text-center text-gray-400" /> Company Profile
                       </Link>
-                      <Link href="/company/billing" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
-                        <i className="fas fa-coins w-5 text-center text-gray-400" /> Billing
+                      <Link href="/company/activity" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
+                        <i className="fas fa-chart-line w-5 text-center text-gray-400" /> Activity
                       </Link>
                       <Link href="/company/settings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                         <i className="fas fa-gear w-5 text-center text-gray-400" /> Settings
@@ -482,6 +501,8 @@ export default function Navbar() {
                 <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-50 py-3 text-sm font-semibold text-red-500 hover:bg-red-100 transition-all">
                   <i className="fas fa-sign-out-alt" /> Sign out
                 </button>
+              ) : !mounted ? (
+                <div className="h-11 rounded-xl bg-gray-100 animate-pulse" aria-hidden="true" />
               ) : isAuthenticated && mounted ? (
                 <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-50 py-3 text-sm font-semibold text-red-500 hover:bg-red-100 transition-all">
                   <i className="fas fa-sign-out-alt" /> Sign out

@@ -21,8 +21,7 @@ const explore: FooterColumn = {
   links: [
     { label: 'Browse Internships', href: '/internships' },
     { label: 'How It Works', href: '/how-it-works' },
-    { label: 'For Companies', href: '/companies' },
-    { label: 'About Us', href: '/about' },
+    { label: 'Our Partners', href: '/companies' },
   ],
 };
 
@@ -47,7 +46,6 @@ const companyColumns: FooterColumn[] = [
       { label: 'Dashboard', href: '/company/dashboard' },
       { label: 'Post an Internship', href: '/company/post-internship' },
       { label: 'Company Profile', href: '/company/profile' },
-      { label: 'Billing', href: '/company/billing' },
       { label: 'Settings', href: '/company/settings' },
     ],
   },
@@ -67,9 +65,8 @@ const adminColumns: FooterColumn[] = [
     title: 'Explore',
     links: [
       { label: 'Browse Internships', href: '/internships' },
-      { label: 'For Companies', href: '/companies' },
+      { label: 'Our Partners', href: '/companies' },
       { label: 'How It Works', href: '/how-it-works' },
-      { label: 'About Us', href: '/about' },
     ],
   },
 ];
@@ -80,7 +77,7 @@ const guestColumns: FooterColumn[] = [
     links: [
       { label: 'Browse Internships', href: '/internships' },
       { label: 'How It Works', href: '/how-it-works' },
-      { label: 'About Us', href: '/about' },
+      { label: 'Our Partners', href: '/companies' },
     ],
   },
   {
@@ -167,20 +164,33 @@ export default function Footer() {
           </div>
 
           {/* Dynamic columns */}
-          {columns.map((col) => (
-            <div key={col.title}>
-              <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wider">{col.title}</h4>
-              <ul className="space-y-3 text-sm text-gray-400">
-                {col.links.map((l) => (
-                  <li key={l.label}>
-                    <Link href={l.href} className="hover:text-primary transition-colors">
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {!mounted ? (
+            [0, 1, 2].map((i) => (
+              <div key={i} aria-hidden="true">
+                <div className="h-4 w-24 bg-gray-800 rounded mb-5 animate-pulse" />
+                <div className="space-y-3">
+                  <div className="h-3 w-32 bg-gray-800 rounded animate-pulse" />
+                  <div className="h-3 w-24 bg-gray-800 rounded animate-pulse" />
+                  <div className="h-3 w-28 bg-gray-800 rounded animate-pulse" />
+                </div>
+              </div>
+            ))
+          ) : (
+            columns.map((col) => (
+              <div key={col.title}>
+                <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-wider">{col.title}</h4>
+                <ul className="space-y-3 text-sm text-gray-400">
+                  {col.links.map((l) => (
+                    <li key={l.label}>
+                      <Link href={l.href} className="hover:text-primary transition-colors">
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Newsletter */}
