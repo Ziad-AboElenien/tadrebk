@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Internship } from '@/features/internship/types';
+import { Internship, getInternshipTracks } from '@/features/internship/types';
 import type { Company } from '@/features/company/types';
 import { getCompanyImgUrl } from '@/features/company/types';
 import MediaImage from '@/components/ui/MediaImage';
@@ -43,8 +43,8 @@ function matchesCategory(internship: Internship, categories: Category[]): boolea
   if (categories.includes('other')) return true;
   const title = internship.title.toLowerCase();
   const skills = [
-    ...(internship.technicalSkills || []),
-    ...(internship.softSkills || []),
+    ...(Array.isArray(internship.technicalSkills) ? internship.technicalSkills : []),
+    ...(Array.isArray(internship.softSkills) ? internship.softSkills : []),
   ].map((s) => s.toLowerCase()).join(' ');
   const searchText = `${title} ${skills}`;
   return categories.some((cat) => {
@@ -63,7 +63,7 @@ function matchesTrack(internship: Internship, categories: Category[]): boolean {
   if (!categories || categories.length === 0) return false;
   if (categories.includes('other')) return true;
   const catTokens = categories.map(normalizeToken);
-  const tracks = (internship.track || []).map(normalizeToken);
+  const tracks = getInternshipTracks(internship).map(normalizeToken);
   if (tracks.length === 0) return matchesCategory(internship, categories);
   return tracks.some((t) =>
     catTokens.some(
@@ -173,7 +173,7 @@ function InternshipsContent() {
       if (filters.location) params.location = filters.location;
       const result = await internshipService.listInternships(params);
 
-      let filtered = result.internships;
+      let filtered = Array.isArray(result?.internships) ? result.internships : [];
       if (cityFilter) {
         const matchingIds = new Set(
           Object.values(companyMap)
@@ -195,8 +195,8 @@ function InternshipsContent() {
         const start = (page - 1) * perPage;
         filtered = filtered.slice(start, start + perPage);
       } else {
-        setTotalPages(result.pagination.pages);
-        setTotal(result.pagination.total);
+        setTotalPages(result?.pagination?.pages ?? 1);
+        setTotal(result?.pagination?.total ?? filtered.length);
       }
 
       // Prioritize internships matching user categories when no active search/filters
@@ -526,17 +526,21 @@ function InternshipsContent() {
                                 </span>
                                 {company?.address || locationLabels[internship.location] || internship.location}
                               </p>
-                              {internship.technicalSkills && internship.technicalSkills.length > 0 && (
-                                <p className="flex items-center gap-2">
-                                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 shrink-0">
-                                    <i className="fas fa-code text-[10px]" />
-                                  </span>
-                                  <span className="truncate">
-                                    {internship.technicalSkills.slice(0, 2).join(', ')}
-                                    {internship.technicalSkills.length > 2 && ` +${internship.technicalSkills.length - 2}`}
-                                  </span>
-                                </p>
-                              )}
+                              {(() => {
+                                const skills = Array.isArray(internship.technicalSkills) ? internship.technicalSkills : [];
+                                if (skills.length === 0) return null;
+                                return (
+                                  <p className="flex items-center gap-2">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 shrink-0">
+                                      <i className="fas fa-code text-[10px]" />
+                                    </span>
+                                    <span className="truncate">
+                                      {skills.slice(0, 2).join(', ')}
+                                      {skills.length > 2 && ` +${skills.length - 2}`}
+                                    </span>
+                                  </p>
+                                );
+                              })()}
                             </div>
                           </div>
                         </Link>
@@ -641,13 +645,17 @@ function InternshipsContent() {
                                 <i className="fas fa-clock text-emerald-400 text-[10px]" />
                                 {internship.workingTime === 'full-time' ? 'Full-time' : 'Part-time'}
                               </span>
-                              {internship.technicalSkills && internship.technicalSkills.length > 0 && (
-                                <span className="flex items-center gap-1 truncate">
-                                  <i className="fas fa-code text-emerald-400 text-[10px]" />
-                                  {internship.technicalSkills.slice(0, 2).join(', ')}
-                                  {internship.technicalSkills.length > 2 && ` +${internship.technicalSkills.length - 2}`}
-                                </span>
-                              )}
+                              {(() => {
+                                const skills = Array.isArray(internship.technicalSkills) ? internship.technicalSkills : [];
+                                if (skills.length === 0) return null;
+                                return (
+                                  <span className="flex items-center gap-1 truncate">
+                                    <i className="fas fa-code text-emerald-400 text-[10px]" />
+                                    {skills.slice(0, 2).join(', ')}
+                                    {skills.length > 2 && ` +${skills.length - 2}`}
+                                  </span>
+                                );
+                              })()}
                             </div>
                             {(() => {
                               const tracks = Array.isArray(internship.track) && internship.track.length > 0

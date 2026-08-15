@@ -1,12 +1,19 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Mousewheel, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
 import { internshipService } from '@/features/internship/services/internship.service';
 import InternshipCard from '@/features/company/components/InternshipCard';
 import Spinner from '@/components/ui/Spinner';
 import Button from '@/components/ui/Button';
+import CursorFollow from '@/features/home/components/CursorFollow';
+import Parallax from '@/features/home/components/Parallax';
 
 function AnimatedCounter({ end, suffix = '' }) {
   const [count, setCount] = useState(0);
@@ -43,6 +50,20 @@ function AnimatedCounter({ end, suffix = '' }) {
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
+// Animates a slide's inner content in/out as the vertical hero advances.
+function SlideContent({ active, children, className = '' }) {
+  return (
+    <motion.div
+      initial={false}
+      animate={active ? { opacity: 1, y: 0 } : { opacity: 0.4, y: 24 }}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 const categories = [
   { icon: 'fa-code', label: 'Software Engineering', from: 'from-blue-400', to: 'to-blue-600', query: 'software' },
   { icon: 'fa-chart-line', label: 'Marketing & Sales', from: 'from-emerald-400', to: 'to-teal-600', query: 'marketing' },
@@ -64,12 +85,20 @@ const testimonials = [
   { name: 'Salma Hassan', role: 'UI/UX Intern at Ejada', initials: 'SH', quote: 'The best part is how organized everything is. I could track my applications and hear back seamlessly.' },
 ];
 
+const heroStats = [
+  { end: 500, suffix: '+', label: 'Active Listings' },
+  { end: 200, suffix: '+', label: 'Hiring Partners' },
+  { end: 12, suffix: 'k+', label: 'Student Users' },
+  { end: 85, suffix: '%', label: 'Success Rate' },
+];
+
 export default function HomeComponent() {
   const router = useRouter();
   const [internships, setInternships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTitle, setSearchTitle] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
+  const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -94,119 +123,226 @@ export default function HomeComponent() {
 
   return (
     <>
-      {/* ─── HERO ─────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#f0fdf4] via-white to-[#ecfdf5]">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-green-200/30 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-emerald-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/4 right-1/4 w-3 h-3 bg-emerald-400 rounded-full animate-float" />
-          <div className="absolute top-1/3 left-1/4 w-2 h-2 bg-green-400 rounded-full animate-float" style={{ animationDelay: '1.5s' }} />
-          <div className="absolute bottom-1/4 right-1/3 w-4 h-4 bg-teal-300 rounded-full animate-float" style={{ animationDelay: '0.8s' }} />
+      {/* ─── Mouse cursor follow glow ───────────────────────── */}
+      <CursorFollow />
+
+      {/* ─── HERO — vertical swiper slider ──────────────────── */}
+      <section className="relative h-[100svh] min-h-[620px] bg-gradient-to-br from-[#f0fdf4] via-white to-[#ecfdf5] overflow-hidden">
+        {/* Parallax background blobs */}
+        <div className="absolute inset-0 pointer-events-none">
+          <Parallax offset={150} className="absolute -top-40 -right-40">
+            <div className="w-96 h-96 bg-green-200/30 rounded-full blur-3xl" />
+          </Parallax>
+          <Parallax offset={110} className="absolute -bottom-40 -left-40">
+            <div className="w-80 h-80 bg-emerald-200/30 rounded-full blur-3xl" />
+          </Parallax>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 pt-16 pb-16 md:pt-24 md:pb-20">
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-5 py-1.5 mb-8 animate-fade-in">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-green-700 text-xs font-bold tracking-wider uppercase">Now over 500+ active internships</span>
+        <Swiper
+          direction="vertical"
+          className="h-full w-full"
+          modules={[Mousewheel, Pagination]}
+          speed={800}
+          slidesPerView={1}
+          spaceBetween={0}
+          mousewheel={{ forceToAxis: true, releaseOnEdges: true }}
+          pagination={{ clickable: true }}
+          onSlideChange={(s) => setActiveSlide(s.activeIndex)}
+        >
+          {/* Slide 1 — main hero */}
+          <SwiperSlide>
+            <div className="h-full w-full flex flex-col items-center justify-center px-4 pt-16 pb-10 text-center">
+              <SlideContent active={activeSlide === 0} className="max-w-4xl w-full">
+                <div className="inline-flex items-center gap-2 bg-white/70 backdrop-blur border border-green-200 rounded-full px-5 py-1.5 mb-8">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-green-700 text-xs font-bold tracking-wider uppercase">Now over 500+ active internships</span>
+                </div>
+
+                <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-[#1a2e35] leading-[1.05] tracking-tight mb-6">
+                  Find internships that<br />
+                  <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                    launch your career
+                  </span>
+                </h1>
+
+                <p className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto mb-8 font-medium leading-relaxed">
+                  Egypt&apos;s first platform connecting university students with top internship opportunities — all in one organized, professional place.
+                </p>
+
+                <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-6">
+                  <div className="flex items-center bg-white rounded-2xl shadow-2xl shadow-green-200/40">
+                    <div className="flex items-center flex-1 min-w-0 px-4">
+                      <i className="fas fa-search text-gray-300 shrink-0" />
+                      <input
+                        type="text"
+                        placeholder="Search internships..."
+                        className="w-full py-4 px-3 text-sm text-gray-600 placeholder:text-gray-300 bg-transparent"
+                        style={{ outline: 'none', outlineOffset: 0, boxShadow: 'none', caretColor: '#333' }}
+                        value={searchTitle}
+                        onChange={(e) => setSearchTitle(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 pr-2">
+                      <input
+                        type="text"
+                        placeholder="Location"
+                        className="hidden sm:inline-block w-28 py-4 text-sm text-gray-600 placeholder:text-gray-300 bg-transparent"
+                        style={{ outline: 'none', outlineOffset: 0, boxShadow: 'none', caretColor: '#333' }}
+                        value={searchLocation}
+                        onChange={(e) => setSearchLocation(e.target.value)}
+                      />
+                      <button type="submit" className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-emerald-600 hover:to-teal-600 transition-all active:scale-[0.97] shrink-0">
+                        Search
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <span className="text-xs text-gray-400 font-medium">Quick search:</span>
+                  {['Software', 'Marketing', 'Design', 'Data'].map((term) => (
+                    <button
+                      key={term}
+                      type="button"
+                      onClick={() => router.push(`/internships?title=${encodeURIComponent(term)}`)}
+                      className="text-xs px-3 py-1.5 bg-white border border-gray-100 rounded-full text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all"
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </SlideContent>
             </div>
+          </SwiperSlide>
 
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-[#1a2e35] leading-[1.05] tracking-tight mb-6 animate-slide-up">
-              Find internships that<br />
-              <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
-                launch your career
-              </span>
-            </h1>
-
-            <p className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto mb-10 font-medium leading-relaxed animate-slide-up animate-delay-200">
-              Egypt&apos;s first platform connecting university students with top internship opportunities — all in one organized, professional place.
-            </p>
-
-            <form onSubmit={handleSearch} className="max-w-2xl mx-auto animate-slide-up animate-delay-400">
-              <div className="flex items-center bg-white rounded-2xl shadow-2xl shadow-green-200/40">
-                <div className="flex items-center flex-1 min-w-0 px-4">
-                  <i className="fas fa-search text-gray-300 shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="Search internships..."
-                    className="w-full py-4 px-3 text-sm text-gray-600 placeholder:text-gray-300 bg-transparent"
-                    style={{ outline: 'none', outlineOffset: 0, boxShadow: 'none', caretColor: '#333' }}
-                    value={searchTitle}
-                    onChange={(e) => setSearchTitle(e.target.value)}
-                  />
+          {/* Slide 2 — stats */}
+          <SwiperSlide>
+            <div className="h-full w-full flex flex-col items-center justify-center px-4 py-10 text-center">
+              <SlideContent active={activeSlide === 1} className="max-w-5xl w-full">
+                <div className="inline-block bg-white/70 backdrop-blur border border-green-200 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider mb-4">
+                  Proven Impact
                 </div>
-                <div className="flex items-center gap-2 pr-2">
-                  <input
-                    type="text"
-                    placeholder="Location"
-                    className="hidden sm:inline-block w-28 py-4 text-sm text-gray-600 placeholder:text-gray-300 bg-transparent"
-                    style={{ outline: 'none', outlineOffset: 0, boxShadow: 'none', caretColor: '#333' }}
-                    value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                  />
-                  <button type="submit" className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-emerald-600 hover:to-teal-600 transition-all active:scale-[0.97] shrink-0">
-                    Search
-                  </button>
-                </div>
-              </div>
-            </form>
+                <h2 className="text-3xl sm:text-5xl font-black text-[#1a2e35] tracking-tight mb-12">
+                  Numbers that speak for themselves
+                </h2>
 
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-5 animate-fade-in animate-delay-600">
-              <span className="text-xs text-gray-400 font-medium">Quick search:</span>
-              {['Software', 'Marketing', 'Design', 'Data'].map((term) => (
-                <button
-                  key={term}
-                  type="button"
-                  onClick={() => router.push(`/internships?title=${encodeURIComponent(term)}`)}
-                  className="text-xs px-3 py-1.5 bg-white border border-gray-100 rounded-full text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all"
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+                  {heroStats.map((stat, i) => (
+                    <div key={stat.label} className="flex flex-col items-center">
+                      <span className="text-4xl md:text-5xl font-black text-[#1a2e35] mb-2 tabular-nums">
+                        <AnimatedCounter end={stat.end} suffix={stat.suffix} />
+                      </span>
+                      <span className="text-[11px] font-bold text-emerald-600/70 uppercase tracking-widest">{stat.label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-gray-300 text-xs tracking-widest uppercase mb-4 font-medium">Trusted by students from</p>
+                <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 mb-10">
+                  {['Cairo University', 'Ain Shams', 'Alexandria', 'GUC', 'BUE'].map((u) => (
+                    <span key={u} className="text-gray-400/50 font-bold tracking-tight text-sm hover:text-gray-600 transition-colors">{u}</span>
+                  ))}
+                </div>
+
+                <Link
+                  href="/internships"
+                  className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#1a2e35] text-white font-bold rounded-full text-sm hover:bg-black transition-all shadow-md hover:shadow-xl active:scale-[0.97]"
                 >
-                  {term}
-                </button>
-              ))}
+                  Browse All Internships
+                  <i className="fas fa-arrow-right text-xs" />
+                </Link>
+              </SlideContent>
             </div>
+          </SwiperSlide>
 
-            {/* Trusted by */}
-            <div className="mt-14 animate-fade-in animate-delay-600">
-              <p className="text-gray-300 text-xs tracking-widest uppercase mb-4 font-medium">Trusted by students from</p>
-              <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-                {['Cairo University', 'Ain Shams', 'Alexandria', 'GUC', 'BUE'].map((u) => (
-                  <span key={u} className="text-gray-400/50 font-bold tracking-tight text-sm hover:text-gray-600 transition-colors">{u}</span>
-                ))}
-              </div>
+          {/* Slide 3 — join CTA */}
+          <SwiperSlide>
+            <div className="h-full w-full flex flex-col items-center justify-center px-4 py-10">
+              <SlideContent active={activeSlide === 2} className="max-w-5xl w-full">
+                <div className="text-center mb-12">
+                  <div className="inline-block bg-white/70 backdrop-blur border border-green-200 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider mb-4">
+                    Join Today
+                  </div>
+                  <h2 className="text-3xl sm:text-5xl font-black text-[#1a2e35] tracking-tight">
+                    Your next opportunity is one step away
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-900 via-teal-900 to-emerald-900 rounded-[28px] p-8 md:p-10 text-center shadow-2xl">
+                    <div className="absolute -bottom-20 -right-20 w-56 h-56 bg-emerald-500 opacity-10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+                    <div className="relative z-10">
+                      <div className="w-14 h-14 bg-emerald-500/20 backdrop-blur rounded-2xl flex items-center justify-center text-emerald-300 mb-6 mx-auto">
+                        <i className="fas fa-graduation-cap text-2xl" />
+                      </div>
+                      <h3 className="text-white text-2xl font-black mb-3 tracking-tight">For Students</h3>
+                      <p className="text-emerald-200/80 mb-8 leading-relaxed">
+                        Create your profile, discover internships that match your skills, and launch your career — all for free.
+                      </p>
+                      <Link
+                        href="/get-started"
+                        className="inline-flex items-center gap-2 bg-white text-emerald-900 font-black px-7 py-3.5 rounded-xl hover:bg-emerald-50 transition-all shadow-xl active:scale-[0.98]"
+                      >
+                        Get Started Free
+                        <i className="fas fa-arrow-right text-sm" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="group relative overflow-hidden bg-gradient-to-br from-[#1a2e35] via-slate-800 to-[#1a2e35] rounded-[28px] p-8 md:p-10 text-center shadow-2xl">
+                    <div className="absolute -bottom-20 -left-20 w-56 h-56 bg-emerald-500 opacity-5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+                    <div className="relative z-10">
+                      <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center text-emerald-300 mb-6 mx-auto">
+                        <i className="fas fa-building text-2xl" />
+                      </div>
+                      <h3 className="text-white text-2xl font-black mb-3 tracking-tight">For Companies</h3>
+                      <p className="text-gray-400 mb-8 leading-relaxed">
+                        Post internship opportunities and find the best emerging talent from Egypt&apos;s top universities.
+                      </p>
+                      <Link
+                        href="/get-started"
+                        className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black px-7 py-3.5 rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all shadow-xl active:scale-[0.98]"
+                      >
+                        Post an Internship
+                        <i className="fas fa-arrow-right text-sm" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </SlideContent>
             </div>
-          </div>
-        </div>
-      </section>
+          </SwiperSlide>
+        </Swiper>
 
-      {/* ─── STATS ────────────────────────────────────────────── */}
-      <section className="py-16 bg-gradient-to-r from-emerald-900 via-teal-900 to-emerald-900">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { end: 500, suffix: '+', label: 'Active Listings' },
-              { end: 200, suffix: '+', label: 'Hiring Partners' },
-              { end: 12, suffix: 'k+', label: 'Student Users' },
-              { end: 85, suffix: '%', label: 'Success Rate' },
-            ].map((stat, i) => (
-              <div
-                key={stat.label}
-                className="flex flex-col items-center animate-slide-up"
-                style={{ animationDelay: `${i * 150}ms` }}
-              >
-                <span className="text-4xl md:text-5xl font-black text-white mb-2 tabular-nums">
-                  <AnimatedCounter end={stat.end} suffix={stat.suffix} />
-                </span>
-                <span className="text-[11px] font-bold text-emerald-200/80 uppercase tracking-widest">{stat.label}</span>
-              </div>
-            ))}
-          </div>
+        {/* Scroll hint */}
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1 text-gray-300 pointer-events-none">
+          <span className="text-[10px] font-semibold uppercase tracking-widest">Scroll</span>
+          <i className="fas fa-chevron-down text-sm animate-bounce" />
         </div>
+
+        <style>{`
+          .swiper-pagination-vertical {
+            right: 16px !important;
+          }
+          .swiper-pagination-vertical .swiper-pagination-bullet {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+          }
+          .swiper-pagination-vertical .swiper-pagination-bullet-active {
+            height: 24px;
+            border-radius: 6px;
+            opacity: 1;
+          }
+        `}</style>
       </section>
 
       {/* ─── HOW IT WORKS ─────────────────────────────────────── */}
       <section className="py-24 bg-white" id="how-it-works">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16">
+          <Parallax offset={90} className="text-center mb-16">
             <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-4">
               Simple Process
             </span>
@@ -216,7 +352,7 @@ export default function HomeComponent() {
             <p className="text-gray-400 text-lg mt-4 max-w-2xl mx-auto">
               Three easy steps to land your next internship.
             </p>
-          </div>
+          </Parallax>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {howItWorks.map((item, i) => (
@@ -242,7 +378,7 @@ export default function HomeComponent() {
       {/* ─── CATEGORIES ───────────────────────────────────────── */}
       <section className="py-24 bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-6">
+          <Parallax offset={70} className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-6">
             <div>
               <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-4">
                 Explore Fields
@@ -258,7 +394,7 @@ export default function HomeComponent() {
               View All Internships
               <i className="fas fa-arrow-right text-xs" />
             </Link>
-          </div>
+          </Parallax>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories.map((cat, i) => (
@@ -282,9 +418,12 @@ export default function HomeComponent() {
       </section>
 
       {/* ─── FEATURED INTERNSHIPS ─────────────────────────────── */}
-      <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-14">
+      <section className="py-24 relative overflow-hidden bg-gradient-to-b from-white via-emerald-50/50 to-white">
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-200/40 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/3 -left-32 w-80 h-80 bg-sky-200/40 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 right-1/3 w-72 h-72 bg-violet-200/30 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 relative">
+          <Parallax offset={60} className="text-center mb-14">
             <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-4">
               Handpicked Opportunities
             </span>
@@ -294,7 +433,7 @@ export default function HomeComponent() {
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
               Top companies are actively seeking talent. Don&apos;t miss your chance.
             </p>
-          </div>
+          </Parallax>
 
           {loading ? (
             <div className="flex justify-center py-20"><Spinner /></div>
@@ -332,14 +471,14 @@ export default function HomeComponent() {
       {/* ─── TESTIMONIALS ─────────────────────────────────────── */}
       <section className="py-24 bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-14">
+          <Parallax offset={70} className="text-center mb-14">
             <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-4">
               Student Stories
             </span>
             <h2 className="text-4xl md:text-5xl font-black text-[#1a2e35] tracking-tight">
               What Students Say
             </h2>
-          </div>
+          </Parallax>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((t, i) => (
@@ -368,52 +507,6 @@ export default function HomeComponent() {
           </div>
         </div>
       </section>
-
-      {/* ─── CTA ──────────────────────────────────────────────── */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="relative overflow-hidden bg-gradient-to-br from-emerald-900 via-teal-900 to-emerald-900 rounded-[32px] p-10 md:p-14 shadow-2xl group">
-            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-emerald-500 opacity-10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-            <div className="relative z-10">
-              <div className="w-14 h-14 bg-emerald-500/20 backdrop-blur rounded-2xl flex items-center justify-center text-emerald-300 mb-8">
-                <i className="fas fa-graduation-cap text-2xl" />
-              </div>
-              <h3 className="text-white text-3xl md:text-4xl font-black mb-4 tracking-tight">For Students</h3>
-              <p className="text-emerald-200/80 mb-8 max-w-md leading-relaxed">
-                Create your profile, discover internships that match your skills, and launch your career — all for free.
-              </p>
-              <Link
-                href="/get-started"
-                className="inline-flex items-center gap-2 bg-white text-emerald-900 font-black px-8 py-4 rounded-xl hover:bg-emerald-50 transition-all shadow-xl active:scale-[0.98]"
-              >
-                Get Started Free
-                <i className="fas fa-arrow-right text-sm" />
-              </Link>
-            </div>
-          </div>
-
-          <div className="relative overflow-hidden bg-gradient-to-br from-[#1a2e35] via-slate-800 to-[#1a2e35] rounded-[32px] p-10 md:p-14 shadow-2xl group">
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-emerald-500 opacity-5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-            <div className="relative z-10">
-              <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center text-emerald-300 mb-8">
-                <i className="fas fa-building text-2xl" />
-              </div>
-              <h3 className="text-white text-3xl md:text-4xl font-black mb-4 tracking-tight">For Companies</h3>
-              <p className="text-gray-400 mb-8 max-w-md leading-relaxed">
-                Post internship opportunities and find the best emerging talent from Egypt&apos;s top universities.
-              </p>
-              <Link
-                href="/get-started"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black px-8 py-4 rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all shadow-xl active:scale-[0.98]"
-              >
-                Post an Internship
-                <i className="fas fa-arrow-right text-sm" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
     </>
   );
 }

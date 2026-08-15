@@ -16,7 +16,7 @@ export default function AuthLayout({
       {/* Minimal header */}
       <header className="px-6 py-2 flex items-center justify-between">
         <Link href="/" className="flex items-center">
-          <Image src="/images/logoandfav.png" alt="Tadrebk" width={232} height={193} className="h-32 w-auto" priority />
+          <Image src="/images/logoandfav.png" alt="Tadrebk" width={232} height={193} className="h-12 w-auto" priority />
         </Link>
         <Link href="/" className="text-sm text-gray-400 hover:text-dark transition-colors flex items-center gap-1.5">
           <i className="fas fa-arrow-left text-xs" />

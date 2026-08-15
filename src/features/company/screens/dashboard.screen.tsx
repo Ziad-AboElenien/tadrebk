@@ -16,6 +16,7 @@ import { getErrorMessage } from '@/lib/axios';
 
 export default function CompanyDashboardScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
+  const authStatus = useAppSelector((s) => s.auth.status);
   const [internships, setInternships] = useState<Internship[]>([]);
   const [credits, setCredits] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,6 +54,42 @@ export default function CompanyDashboardScreen() {
     } finally {
       setDeleting(null);
     }
+  }
+
+  // Session (company profile) is still hydrating after a hard refresh —
+  // show a skeleton instead of the "Complete Company Profile" prompt.
+  const hydrating = authStatus === 'idle' || authStatus === 'loading';
+
+  if (hydrating) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8" aria-hidden="true">
+        <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 mb-6 shadow-sm animate-pulse">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-xl bg-gray-100 shrink-0" />
+            <div className="flex-1 space-y-2.5">
+              <div className="h-5 w-48 bg-gray-100 rounded-full" />
+              <div className="h-3 w-64 bg-gray-100 rounded-full" />
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-24 bg-white border border-gray-100 rounded-2xl shadow-sm animate-pulse" />
+          ))}
+        </div>
+        <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden animate-pulse">
+          <div className="p-6 sm:p-8 border-b border-gray-100">
+            <div className="h-5 w-40 bg-gray-100 rounded-full" />
+          </div>
+          <div className="p-6 sm:p-8 space-y-4">
+            <div className="h-4 bg-gray-100 rounded-full" />
+            <div className="h-4 w-2/3 bg-gray-100 rounded-full" />
+            <div className="h-4 w-1/2 bg-gray-100 rounded-full" />
+            <div className="h-4 w-3/4 bg-gray-100 rounded-full" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!company) {
@@ -102,7 +139,7 @@ export default function CompanyDashboardScreen() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
           <p className="text-2xl font-black text-dark">{internships.length}</p>
           <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wide">Total internships</p>
@@ -111,7 +148,8 @@ export default function CompanyDashboardScreen() {
           <p className="text-2xl font-black text-emerald-600">{internships.filter((i) => !i.closed).length}</p>
           <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wide">Active</p>
         </div>
-        <Link href="/company/billing" className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:border-primary/30 transition-colors">
+        {/* Credits card — hidden until billing becomes a feature again */}
+        <Link href="/company/billing" className="hidden bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:border-primary/30 transition-colors">
           <p className="text-2xl font-black text-amber-600">{credits ?? '—'}</p>
           <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wide">Credits</p>
         </Link>

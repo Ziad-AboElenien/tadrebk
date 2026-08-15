@@ -5,56 +5,58 @@ interface SpinnerProps {
   className?: string;
 }
 
-const sizes = { sm: '0.6px', md: '1px', lg: '1.4px' };
+const dimensions = {
+  sm: { width: 56, height: 51 },
+  md: { width: 90, height: 82 },
+  lg: { width: 128, height: 116 },
+};
 
 export default function Spinner({ size = 'md', className = '' }: SpinnerProps) {
+  const { width, height } = dimensions[size];
   return (
     <div role="status" aria-label="Loading" className={`inline-flex items-center justify-center ${className}`}>
       <style>{`
-        .star-loader {
-          --color-1: #10b981;
-          --color-2: #059669;
-          --size: ${sizes[size]};
-
-          transform: rotateZ(45deg);
-          perspective: calc(1000 * var(--size));
-          border-radius: 50%;
-          width: calc(48 * var(--size));
-          height: calc(48 * var(--size));
-          color: var(--color-1);
-          position: relative;
-          display: inline-block;
+        .tadrebk-loader {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
         }
-        .star-loader::before,
-        .star-loader::after {
-          content: '';
-          display: block;
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: inherit;
-          height: inherit;
-          border-radius: 50%;
-          transform: rotateX(70deg);
-          animation: 1s starSpin linear infinite;
+        .tadrebk-loader__triangle {
+          stroke-dasharray: 1;
+          animation: tadrebk-draw 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
         }
-        .star-loader::after {
-          color: var(--color-2);
-          transform: rotateY(70deg);
-          animation-delay: 0.4s;
+        .tadrebk-loader__dot {
+          animation: tadrebk-fade 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
         }
-        @keyframes starSpin {
-          0%, 100% { box-shadow: 0.2em 0 0 0 currentcolor; }
-          12% { box-shadow: 0.2em 0.2em 0 0 currentcolor; }
-          25% { box-shadow: 0 0.2em 0 0 currentcolor; }
-          37% { box-shadow: -0.2em 0.2em 0 0 currentcolor; }
-          50% { box-shadow: -0.2em 0 0 0 currentcolor; }
-          62% { box-shadow: -0.2em -0.2em 0 0 currentcolor; }
-          75% { box-shadow: 0 -0.2em 0 0 currentcolor; }
-          87% { box-shadow: 0.2em -0.2em 0 0 currentcolor; }
+        .tadrebk-loader__tassel {
+          transform-origin: 95px 44px;
+          animation: tadrebk-swing 1.3s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+        }
+        @keyframes tadrebk-draw {
+          0%   { stroke-dashoffset: 1; }
+          50%  { stroke-dashoffset: 0; }
+          100% { stroke-dashoffset: -1; }
+        }
+        @keyframes tadrebk-fade {
+          0%, 40%  { opacity: 0; }
+          60%, 100% { opacity: 1; }
+        }
+        @keyframes tadrebk-swing {
+          0%, 100% { transform: rotate(-7deg); }
+          50%      { transform: rotate(7deg); }
         }
       `}</style>
-      <span className="star-loader" />
+      <svg className="tadrebk-loader" viewBox="0 0 110 100" width={width} height={height}>
+        <polygon points="55,22 100,46 55,66 10,46" fill="#16233A" />
+        <path d="M30,46 v20 a7,7 0 0 0 14,0 v-14" fill="none" stroke="#16233A" stroke-width="12" stroke-linecap="round" />
+        <path d="M55,52 v18 a7,7 0 0 0 14,0 v-16" fill="none" stroke="#16233A" stroke-width="12" stroke-linecap="round" />
+        <path className="tadrebk-loader__triangle" d="M37,46 L55,32 L73,46" fill="none" stroke="#4CB675" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" pathLength="1" />
+        <circle className="tadrebk-loader__dot" cx="73" cy="46" r="7" fill="#4CB675" />
+        <g className="tadrebk-loader__tassel">
+          <line x1="95" y1="44" x2="91" y2="70" stroke="#16233A" stroke-width="3" />
+          <circle cx="90" cy="74" r="4" fill="#16233A" />
+        </g>
+      </svg>
     </div>
   );
 }

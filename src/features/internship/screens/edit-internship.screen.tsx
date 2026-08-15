@@ -19,6 +19,7 @@ import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
 import { CATEGORY_LABELS } from '@/features/student/types';
+import { MAX_TRACKS_PER_POST } from '@/lib/constants';
 
 export default function EditInternshipScreen() {
   const router = useRouter();
@@ -267,7 +268,10 @@ export default function EditInternshipScreen() {
 
         {/* Track */}
         <div>
-          <label className="text-sm font-semibold text-gray-700 mb-2 block">Track <span className="text-red-500">*</span> <span className="text-gray-400 font-normal">(select at least one)</span></label>
+          <label className="text-sm font-semibold text-gray-700 mb-2 block">
+            Track <span className="text-red-500">*</span> <span className="text-gray-400 font-normal">(select 1 to {MAX_TRACKS_PER_POST})</span>
+            {selectedCategories.length > 0 && <span className="text-gray-400 font-normal"> — <span className="text-primary font-bold">{selectedCategories.length}</span>/{MAX_TRACKS_PER_POST} selected</span>}
+          </label>
 
           {/* Selected chips */}
           <div className="flex flex-wrap gap-2 mb-2">
@@ -296,16 +300,32 @@ export default function EditInternshipScreen() {
                   type="button"
                   disabled={on}
                   onClick={() => {
-                    if (isOther) { setShowCategoryInput(true); return; }
+                    if (isOther) {
+                      if (selectedCategories.length >= MAX_TRACKS_PER_POST) {
+                        setCategoryError(`You can select up to ${MAX_TRACKS_PER_POST} tracks`);
+                        return;
+                      }
+                      setShowCategoryInput(true);
+                      return;
+                    }
                     if (on) setSelectedCategories((prev) => prev.filter((c) => c !== value));
-                    else { setSelectedCategories((prev) => [...prev, value]); setCategoryError(null); }
+                    else {
+                      if (selectedCategories.length >= MAX_TRACKS_PER_POST) {
+                        setCategoryError(`You can select up to ${MAX_TRACKS_PER_POST} tracks`);
+                        return;
+                      }
+                      setSelectedCategories((prev) => [...prev, value]);
+                      setCategoryError(null);
+                    }
                   }}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                     isOther
                       ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 cursor-pointer'
                       : on
                         ? 'bg-emerald-50 text-emerald-600 border-emerald-200 cursor-default'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-primary/40 hover:text-primary cursor-pointer'
+                        : selectedCategories.length >= MAX_TRACKS_PER_POST
+                          ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-primary/40 hover:text-primary cursor-pointer'
                   }`}
                 >
                   {isOther ? <><i className="fas fa-pen text-[10px] mr-1" />{label}</> : on ? <><i className="fas fa-check text-[10px] mr-1" />{label}</> : label}
@@ -327,6 +347,10 @@ export default function EditInternshipScreen() {
                     e.preventDefault();
                     const val = categoryText.trim();
                     if (!val) return;
+                    if (selectedCategories.length >= MAX_TRACKS_PER_POST) {
+                      setCategoryError(`You can select up to ${MAX_TRACKS_PER_POST} tracks`);
+                      return;
+                    }
                     if (!selectedCategories.includes(val)) {
                       setSelectedCategories((prev) => [...prev, val]);
                       setCategoryError(null);
@@ -344,6 +368,10 @@ export default function EditInternshipScreen() {
                 onClick={() => {
                   const val = categoryText.trim();
                   if (!val) return;
+                  if (selectedCategories.length >= MAX_TRACKS_PER_POST) {
+                    setCategoryError(`You can select up to ${MAX_TRACKS_PER_POST} tracks`);
+                    return;
+                  }
                   if (!selectedCategories.includes(val)) {
                     setSelectedCategories((prev) => [...prev, val]);
                     setCategoryError(null);

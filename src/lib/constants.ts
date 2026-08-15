@@ -66,6 +66,11 @@ export const DEFAULT_PAGE_SIZE = 9;
 export const HOME_FEATURED_LIMIT = 6;
 
 // ============================================================
+// Internship posting limits
+// ============================================================
+export const MAX_TRACKS_PER_POST = 3;
+
+// ============================================================
 // Local storage keys
 // ============================================================
 export const LS_ACCESS_TOKEN = 'tadrebk_access_token';

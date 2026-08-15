@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setUser } from '@/store/userSlice';
 import { setCompany } from '@/store/companySlice';
-import { setRole } from '@/store/authSlice';
+import { setRole, setStatus } from '@/store/authSlice';
 import { userService } from '@/features/student/services/user.service';
 import { companyService } from '@/features/company/services/company.service';
 import { LS_USER_ROLE } from '@/lib/constants';
@@ -22,9 +22,16 @@ export default function SessionLoader({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     if (loaded.current) return;
-    if (!isAuthenticated || !userId) return;
+    loaded.current = true;
+
+    // No active session → nothing to hydrate.
+    if (!isAuthenticated || !userId) {
+      dispatch(setStatus('succeeded'));
+      return;
+    }
 
     const id = userId;
+    dispatch(setStatus('loading'));
 
     async function hydrate() {
       try {
@@ -59,14 +66,16 @@ export default function SessionLoader({ children }: { children: React.ReactNode 
         }
       } catch {
         // Token invalid — logout will have happened via the axios interceptor
+      } finally {
+        dispatch(setStatus('succeeded'));
       }
     }
 
     if (!currentUser) {
       hydrate();
+    } else {
+      dispatch(setStatus('succeeded'));
     }
-
-    loaded.current = true;
   }, [isAuthenticated, userId, currentUser, currentCompany, dispatch]);
 
   return <>{children}</>;
