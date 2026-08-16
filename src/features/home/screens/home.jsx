@@ -146,6 +146,8 @@ export default function HomeComponent() {
           slidesPerView={1}
           spaceBetween={0}
           mousewheel={{ forceToAxis: true, releaseOnEdges: true }}
+          touchReleaseOnEdges
+          threshold={0}
           pagination={{ clickable: true }}
           onSlideChange={(s) => setActiveSlide(s.activeIndex)}
         >
