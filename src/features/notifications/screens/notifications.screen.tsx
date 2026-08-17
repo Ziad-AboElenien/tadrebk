@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setUnreadCount } from '@/store/notificationSlice';
 import { notificationService } from '@/features/notifications/server/notification.service';
@@ -46,8 +47,15 @@ function statusBadge(status?: string) {
   );
 }
 
+function getNotificationHref(n: Notification): string | null {
+  if (n.data?.internshipId) return `/internships/${n.data.internshipId}`;
+  if (n.data?.applicationId) return null;
+  return null;
+}
+
 export default function NotificationsScreen() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const { unreadCount } = useAppSelector((s) => s.notifications);
   const role = useAppSelector((s) => s.auth.role);
   const dashboardHref = role === 'company' ? '/company/dashboard' : '/dashboard';
@@ -112,6 +120,12 @@ export default function NotificationsScreen() {
     finally { setMarkingIds((prev) => { const next = new Set(prev); next.delete(n._id); return next; }); }
   }
 
+  async function handleCardClick(n: Notification) {
+    const href = getNotificationHref(n);
+    if (!n.read) await handleMarkAsRead(n);
+    if (href) router.push(href);
+  }
+
   async function handleMarkSelectedRead() {
     if (selected.size === 0) return;
     setMarkingAll(true);
@@ -138,7 +152,6 @@ export default function NotificationsScreen() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      {/* Page header + tabs */}
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link href={dashboardHref} className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
@@ -154,17 +167,23 @@ export default function NotificationsScreen() {
             <button
               key={tab}
               onClick={() => { setFilter(tab); setSelected(new Set()); }}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                filter === tab ? 'bg-emerald-500 text-white shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-50'
+              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all backdrop-blur-xl border ${
+                filter === tab
+                  ? 'bg-white/70 border-white/80 text-emerald-700 shadow-md shadow-emerald-100/50'
+                  : 'bg-white/50 border-white/60 text-gray-500 hover:bg-white/70 hover:text-gray-700'
               }`}
             >
               {tab}
+              {tab === 'Unread' && unreadCount > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-emerald-500 text-[10px] font-bold text-white px-1">
+                  {unreadCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Bulk action bar */}
       {selected.size > 0 && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-gray-900 px-5 py-3.5">
           <div className="flex items-center gap-3">
@@ -190,7 +209,6 @@ export default function NotificationsScreen() {
         </div>
       )}
 
-      {/* List */}
       {loading ? (
         <div className="flex justify-center py-20"><Spinner size="lg" /></div>
       ) : filtered.length === 0 ? (
@@ -205,19 +223,25 @@ export default function NotificationsScreen() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {filtered.map((n) => {
             const checked = selected.has(n._id);
             const loadingMark = markingIds.has(n._id);
+            const href = getNotificationHref(n);
             return (
               <div
                 key={n._id}
-                className={`flex items-start gap-4 rounded-2xl border px-5 py-5 transition ${
-                  checked ? 'border-emerald-200 bg-emerald-50/40' : 'border-gray-100 bg-white hover:border-gray-200'
+                onClick={() => handleCardClick(n)}
+                className={`flex items-start gap-4 rounded-2xl border px-5 py-5 transition-all ${
+                  checked
+                    ? 'border-emerald-200 bg-emerald-50/40'
+                    : !n.read
+                      ? 'border-emerald-100 bg-gradient-to-r from-emerald-50/60 to-white hover:border-emerald-200 hover:shadow-sm cursor-pointer'
+                      : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm cursor-pointer'
                 }`}
               >
                 <button
-                  onClick={() => toggleSelect(n._id)}
+                  onClick={(e) => { e.stopPropagation(); toggleSelect(n._id); }}
                   className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition ${
                     checked ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300 bg-white hover:border-emerald-400'
                   }`}
@@ -225,40 +249,34 @@ export default function NotificationsScreen() {
                   {checked && <i className="fas fa-check h-3 w-3 text-white" />}
                 </button>
 
-                <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-emerald-50">
-                  <i className={`fas ${getIcon(n.type)} text-base text-emerald-500`} />
+                <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full ${
+                  !n.read ? 'bg-emerald-100' : 'bg-emerald-50'
+                }`}>
+                  <i className={`fas ${getIcon(n.type)} text-base ${!n.read ? 'text-emerald-600' : 'text-emerald-400'}`} />
                 </div>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-extrabold text-gray-900">{n.title}</h3>
+                      <h3 className={`text-sm ${!n.read ? 'font-extrabold text-gray-900' : 'font-semibold text-gray-700'}`}>{n.title}</h3>
                       {!n.read && (
                         <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white">NEW</span>
                       )}
                       {statusBadge(n.data?.status)}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleMarkAsRead(n)}
-                        disabled={loadingMark || n.read}
-                        className="text-gray-300 transition hover:text-emerald-500 disabled:opacity-40"
-                        title="Mark as read"
-                      >
-                        {loadingMark ? <Spinner size="sm" /> : <i className="fas fa-check h-4 w-4" />}
-                      </button>
+                    <div className="flex items-center gap-2">
+                      {loadingMark && <Spinner size="sm" />}
+                      {href && (
+                        <i className="fas fa-arrow-right text-[11px] text-gray-300" />
+                      )}
                     </div>
                   </div>
                   <p className="mt-1 text-sm leading-relaxed text-gray-500">{n.message}</p>
-                  {n.data?.internshipId && n.data?.internshipTitle && (
-                    <Link
-                      href={`/internships/${n.data.internshipId}`}
-                      className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-                    >
-                      <i className="fas fa-briefcase" />
+                  {n.data?.internshipTitle && (
+                    <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                      <i className="fas fa-briefcase text-[10px]" />
                       {n.data.internshipTitle}
-                      <i className="fas fa-arrow-up-right-from-square text-[9px]" />
-                    </Link>
+                    </p>
                   )}
                   <p className="mt-2 flex items-center gap-1.5 text-xs text-gray-400">
                     <i className="fas fa-clock text-[11px]" />{timeAgo(n.createdAt)}
@@ -270,14 +288,12 @@ export default function NotificationsScreen() {
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && !loading && (
         <div className="mt-6 flex justify-center">
           <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       )}
 
-      {/* Mark all */}
       {items.some((n) => !n.read) && selected.size === 0 && (
         <div className="mt-6 text-center">
           <button

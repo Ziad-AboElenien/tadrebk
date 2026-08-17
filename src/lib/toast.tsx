@@ -11,6 +11,8 @@ const baseOpts: ToastOptions = {
   pauseOnHover: true,
 };
 
+let toastCounter = 0;
+
 function makeIcon(faClass: string, color: string, bg: string): ReactNode {
   return (
     <div
@@ -49,12 +51,13 @@ function toastWith(
   const fn = type === 'error' ? toast.error : type === 'info' ? toast.info : type === 'warning' ? toast.warning : toast.success;
 
   fn(
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 pl-1">
       {icon}
       <span className="text-sm font-medium text-dark">{message}</span>
     </div>,
     {
       ...baseOpts,
+      toastId: `toast-${type}-${message}`,
       className: `!bg-white !border ${border} !rounded-2xl !shadow-xl !overflow-hidden`,
     },
   );

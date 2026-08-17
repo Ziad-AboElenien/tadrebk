@@ -109,6 +109,44 @@ export default function StudentDashboardScreen() {
   const savedCount = savedInternships.length;
   const profileBlank = useBlankImage(getUserImgUrl(user?.profilePicture));
 
+  const authStatus = useAppSelector((s) => s.auth.status);
+  const hydrating = authStatus === 'idle' || authStatus === 'loading';
+
+  if (hydrating) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <main className="mx-auto max-w-6xl px-4 sm:px-8 py-8">
+          <div className="mb-6"><div className="h-8 w-64 bg-gray-200 rounded-full animate-pulse" /><div className="h-4 w-80 bg-gray-100 rounded-full animate-pulse mt-2" /></div>
+          <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+            <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+              <div className="h-20 bg-gray-100 animate-pulse" />
+              <div className="px-6 pb-6">
+                <div className="-mt-10 flex flex-wrap items-end justify-between gap-4">
+                  <div className="flex items-end gap-4 flex-wrap">
+                    <div className="h-20 w-20 flex-shrink-0 rounded-2xl border-4 border-white bg-gray-200 animate-pulse" />
+                    <div className="pb-1 space-y-2">
+                      <div className="h-5 w-40 bg-gray-200 rounded-full animate-pulse" />
+                      <div className="h-3 w-56 bg-gray-100 rounded-full animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-2xl bg-white p-6 shadow-sm space-y-3">
+              <div className="h-5 w-28 bg-gray-200 rounded-full animate-pulse" />
+              <div className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+              <div className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+              <div className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+            {[0,1,2].map((i) => <div key={i} className="h-28 bg-white border border-gray-100 rounded-2xl shadow-sm animate-pulse" />)}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">

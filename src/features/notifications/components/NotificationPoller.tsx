@@ -34,7 +34,7 @@ export default function NotificationPoller() {
       if (mountedRef.current && !firstPollRef.current && count > lastCountRef.current) {
         const diff = count - lastCountRef.current;
         toast(
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pl-1">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
               <i className="fas fa-bell text-emerald-500 text-sm" />
             </div>
@@ -45,6 +45,7 @@ export default function NotificationPoller() {
           </div>,
           {
             icon: false,
+            toastId: 'notification-poller',
             className: '!bg-white !border !border-gray-100 !rounded-2xl !shadow-xl !overflow-hidden',
             autoClose: 5000,
           }
@@ -57,8 +58,6 @@ export default function NotificationPoller() {
   }, [dispatch]);
 
   useEffect(() => {
-    // Re-arm on every mount; a previous unmount's cleanup must not permanently
-    // disable the badge updates for the rest of the session.
     mountedRef.current = true;
     if (globalInitialized) return;
     globalInitialized = true;
@@ -68,6 +67,11 @@ export default function NotificationPoller() {
 
     return () => {
       mountedRef.current = false;
+      if (globalIntervalId) {
+        clearInterval(globalIntervalId);
+        globalIntervalId = null;
+      }
+      globalInitialized = false;
     };
   }, [fetchCount]);
 
