@@ -95,8 +95,7 @@ export default function CompanyDashboardScreen() {
   if (!company) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <p className="text-gray-500 mb-4">Complete your company profile to access the dashboard.</p>
-        <Link href="/company/onboarding"><Button>Complete Company Profile</Button></Link>
+        <div className="flex justify-center"><Spinner /></div>
       </div>
     );
   }

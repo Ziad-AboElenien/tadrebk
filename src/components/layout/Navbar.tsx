@@ -130,6 +130,19 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+          {isAuthenticated && mounted && (
+            <Link
+              href={role === 'company' ? '/company/activity' : '/activity'}
+              className={[
+                'text-sm font-semibold transition-colors',
+                pathname === '/activity' || pathname === '/company/activity'
+                  ? 'text-primary'
+                  : 'text-gray-500 hover:text-dark',
+              ].join(' ')}
+            >
+              Activity
+            </Link>
+          )}
         </nav>
         )}
 

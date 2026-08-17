@@ -223,6 +223,42 @@ export default function StudentProfileScreen() {
   const profileBlank = useBlankImage(profileUrl);
   const coverBlank = useBlankImage(coverUrl);
 
+  const authStatus = useAppSelector((s) => s.auth.status);
+  const hydrating = authStatus === 'idle' || authStatus === 'loading';
+
+  if (hydrating) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <main className="mx-auto max-w-4xl px-4 sm:px-8 py-8">
+          <div className="mb-6"><div className="h-4 w-40 bg-gray-200 rounded-full animate-pulse" /></div>
+          <div className="relative h-48 sm:h-56 md:h-64 rounded-3xl bg-gray-100 animate-pulse" />
+          <div className="relative px-4 sm:px-6 -mt-14 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              <div className="flex items-end gap-4">
+                <div className="w-32 h-32 rounded-full bg-gray-200 ring-4 ring-white shadow-xl animate-pulse" />
+                <div className="pb-1 space-y-2">
+                  <div className="h-7 w-48 bg-gray-200 rounded-full animate-pulse" />
+                  <div className="h-4 w-64 bg-gray-100 rounded-full animate-pulse" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-6">
+            {[0,1,2].map((i) => (
+              <div key={i} className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm">
+                <div className="h-5 w-32 bg-gray-200 rounded-full animate-pulse mb-4" />
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-100 rounded-full" />
+                  <div className="h-4 w-2/3 bg-gray-100 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
