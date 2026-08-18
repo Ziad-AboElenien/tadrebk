@@ -126,6 +126,8 @@ export default function LoginForm({ role }: LoginFormProps) {
       } else if (role === 'company') {
         localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
         router.push('/company/onboarding');
+      } else if (!user.categories || user.categories.length === 0) {
+        router.push('/onboarding');
       } else {
         router.push('/dashboard');
       }

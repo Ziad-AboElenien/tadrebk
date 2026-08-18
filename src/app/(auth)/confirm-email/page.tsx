@@ -90,7 +90,7 @@ export default function ConfirmEmailPage() {
       <p className="text-gray-400 text-sm mb-2">
         We sent a 6-digit verification code to
       </p>
-      <p className="text-dark font-semibold text-sm mb-8 bg-gray-50 px-4 py-2 rounded-xl inline-block">
+      <p className="text-dark font-semibold text-sm mb-8 bg-gray-50 px-4 py-2 rounded-xl inline-block max-w-full overflow-hidden text-ellipsis">
         {email || 'your email address'}
       </p>
 

@@ -36,6 +36,15 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handler);
   }, []);
 
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
+
   // Company user stuck in onboarding → lock all navigation
   const pendingOnboarding =
     mounted &&
@@ -433,7 +442,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
           />
           {/* Panel */}
-          <div className={`fixed right-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col animate-grow-from-btn origin-top-right ${scrolled ? 'top-20' : 'top-18'}`}>
+          <div className={`fixed right-2 w-[min(288px,calc(100vw-1rem))] max-h-[calc(100vh-5rem)] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col animate-grow-from-btn origin-top-right ${scrolled ? 'top-20' : 'top-18'}`}>
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-2 border-b border-gray-100">
               <Image src="/images/logoandfav.png" alt="Tadrebk" width={232} height={193} className="h-12 w-auto" />

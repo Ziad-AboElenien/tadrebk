@@ -169,7 +169,7 @@ export default function MyApplicationsScreen() {
                       Applied {new Date(app.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <Badge variant={app.status === 'accepted' ? 'success' : app.status === 'rejected' ? 'danger' : 'warning'}>
                       {statusLabels[app.status] || app.status}
                     </Badge>
@@ -246,8 +246,8 @@ export default function MyApplicationsScreen() {
       {ratingModal && (
         <>
           <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={() => setRatingModal(null)} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
+            <div className="bg-white rounded-3xl shadow-2xl p-5 sm:p-8 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
               <h3 className="text-lg font-bold text-dark mb-1">Rate {ratingModal.companyName}</h3>
               <p className="text-sm text-gray-400 mb-5">How was your experience with this company?</p>
 

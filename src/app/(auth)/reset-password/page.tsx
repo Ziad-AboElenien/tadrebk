@@ -68,7 +68,7 @@ export default function ResetPasswordPage() {
       <h1 className="text-3xl font-black text-dark mb-2">Reset password</h1>
       <p className="text-gray-400 text-sm mb-8">
         Enter the 6-digit code we sent to{' '}
-        <span className="font-semibold text-dark">{email || 'your email'}</span>{' '}
+        <span className="font-semibold text-dark break-all">{email || 'your email'}</span>{' '}
         and choose a new password.
       </p>
 

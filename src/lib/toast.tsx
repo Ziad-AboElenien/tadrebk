@@ -53,7 +53,7 @@ function toastWith(
   fn(
     <div className="flex items-center gap-3 pl-1">
       {icon}
-      <span className="text-sm font-medium text-dark">{message}</span>
+      <span className="text-sm font-medium text-dark max-w-[260px] sm:max-w-xs line-clamp-3">{message}</span>
     </div>,
     {
       ...baseOpts,

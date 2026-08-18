@@ -585,9 +585,9 @@ export default function InternshipApplicationsScreen() {
 
       {/* Email confirmation modal */}
       {emailConfirmTarget && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setEmailConfirmTarget(null)} />
-          <div className="relative bg-white rounded-[2rem] p-10 shadow-2xl max-w-sm w-full mx-4 text-center animate-fade-in-up">
+          <div className="relative bg-white rounded-[2rem] p-6 sm:p-10 shadow-2xl max-w-sm w-full text-center animate-fade-in-up">
             <div className="w-16 h-16 rounded-[1.25rem] bg-emerald-50 flex items-center justify-center mx-auto mb-5">
               <svg className="w-8 h-8 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
@@ -619,8 +619,8 @@ export default function InternshipApplicationsScreen() {
       {ratingModal && (
         <>
           <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm" onClick={() => setRatingModal(null)} />
-          <div className="fixed inset-0 z-[101] flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 z-[101] flex items-center justify-center overflow-y-auto p-4">
+            <div className="bg-white rounded-3xl shadow-2xl p-5 sm:p-8 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
               <h3 className="text-lg font-bold text-dark mb-1">Rate {ratingModal.studentName}</h3>
               <p className="text-sm text-gray-400 mb-5">How was this student's performance?</p>
 

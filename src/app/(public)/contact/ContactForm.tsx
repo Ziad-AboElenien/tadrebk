@@ -28,7 +28,7 @@ export default function ContactForm() {
   }
 
   return (
-    <div className="bg-white rounded-[32px] border border-gray-50 shadow-sm p-8 md:p-12 max-w-2xl mx-auto">
+    <div className="bg-white rounded-[32px] border border-gray-50 shadow-sm p-5 sm:p-8 md:p-12 max-w-2xl mx-auto">
       <h2 className="text-3xl font-black text-[#1a2e35] mb-2">Send us a message</h2>
       <p className="text-gray-400 text-sm mb-8">
         Fill in the form below and we will reply to your email.

@@ -93,7 +93,7 @@ export default function CertificateScreen() {
               {/* Body */}
               <div className="text-center max-w-2xl mx-auto">
                 <p className="text-sm text-gray-500 font-medium tracking-wide mb-1">This certifies that</p>
-                <p className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight" style={{ fontFamily: 'Georgia, serif' }}>
+                <p className="text-2xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight break-words" style={{ fontFamily: 'Georgia, serif' }}>
                   {studentName}
                 </p>
                 <div className="w-16 h-0.5 bg-amber-400/60 mx-auto mb-4" />

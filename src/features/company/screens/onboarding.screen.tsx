@@ -102,7 +102,7 @@ export default function CompanyOnboardingScreen() {
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm space-y-4"
+        className="bg-white border border-gray-100 rounded-3xl p-5 sm:p-8 shadow-sm space-y-4"
         noValidate
       >
         <Input

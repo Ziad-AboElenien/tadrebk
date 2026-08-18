@@ -174,7 +174,7 @@ export default function SignupForm({ role }: SignupFormProps) {
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input
             label="First name"
             id="signup-firstName"
@@ -286,7 +286,7 @@ export default function SignupForm({ role }: SignupFormProps) {
               />
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Select
                 label="Degree"
                 id="signup-degree"

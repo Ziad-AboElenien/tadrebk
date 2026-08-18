@@ -212,8 +212,8 @@ export default function CompanySettingsScreen() {
                 />
               </div>
             </div>
-            <div className="pb-1">
-              <h1 className="text-2xl sm:text-3xl font-black text-dark">{company.name}</h1>
+            <div className="pb-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-black text-dark truncate">{company.name}</h1>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-0.5 text-sm text-gray-500">
                 {company.industry && (
                   <span className="flex items-center gap-1.5"><i className="fas fa-building text-gray-300 text-xs" />{company.industry}</span>

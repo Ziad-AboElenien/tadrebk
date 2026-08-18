@@ -110,6 +110,8 @@ export function useGoogleAuth() {
 
         if (role === 'company') {
           router.push('/company/dashboard');
+        } else if (!user.categories || user.categories.length === 0) {
+          router.push('/onboarding');
         } else {
           router.push('/dashboard');
         }

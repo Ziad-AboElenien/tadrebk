@@ -41,8 +41,10 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
 }
 
 body {
@@ -109,6 +111,10 @@ body {
   background-color: var(--color-primary-light);
   color: var(--color-primary-dark);
 }
+
+/* ── Hide scrollbar ──────────────────────────────────────── */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ── Focus visible ring ───────────────────────────────────── */
 :focus-visible {

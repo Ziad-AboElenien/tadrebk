@@ -40,9 +40,9 @@ export default function CourseModal({ open, adding = false, onAdd, onClose }: Co
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-bold text-dark flex items-center gap-2">
             <i className="fas fa-certificate text-primary" /> Add course
