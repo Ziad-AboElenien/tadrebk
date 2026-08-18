@@ -42,10 +42,10 @@ export default function FeaturedInternshipsSection() {
             variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
           >
             <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
-              How It Works
+              Featured Internships
             </motion.h2>
             <motion.p variants={fadeUp} custom={1} className="text-gray-400 text-sm mt-3 max-w-md mx-auto">
-              Three easy steps to land your next internship.
+              Fresh opportunities from top companies in Egypt.
             </motion.p>
           </motion.div>
         </Parallax>
