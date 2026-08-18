@@ -48,12 +48,12 @@ export default function Spinner({ size = 'md', className = '' }: SpinnerProps) {
       `}</style>
       <svg className="tadrebk-loader" viewBox="0 0 110 100" width={width} height={height}>
         <polygon points="55,22 100,46 55,66 10,46" fill="#16233A" />
-        <path d="M30,46 v20 a7,7 0 0 0 14,0 v-14" fill="none" stroke="#16233A" stroke-width="12" stroke-linecap="round" />
-        <path d="M55,52 v18 a7,7 0 0 0 14,0 v-16" fill="none" stroke="#16233A" stroke-width="12" stroke-linecap="round" />
-        <path className="tadrebk-loader__triangle" d="M37,46 L55,32 L73,46" fill="none" stroke="#4CB675" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" pathLength="1" />
+        <path d="M30,46 v20 a7,7 0 0 0 14,0 v-14" fill="none" stroke="#16233A" strokeWidth="12" strokeLinecap="round" />
+        <path d="M55,52 v18 a7,7 0 0 0 14,0 v-16" fill="none" stroke="#16233A" strokeWidth="12" strokeLinecap="round" />
+        <path className="tadrebk-loader__triangle" d="M37,46 L55,32 L73,46" fill="none" stroke="#4CB675" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" pathLength="1" />
         <circle className="tadrebk-loader__dot" cx="73" cy="46" r="7" fill="#4CB675" />
         <g className="tadrebk-loader__tassel">
-          <line x1="95" y1="44" x2="91" y2="70" stroke="#16233A" stroke-width="3" />
+          <line x1="95" y1="44" x2="91" y2="70" stroke="#16233A" strokeWidth="3" />
           <circle cx="90" cy="74" r="4" fill="#16233A" />
         </g>
       </svg>

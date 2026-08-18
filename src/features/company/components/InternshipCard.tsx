@@ -1,15 +1,23 @@
 'use client';
 
 import Link from 'next/link';
+import { useMemo, useState, useEffect, useCallback, memo } from 'react';
 import { Internship, getInternshipTracks } from '@/features/internship/types';
 import type { Company } from '@/features/company/types';
 import { getCompanyImgUrl } from '@/features/company/types';
 import { CATEGORY_LABELS } from '@/features/student/types';
 import MediaImage from '@/components/ui/MediaImage';
 import Badge from '@/components/ui/Badge';
-import { useState, useEffect, useCallback } from 'react';
 
 const LS_SAVED = 'tadrebk_saved_internships';
+
+const locationIcons: Record<string, string> = {
+  'on-site': 'fas fa-map-marker-alt',
+  remote: 'fas fa-globe',
+  hybrid: 'fas fa-code-branch',
+};
+
+const locationLabels: Record<string, string> = { 'on-site': 'On-site', remote: 'Remote', hybrid: 'Hybrid' };
 
 function isSaved(id: string): boolean {
   if (typeof window === 'undefined') return false;
@@ -39,14 +47,14 @@ function companyFromInternship(internship: Internship): Company | null {
   return null;
 }
 
-export default function InternshipCard({
+function InternshipCardInner({
   internship,
   compact = false,
 }: InternshipCardProps) {
   const [saved, setSaved] = useState(false);
-  const company = companyFromInternship(internship);
-  const logoUrl = company ? getCompanyImgUrl(company.logo) : null;
-  const tracks = getInternshipTracks(internship);
+  const company = useMemo(() => companyFromInternship(internship), [internship]);
+  const logoUrl = useMemo(() => (company ? getCompanyImgUrl(company.logo) : null), [company]);
+  const tracks = useMemo(() => getInternshipTracks(internship), [internship]);
 
   useEffect(() => { setSaved(isSaved(internship._id)); }, [internship._id]);
 
@@ -56,14 +64,6 @@ export default function InternshipCard({
     const now = toggleSaved(internship._id);
     setSaved(now);
   }, [internship._id]);
-
-  const locationIcons: Record<string, string> = {
-    'on-site': 'fas fa-map-marker-alt',
-    remote: 'fas fa-globe',
-    hybrid: 'fas fa-code-branch',
-  };
-
-  const locationLabels: Record<string, string> = { 'on-site': 'On-site', remote: 'Remote', hybrid: 'Hybrid' };
 
   if (compact) {
     return (
@@ -244,3 +244,6 @@ export default function InternshipCard({
     </div>
   );
 }
+
+const InternshipCard = memo(InternshipCardInner);
+export default InternshipCard;

@@ -11,7 +11,7 @@ import { setUser } from '@/store/userSlice';
 import { setCompany } from '@/store/companySlice';
 import { companyService } from '@/features/company/services/company.service';
 import { userService } from '@/features/student/services/user.service';
-import { LS_PENDING_ONBOARDING } from '@/lib/constants';
+import { LS_PENDING_ONBOARDING, LS_PENDING_EMAIL } from '@/lib/constants';
 
 function parseJwt(token: string) {
   try {
@@ -95,6 +95,13 @@ export function useGoogleAuth() {
 
         dispatch(setTokens({ tokens, userId, role }));
         dispatch(setUser(user));
+
+        if (user.isConfirmed === false) {
+          localStorage.setItem(LS_PENDING_EMAIL, user.email);
+          toast.info('Please verify your email to continue.');
+          router.push('/confirm-email?resend=true');
+          return;
+        }
 
         toast.success(`Welcome, ${user.firstName}!`);
 

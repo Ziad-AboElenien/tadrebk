@@ -57,7 +57,8 @@ function CompanyCard({ currentCompany, stats, internships }: {
         {internships.length > 0 ? (
           <div className="space-y-2.5">
             {internships.map((intern) => {
-              const cats = (intern.track || intern.categories || []).slice(0, 2);
+              const rawCats = intern.track || intern.categories;
+              const cats = (Array.isArray(rawCats) ? rawCats : rawCats ? [rawCats] : []).slice(0, 2);
               const desc = intern.description?.slice(0, 80);
               return (
                 <Link key={intern._id} href={`/company/internships/${intern._id}/applications`} className="block rounded-xl bg-white/60 backdrop-blur-sm border border-white/50 p-3 hover:bg-white/90 hover:shadow-sm transition-all duration-200 group">

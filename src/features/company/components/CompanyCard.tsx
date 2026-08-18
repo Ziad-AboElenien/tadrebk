@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useMemo, memo } from 'react';
 import { Company, getCompanyImgUrl } from '@/features/company/types';
 import MediaImage from '@/components/ui/MediaImage';
 
@@ -9,11 +10,11 @@ interface CompanyCardProps {
   internshipCount?: number;
 }
 
-export default function CompanyCard({
+function CompanyCardInner({
   company,
   internshipCount = 0,
 }: CompanyCardProps) {
-  const logoUrl = getCompanyImgUrl(company.logo);
+  const logoUrl = useMemo(() => getCompanyImgUrl(company.logo), [company.logo]);
 
   return (
     <Link href={`/companies/${company._id}`}>
@@ -58,3 +59,6 @@ export default function CompanyCard({
     </Link>
   );
 }
+
+const CompanyCard = memo(CompanyCardInner);
+export default CompanyCard;
