@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { loginSchema, type LoginFormData } from '@/features/auth/schemas/auth.schemas';
 import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage } from '@/lib/axios';
-import { LS_COMPANY_ID, LS_PENDING_ONBOARDING } from '@/lib/constants';
+import { LS_COMPANY_ID, LS_PENDING_ONBOARDING, LS_PENDING_EMAIL } from '@/lib/constants';
 import { useAppDispatch } from '@/store/store';
 import { setTokens, setRole } from '@/store/authSlice';
 import { setUser } from '@/store/userSlice';
@@ -107,6 +107,13 @@ export default function LoginForm({ role }: LoginFormProps) {
 
       dispatch(setRole(userRole));
       dispatch(setUser(user));
+
+      if (user.isConfirmed === false) {
+        localStorage.setItem(LS_PENDING_EMAIL, user.email);
+        toastHelper.info('Please verify your email to continue.');
+        router.push('/confirm-email?resend=true');
+        return;
+      }
 
       toastHelper.success(`Welcome back, ${user.firstName}!`);
 

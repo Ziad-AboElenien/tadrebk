@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useAppSelector } from '@/store/store';
 import { internshipService } from '@/features/internship/services/internship.service';
@@ -41,7 +41,9 @@ export default function CompanyDashboardScreen() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  async function confirmDelete() {
+  const activeCount = useMemo(() => internships.filter((i) => !i.closed).length, [internships]);
+
+  const confirmDelete = useCallback(async () => {
     if (!company || !deleteTarget) return;
     setDeleting(deleteTarget);
     setDeleteTarget(null);
@@ -54,7 +56,7 @@ export default function CompanyDashboardScreen() {
     } finally {
       setDeleting(null);
     }
-  }
+  }, [company, deleteTarget]);
 
   // Session (company profile) is still hydrating after a hard refresh —
   // show a skeleton instead of the "Complete Company Profile" prompt.
@@ -144,7 +146,7 @@ export default function CompanyDashboardScreen() {
           <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wide">Total internships</p>
         </div>
         <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-          <p className="text-2xl font-black text-emerald-600">{internships.filter((i) => !i.closed).length}</p>
+          <p className="text-2xl font-black text-emerald-600">{activeCount}</p>
           <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wide">Active</p>
         </div>
         {/* Credits card — hidden until billing becomes a feature again */}

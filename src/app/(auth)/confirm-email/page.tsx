@@ -1,16 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toastHelper } from '@/lib/toast';
 import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage, getErrorStatus } from '@/lib/axios';
 import { LS_PENDING_EMAIL, LS_INTENDED_ROLE } from '@/lib/constants';
+import { useSearchParams } from 'next/navigation';
 import OTPInput from '@/features/auth/components/OTPInput';
 import Button from '@/components/ui/Button';
 
 export default function ConfirmEmailPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -22,6 +24,15 @@ export default function ConfirmEmailPage() {
     const stored = localStorage.getItem(LS_PENDING_EMAIL) || '';
     setEmail(stored);
   }, []);
+
+  // Auto-resend when coming from login with unconfirmed account
+  const autoResent = useRef(false);
+  useEffect(() => {
+    if (!email || autoResent.current) return;
+    if (searchParams.get('resend') !== 'true') return;
+    autoResent.current = true;
+    handleResend();
+  }, [email, searchParams]);
 
   // Countdown timer for resend
   useEffect(() => {

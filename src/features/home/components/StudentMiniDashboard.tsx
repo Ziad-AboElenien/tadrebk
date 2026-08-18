@@ -187,7 +187,8 @@ export default function StudentMiniDashboard() {
         const cats = currentUser?.categories;
         if (cats && cats.length > 0) {
           const matched = result.internships.filter((i) => {
-            const tracks = (i.track || i.categories || []).map((t) => t.toLowerCase());
+            const rawTracks = i.track || i.categories;
+            const tracks = (Array.isArray(rawTracks) ? rawTracks : rawTracks ? [rawTracks] : []).map((t) => t.toLowerCase());
             return cats.some((c) => tracks.includes(c.toLowerCase()));
           });
           setRecommended(matched.length >= 3 ? matched.slice(0, 3) : result.internships.slice(0, 3));

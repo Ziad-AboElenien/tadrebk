@@ -13,7 +13,8 @@ import { LS_PENDING_EMAIL } from '@/lib/constants';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
-import UniversityAutocomplete from '@/components/ui/UniversityAutocomplete';
+import dynamic from 'next/dynamic';
+const UniversityAutocomplete = dynamic(() => import('@/components/ui/UniversityAutocomplete'), { ssr: false });
 import { useGoogleAuth } from '@/features/auth/hooks/useGoogleAuth';
 
 const fieldOfStudyOptions = [

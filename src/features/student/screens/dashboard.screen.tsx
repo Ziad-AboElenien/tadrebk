@@ -79,7 +79,7 @@ export default function StudentDashboardScreen() {
   useEffect(() => { fetchApplications(); }, [fetchApplications]);
   useEffect(() => { setPage(1); }, [filter]);
 
-  async function handleCancel(companyId: string, internId: string, appId: string) {
+  const handleCancel = useCallback(async (companyId: string, internId: string, appId: string) => {
     setCancellingId(appId);
     try {
       await applicationService.cancelApplication(companyId, internId, appId);
@@ -87,7 +87,7 @@ export default function StudentDashboardScreen() {
       fetchApplications();
     } catch (err) { toastHelper.error(getErrorMessage(err)); }
     finally { setCancellingId(null); }
-  }
+  }, [fetchApplications]);
 
   async function handleResumeUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
