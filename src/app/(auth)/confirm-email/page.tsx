@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toastHelper } from '@/lib/toast';
 import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage, getErrorStatus } from '@/lib/axios';
 import { LS_PENDING_EMAIL, LS_INTENDED_ROLE } from '@/lib/constants';
-import { useSearchParams } from 'next/navigation';
 import OTPInput from '@/features/auth/components/OTPInput';
 import Button from '@/components/ui/Button';
+import Spinner from '@/components/ui/Spinner';
 
-export default function ConfirmEmailPage() {
+function ConfirmEmailInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [otp, setOtp] = useState('');
@@ -81,7 +81,7 @@ export default function ConfirmEmailPage() {
     try {
       await authService.resendOtp({ email });
       toastHelper.success('New OTP sent! Check your email.');
-      setCountdown(300); // 5 min cooldown
+      setCountdown(300);
       setOtp('');
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
@@ -148,7 +148,7 @@ export default function ConfirmEmailPage() {
           </p>
         ) : (
           <p className="text-gray-400 text-sm">
-            Didn't receive it?{' '}
+            Didn&apos;t receive it?{' '}
             <button
               onClick={handleResend}
               disabled={isResending}
@@ -172,5 +172,13 @@ export default function ConfirmEmailPage() {
         </button>
       </p>
     </div>
+  );
+}
+
+export default function ConfirmEmailPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-20"><Spinner size="lg" /></div>}>
+      <ConfirmEmailInner />
+    </Suspense>
   );
 }
