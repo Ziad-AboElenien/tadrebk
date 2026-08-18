@@ -65,9 +65,7 @@ export default function NotificationsScreen() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [markingAll, setMarkingAll] = useState(false);
-  const [markingIds, setMarkingIds] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<FilterTab>('All');
-  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const fetchPage = useCallback(async (p: number) => {
     setLoading(true);
@@ -96,46 +94,19 @@ export default function NotificationsScreen() {
     return true;
   });
 
-  const allChecked = filtered.length > 0 && filtered.every((n) => selected.has(n._id));
-
-  const toggleSelect = (id: string) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-
-  const toggleAll = () =>
-    setSelected(allChecked ? new Set() : new Set(filtered.map((n) => n._id)));
-
   async function handleMarkAsRead(n: Notification) {
     if (n.read) return;
-    setMarkingIds((prev) => new Set(prev).add(n._id));
     try {
       await notificationService.markAsRead(n._id);
       await fetchPage(page);
       await refreshCount();
     } catch { toastHelper.error('Failed to mark as read'); }
-    finally { setMarkingIds((prev) => { const next = new Set(prev); next.delete(n._id); return next; }); }
   }
 
   async function handleCardClick(n: Notification) {
-    const href = getNotificationHref(n);
     if (!n.read) await handleMarkAsRead(n);
+    const href = getNotificationHref(n);
     if (href) router.push(href);
-  }
-
-  async function handleMarkSelectedRead() {
-    if (selected.size === 0) return;
-    setMarkingAll(true);
-    try {
-      await Promise.all([...selected].map((id) => notificationService.markAsRead(id)));
-      await fetchPage(page);
-      await refreshCount();
-      setSelected(new Set());
-    } catch { toastHelper.error('Failed to mark as read'); }
-    finally { setMarkingAll(false); }
   }
 
   async function handleMarkAllRead() {
@@ -166,7 +137,7 @@ export default function NotificationsScreen() {
           {tabs.map((tab) => (
             <button
               key={tab}
-              onClick={() => { setFilter(tab); setSelected(new Set()); }}
+              onClick={() => setFilter(tab)}
               className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all backdrop-blur-xl border ${
                 filter === tab
                   ? 'bg-white/70 border-white/80 text-emerald-700 shadow-md shadow-emerald-100/50'
@@ -184,31 +155,6 @@ export default function NotificationsScreen() {
         </div>
       </div>
 
-      {selected.size > 0 && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-gray-900 px-5 py-3.5">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={toggleAll}
-              className={`flex h-5 w-5 items-center justify-center rounded border-2 transition ${allChecked ? 'border-white bg-white' : 'border-gray-400'}`}
-            >
-              {allChecked && <i className="fas fa-check h-3 w-3 text-gray-900" />}
-            </button>
-            <span className="text-sm font-semibold text-white">
-              {selected.size} {selected.size === 1 ? 'item' : 'items'} selected
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleMarkSelectedRead}
-              disabled={markingAll}
-              className="flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-600 disabled:opacity-50"
-            >
-              {markingAll ? <Spinner size="sm" /> : <i className="fas fa-check h-4 w-4" />} Mark selected as read
-            </button>
-          </div>
-        </div>
-      )}
-
       {loading ? (
         <div className="flex justify-center py-20"><Spinner size="lg" /></div>
       ) : filtered.length === 0 ? (
@@ -225,30 +171,16 @@ export default function NotificationsScreen() {
       ) : (
         <div className="space-y-2">
           {filtered.map((n) => {
-            const checked = selected.has(n._id);
-            const loadingMark = markingIds.has(n._id);
-            const href = getNotificationHref(n);
             return (
               <div
                 key={n._id}
                 onClick={() => handleCardClick(n)}
                 className={`flex items-start gap-4 rounded-2xl border px-5 py-5 transition-all ${
-                  checked
-                    ? 'border-emerald-200 bg-emerald-50/40'
-                    : !n.read
-                      ? 'border-emerald-100 bg-gradient-to-r from-emerald-50/60 to-white hover:border-emerald-200 hover:shadow-sm cursor-pointer'
-                      : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm cursor-pointer'
+                  !n.read
+                    ? 'border-emerald-100 bg-gradient-to-r from-emerald-50/60 to-white hover:border-emerald-200 hover:shadow-sm cursor-pointer'
+                    : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm cursor-pointer'
                 }`}
               >
-                <button
-                  onClick={(e) => { e.stopPropagation(); toggleSelect(n._id); }}
-                  className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition ${
-                    checked ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300 bg-white hover:border-emerald-400'
-                  }`}
-                >
-                  {checked && <i className="fas fa-check h-3 w-3 text-white" />}
-                </button>
-
                 <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full ${
                   !n.read ? 'bg-emerald-100' : 'bg-emerald-50'
                 }`}>
@@ -264,20 +196,8 @@ export default function NotificationsScreen() {
                       )}
                       {statusBadge(n.data?.status)}
                     </div>
-                    <div className="flex items-center gap-2">
-                      {loadingMark && <Spinner size="sm" />}
-                      {href && (
-                        <i className="fas fa-arrow-right text-[11px] text-gray-300" />
-                      )}
-                    </div>
                   </div>
                   <p className="mt-1 text-sm leading-relaxed text-gray-500">{n.message}</p>
-                  {n.data?.internshipTitle && (
-                    <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
-                      <i className="fas fa-briefcase text-[10px]" />
-                      {n.data.internshipTitle}
-                    </p>
-                  )}
                   <p className="mt-2 flex items-center gap-1.5 text-xs text-gray-400">
                     <i className="fas fa-clock text-[11px]" />{timeAgo(n.createdAt)}
                   </p>
@@ -294,7 +214,7 @@ export default function NotificationsScreen() {
         </div>
       )}
 
-      {items.some((n) => !n.read) && selected.size === 0 && (
+      {items.some((n) => !n.read) && (
         <div className="mt-6 text-center">
           <button
             onClick={handleMarkAllRead}

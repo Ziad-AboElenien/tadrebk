@@ -75,8 +75,8 @@ export default function CompanyProfileScreen() {
                   <i className="fas fa-building text-3xl text-gray-300" />
                 </div>
               )}
-              <div className="pb-1">
-                <h1 className="text-2xl sm:text-3xl font-black text-dark">{c.name}</h1>
+              <div className="pb-1 min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-black text-dark truncate">{c.name}</h1>
                 {c.industry && (
                   <span className="inline-block mt-1 px-3 py-1 bg-emerald-50 text-primary text-sm font-semibold rounded-full border border-emerald-100">
                     {c.industry}

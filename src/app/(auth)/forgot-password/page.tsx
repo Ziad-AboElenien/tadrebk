@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
         </div>
         <h1 className="text-3xl font-black text-dark mb-3">OTP Sent!</h1>
         <p className="text-gray-400 text-sm mb-8">
-          We've sent a password reset code to <span className="font-semibold text-dark">{getValues('email')}</span>. Check your inbox.
+          We've sent a password reset code to <span className="font-semibold text-dark break-all">{getValues('email')}</span>. Check your inbox.
         </p>
         <Button
           fullWidth

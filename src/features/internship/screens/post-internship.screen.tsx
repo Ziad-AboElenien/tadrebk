@@ -178,9 +178,9 @@ export default function PostInternshipScreen() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
       {/* Success modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => router.push('/company/dashboard')} />
-          <div className="relative bg-white rounded-[2rem] p-10 sm:p-12 shadow-2xl max-w-md w-full mx-4 text-center animate-fade-in-up">
+          <div className="relative bg-white rounded-[2rem] p-6 sm:p-10 sm:p-12 shadow-2xl max-w-md w-full text-center animate-fade-in-up">
             <div className="w-20 h-20 rounded-[1.25rem] bg-emerald-50 flex items-center justify-center mx-auto mb-6">
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
                 <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -428,7 +428,7 @@ export default function PostInternshipScreen() {
 
         {/* Questions builder */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <label className="text-sm font-semibold text-gray-700">Application Questions <span className="text-gray-400 font-normal">(optional)</span></label>
             <div className="flex gap-2">
               <button type="button" onClick={() => addQuestion('mcq')} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-200 hover:bg-emerald-50 transition">

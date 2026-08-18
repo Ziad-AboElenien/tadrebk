@@ -142,9 +142,9 @@ function TeamCard({ member, index }: { member: (typeof team)[number]; index: num
 
           <div className="mt-3 space-y-1.5 text-xs text-gray-300">
             {member.email !== '#' && (
-              <a href={`mailto:${member.email}`} className="flex items-center gap-2 hover:text-white transition-colors">
-                <i className="fas fa-envelope w-3.5 text-center" />
-                {member.email}
+              <a href={`mailto:${member.email}`} className="flex items-center gap-2 hover:text-white transition-colors overflow-hidden">
+                <i className="fas fa-envelope w-3.5 text-center shrink-0" />
+                <span className="truncate">{member.email}</span>
               </a>
             )}
             {member.phone !== '#' && (

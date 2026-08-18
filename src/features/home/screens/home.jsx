@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/store/store';
 import { motion } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Mousewheel, Pagination } from 'swiper/modules';
@@ -10,10 +11,22 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import { internshipService } from '@/features/internship/services/internship.service';
 import InternshipCard from '@/features/company/components/InternshipCard';
+import CompanyMiniDashboard from '@/features/home/components/CompanyMiniDashboard';
+import StudentMiniDashboard from '@/features/home/components/StudentMiniDashboard';
 import Spinner from '@/components/ui/Spinner';
 import Button from '@/components/ui/Button';
 import CursorFollow from '@/features/home/components/CursorFollow';
 import Parallax from '@/features/home/components/Parallax';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.6, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] } }),
+};
+
+const scaleIn = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: (i = 0) => ({ opacity: 1, scale: 1, transition: { duration: 0.5, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] } }),
+};
 
 function SlideContent({ active, children, className = '' }) {
   return (
@@ -32,18 +45,18 @@ const quickTags = ['Software', 'Fintech', 'Design', 'Data'];
 const universities = ['Cairo University', 'Ain Shams', 'Alexandria', 'GUC', 'BUE'];
 
 const howItWorks = [
-  { step: '01', icon: 'fa-users', title: 'Create Account', desc: "Sign up as a student or a company in seconds — it's completely free." },
-  { step: '02', icon: 'fa-magnifying-glass', title: 'Explore Opportunities', desc: 'Browse hundreds of internships filtered by field, location, and type.' },
-  { step: '03', icon: 'fa-briefcase', title: 'Apply & Get Hired', desc: 'Submit your application with one click and track your progress.' },
+  { step: '01', icon: 'fa-users', title: 'Create Account', desc: "Sign up as a student or a company in seconds — it's completely free.", color: 'from-emerald-400 to-teal-500' },
+  { step: '02', icon: 'fa-magnifying-glass', title: 'Explore Opportunities', desc: 'Browse hundreds of internships filtered by field, location, and type.', color: 'from-sky-400 to-blue-500' },
+  { step: '03', icon: 'fa-briefcase', title: 'Apply & Get Hired', desc: 'Submit your application with one click and track your progress.', color: 'from-violet-400 to-purple-500' },
 ];
 
 const categories = [
-  { icon: 'fa-code', label: 'Software Engineering', count: 42, query: 'software' },
-  { icon: 'fa-bullhorn', label: 'Marketing & Sales', count: 28, query: 'marketing' },
-  { icon: 'fa-desktop', label: 'UI/UX Design', count: 19, query: 'design' },
-  { icon: 'fa-chart-line', label: 'Digital Marketing', count: 24, query: 'digital' },
-  { icon: 'fa-chart-bar', label: 'Finance & Accounting', count: 15, query: 'finance' },
-  { icon: 'fa-users', label: 'Human Resources', count: 13, query: 'hr' },
+  { icon: 'fa-code', label: 'Software Engineering', count: 42, query: 'software', color: 'from-blue-400 to-blue-600' },
+  { icon: 'fa-bullhorn', label: 'Marketing & Sales', count: 28, query: 'marketing', color: 'from-emerald-400 to-teal-600' },
+  { icon: 'fa-desktop', label: 'UI/UX Design', count: 19, query: 'design', color: 'from-violet-400 to-purple-600' },
+  { icon: 'fa-chart-line', label: 'Digital Marketing', count: 24, query: 'digital', color: 'from-orange-400 to-red-500' },
+  { icon: 'fa-chart-bar', label: 'Finance & Accounting', count: 15, query: 'finance', color: 'from-amber-400 to-yellow-600' },
+  { icon: 'fa-users', label: 'Human Resources', count: 13, query: 'hr', color: 'from-rose-400 to-pink-600' },
 ];
 
 export default function HomeComponent() {
@@ -54,10 +67,12 @@ export default function HomeComponent() {
   const [searchLocation, setSearchLocation] = useState('');
   const [activeSlide, setActiveSlide] = useState(0);
 
+  const role = useAppSelector((s) => s.auth.role);
+
   useEffect(() => {
     (async () => {
       try {
-        const result = await internshipService.listInternships({ limit: 6 });
+        const result = await internshipService.listInternships({ limit: 20 });
         setInternships(result.internships);
       } catch {
         // silently fail
@@ -79,14 +94,14 @@ export default function HomeComponent() {
     <>
       <CursorFollow />
 
-      {/* ─── HERO — vertical swiper slider ──────────────────── */}
+      {/* ─── HERO ──────────────────────────────────────────── */}
       <section className="relative h-[100svh] min-h-[620px] bg-gradient-to-b from-emerald-50/80 to-white overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <Parallax offset={150} className="absolute -top-40 -right-40">
-            <div className="w-96 h-96 bg-green-200/30 rounded-full blur-3xl" />
+            <div className="w-96 h-96 bg-green-200/30 rounded-full blur-3xl animate-float" />
           </Parallax>
           <Parallax offset={110} className="absolute -bottom-40 -left-40">
-            <div className="w-80 h-80 bg-emerald-200/30 rounded-full blur-3xl" />
+            <div className="w-80 h-80 bg-emerald-200/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
           </Parallax>
         </div>
 
@@ -104,30 +119,44 @@ export default function HomeComponent() {
           onSlideChange={(s) => setActiveSlide(s.activeIndex)}
         >
           <SwiperSlide>
-            <div className="h-full w-full flex flex-col items-center justify-center px-4 sm:px-8 pt-16 pb-10 text-center">
+            <div className="h-full w-full flex flex-col items-center justify-center px-4 sm:px-8 pt-32 sm:pt-16 pb-10 text-center">
               <SlideContent active={activeSlide === 0} className="max-w-4xl w-full">
-                <div className="inline-flex items-center gap-2 bg-white/70 backdrop-blur border border-emerald-200 rounded-full px-5 py-1.5 mb-8 shadow-sm">
-                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  <span className="text-emerald-700 text-xs font-bold tracking-wider uppercase">Now over 500+ active internships</span>
-                </div>
-
-                <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-gray-900 leading-[1.05] tracking-tight mb-6">
+                <motion.h1
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                  className="text-4xl sm:text-6xl md:text-7xl font-black text-gray-900 leading-[1.05] tracking-tight mb-6"
+                >
                   Find internships that<br />
-                  <span className="text-emerald-500">launch your career</span>
-                </h1>
+                  <span className="bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent">
+                    launch your career
+                  </span>
+                </motion.h1>
 
-                <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-8 font-medium leading-relaxed">
+                <motion.p
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                  className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-8 font-medium leading-relaxed"
+                >
                   Egypt&apos;s first platform connecting university students with top internship opportunities — all in one organized, professional place.
-                </p>
+                </motion.p>
 
-                <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-4">
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-white rounded-2xl shadow-lg overflow-hidden">
+                <motion.form
+                  onSubmit={handleSearch}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="max-w-2xl mx-auto mb-4"
+                >
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-white rounded-2xl shadow-lg shadow-emerald-100/50 ring-1 ring-gray-100 overflow-hidden transition-all duration-300">
                     <div className="flex items-center flex-1 gap-3 px-5 py-4">
                       <i className="fas fa-search text-gray-400 shrink-0" />
                       <input
                         type="text"
                         placeholder="Search internships..."
-                        className="w-full text-sm text-gray-800 placeholder:text-gray-400 bg-transparent outline-none"
+                        className="w-full text-sm sm:text-sm text-gray-800 placeholder:text-gray-400 bg-transparent outline-none ring-0 focus:ring-0 focus:outline-none"
+                        style={{ fontSize: 'max(16px, 1rem)' }}
                         value={searchTitle}
                         onChange={(e) => setSearchTitle(e.target.value)}
                       />
@@ -138,13 +167,14 @@ export default function HomeComponent() {
                       <input
                         type="text"
                         placeholder="Location"
-                        className="w-full text-sm text-gray-800 placeholder:text-gray-400 bg-transparent outline-none"
+                        className="w-full text-sm sm:text-sm text-gray-800 placeholder:text-gray-400 bg-transparent outline-none ring-0 focus:ring-0 focus:outline-none"
+                        style={{ fontSize: 'max(16px, 1rem)' }}
                         value={searchLocation}
                         onChange={(e) => setSearchLocation(e.target.value)}
                       />
                     </div>
                     <div className="p-2">
-                      <button type="submit" className="w-full sm:w-auto bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-emerald-600 transition-all active:scale-[0.97]">
+                      <button type="submit" className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-3 rounded-xl font-bold text-sm hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-200/50 transition-all duration-300 active:scale-[0.97]">
                         Search
                       </button>
                     </div>
@@ -152,36 +182,43 @@ export default function HomeComponent() {
                   <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
                     <span className="text-sm font-semibold text-gray-400">Quick search:</span>
                     {quickTags.map((term) => (
-                      <button
+                      <motion.button
                         key={term}
                         type="button"
+                        whileHover={{ scale: 1.05, y: -1 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => router.push(`/internships?title=${encodeURIComponent(term)}`)}
-                        className="rounded-full border border-gray-200 bg-white px-4 py-1 text-sm text-gray-600 hover:border-emerald-300 hover:text-emerald-600 transition-all"
+                        className="rounded-full border border-gray-200 bg-white px-4 py-1 text-sm text-gray-600 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-200"
                       >
                         {term}
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
-                </form>
+                </motion.form>
 
                 {/* Universities strip */}
-                <div className="mt-14">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                  className="mt-14"
+                >
                   <p className="mb-4 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400">
                     <i className="fas fa-landmark text-sm" />
                     Trusted by students from
                   </p>
-                  <div className="border-y border-gray-100 bg-white/80 py-4">
-                    <div className="flex items-center justify-center gap-0">
+                  <div className="border-y border-gray-100 bg-white/80 py-4 overflow-hidden">
+                    <div className="flex items-center justify-center gap-0 overflow-x-auto scrollbar-none min-w-0">
                       {universities.map((u, i) => (
-                        <span key={u} className="flex items-center">
-                          <span className="whitespace-nowrap px-6 sm:px-12 text-sm font-bold text-gray-800">{u}</span>
-                          {i < universities.length - 1 && <span className="h-4 w-px bg-gray-200" />}
+                        <span key={u} className="flex items-center shrink-0">
+                          <span className="whitespace-nowrap px-4 sm:px-10 text-xs sm:text-sm font-bold text-gray-800 hover:text-emerald-600 transition-colors cursor-default">{u}</span>
+                          {i < universities.length - 1 && <span className="h-4 w-px bg-gray-200 shrink-0" />}
                         </span>
                       ))}
                     </div>
                   </div>
                   <div className="h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
-                </div>
+                </motion.div>
               </SlideContent>
             </div>
           </SwiperSlide>
@@ -200,206 +237,165 @@ export default function HomeComponent() {
       </section>
 
       {/* ─── DASHBOARD PREVIEW (dark section) ──────────────── */}
-      <section className="bg-gray-900 px-6 sm:px-10 py-16">
-        <div className="mx-auto max-w-6xl lg:grid lg:grid-cols-2 lg:gap-16 lg:items-center">
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-700 bg-emerald-900/40 px-3 py-1 text-xs font-bold uppercase tracking-widest text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />Your career dashboard
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black leading-tight text-white">
-              Manage your <span className="text-emerald-400">internship journey</span> in one place
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-gray-400">
-              Discover opportunities, track applications and never miss an important update. Join thousands of students launching their careers today.
-            </p>
-            <div className="mt-8 space-y-5">
-              {[
-                { icon: 'fa-table-columns', title: 'Stay Organized', desc: 'All your applications and updates in one central, easy-to-use dashboard.' },
-                { icon: 'fa-chart-line', title: 'Find Better Matches', desc: 'Personalised recommendations based on your student profile and skills.' },
-                { icon: 'fa-bell', title: 'Never Miss a Deadline', desc: 'Get timely reminders and stay ahead of every single opportunity.' },
-              ].map((item) => (
-                <div key={item.title} className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-900/60 text-emerald-400">
-                    <i className={`fas ${item.icon} text-sm`} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-white">{item.title}</p>
-                    <p className="text-sm text-gray-400">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-8 flex gap-3">
-              <Link href="/get-started" className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-600">
-                Start Your Journey <i className="fas fa-arrow-right text-xs" />
-              </Link>
-              <Link href="/how-it-works" className="inline-flex items-center gap-2 rounded-xl border border-gray-700 px-6 py-3 text-sm font-semibold text-gray-300 transition hover:border-gray-500">
-                Learn More
-              </Link>
-            </div>
-          </div>
-
-          {/* Mini dashboard mockup */}
-          <div className="mt-12 lg:mt-0">
-            <div className="overflow-hidden rounded-2xl bg-white shadow-2xl">
-              <div className="flex items-center justify-between bg-gray-50 px-5 py-4">
-                <div>
-                  <p className="text-sm font-bold text-gray-900">Good morning, Emad <span role="img" aria-label="wave">👋</span></p>
-                  <p className="text-xs text-gray-400">You have 3 pending updates today.</p>
-                </div>
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-white text-xs font-bold">E</div>
-              </div>
-              <div className="grid grid-cols-2 gap-3 border-b border-gray-100 px-5 py-4">
-                {[{ label: 'Applications Sent', value: '08' }, { label: 'Active Interviews', value: '12' }].map((s) => (
-                  <div key={s.label} className="rounded-xl bg-gray-50 p-3 text-center">
-                    <p className="text-2xl font-black text-gray-900">{s.value}</p>
-                    <p className="text-xs text-gray-400">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="px-5 py-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-xs font-bold text-gray-700">Recent Applications</p>
-                  <Link href="/dashboard" className="text-xs text-emerald-500 hover:underline">View All</Link>
-                </div>
-                <div className="space-y-3">
-                  {[
-                    { role: 'Frontend Developer Intern', co: 'Swvl', status: 'Interviewing', color: 'text-emerald-600 bg-emerald-50' },
-                    { role: 'UI/UX Design Intern', co: 'Robosta', status: 'Applied', color: 'text-gray-600 bg-gray-100' },
-                    { role: 'Marketing Intern', co: 'Jumia', status: 'Applied', color: 'text-gray-600 bg-gray-100' },
-                  ].map((a) => (
-                    <div key={a.role} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-pink-100 to-sky-100" />
-                        <div>
-                          <p className="text-xs font-semibold text-gray-900">{a.role}</p>
-                          <p className="text-[10px] text-gray-400">{a.co}</p>
-                        </div>
-                      </div>
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${a.color}`}>{a.status}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {role === 'company' ? <CompanyMiniDashboard /> : <StudentMiniDashboard />}
 
       {/* ─── HOW IT WORKS ─────────────────────────────────────── */}
-      <section className="py-20 bg-white" id="how-it-works">
+      <section className="py-20 bg-gradient-to-b from-gray-50 to-white overflow-hidden" id="how-it-works">
         <div className="max-w-5xl mx-auto px-4 sm:px-8">
-          <Parallax offset={90} className="text-center mb-14">
-            <span className="inline-block bg-emerald-50 text-emerald-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-emerald-200 mb-4">
-              Simple Process
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-              How It Works
-            </h2>
-            <p className="text-gray-400 text-sm mt-3 max-w-md mx-auto">
-              Three easy steps to land your next internship.
-            </p>
+          <Parallax offset={60} className="text-center mb-14">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-80px' }}
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
+            >
+              <motion.h2 variants={fadeUp} custom={0} className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
+                How It Works
+              </motion.h2>
+              <motion.p variants={fadeUp} custom={1} className="text-gray-400 text-sm mt-3 max-w-md mx-auto">
+                Three easy steps to land your next internship.
+              </motion.p>
+            </motion.div>
           </Parallax>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {howItWorks.map((item, i) => (
-              <div
+              <motion.div
                 key={item.step}
-                className="relative bg-white rounded-2xl border border-gray-100 shadow-sm p-8 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group animate-slide-up"
-                style={{ animationDelay: `${i * 200}ms` }}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: '-40px' }}
+                variants={scaleIn}
+                custom={i}
+                whileHover={{ y: -8, transition: { duration: 0.3 } }}
+                className="relative bg-white rounded-2xl border border-gray-100 shadow-sm p-8 hover:shadow-xl hover:shadow-emerald-100/50 hover:border-emerald-100 transition-all duration-300 group cursor-default"
               >
-                <span className="absolute right-4 top-4 text-4xl font-black text-gray-100">{item.step}</span>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                <span className="absolute right-4 top-4 text-4xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors duration-300">{item.step}</span>
+                <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${item.color} text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
                   <i className={`fas ${item.icon} text-lg`} />
                 </div>
-                <h3 className="text-base font-black text-gray-900">{item.title}</h3>
+                <h3 className="text-base font-black text-gray-900 group-hover:text-emerald-700 transition-colors duration-300">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-gray-400">{item.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* ─── CATEGORIES ───────────────────────────────────────── */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-gradient-to-b from-white to-emerald-50/40 overflow-hidden">
         <div className="max-w-5xl mx-auto px-4 sm:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-1 block">Explore Fields</span>
-              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-                Browse by Category
-              </h2>
-            </div>
-            <Link
-              href="/internships"
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white font-bold rounded-xl text-sm hover:bg-gray-800 transition-all"
+            <Parallax offset={70}>
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: '-80px' }}
+                variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
+              >
+                <motion.span variants={fadeUp} custom={0} className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-1 block">Explore Fields</motion.span>
+                <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
+                  Browse by Category
+                </motion.h2>
+              </motion.div>
+            </Parallax>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
             >
-              View All Internships
-              <i className="fas fa-arrow-right text-xs" />
-            </Link>
+              <Link
+                href="/internships"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white font-bold rounded-xl text-sm hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-200/50 hover:scale-[1.02] transition-all duration-300"
+              >
+                View All Internships
+                <i className="fas fa-arrow-right text-xs" />
+              </Link>
+            </motion.div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {categories.map((cat, i) => (
-              <Link
+              <motion.div
                 key={cat.label}
-                href={`/internships?title=${cat.query}`}
-                className="group flex items-center gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:ring-1 hover:ring-emerald-200 transition-all duration-300 animate-slide-up"
-                style={{ animationDelay: `${i * 100}ms` }}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: '-40px' }}
+                variants={scaleIn}
+                custom={i}
               >
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
-                  <i className={`fas ${cat.icon} text-lg`} />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-gray-900">{cat.label}</p>
-                  <p className="text-xs text-gray-400">{cat.count} opportunities &rarr;</p>
-                </div>
-              </Link>
+                <Link
+                  href={`/internships?title=${cat.query}`}
+                  className="group flex items-center gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:shadow-emerald-100/50 hover:ring-1 hover:ring-emerald-200 hover:-translate-y-1 transition-all duration-300"
+                >
+                  <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${cat.color} text-white group-hover:scale-110 group-hover:rotate-3 shadow-md transition-all duration-300`}>
+                    <i className={`fas ${cat.icon} text-lg`} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-gray-900 group-hover:text-emerald-700 transition-colors">{cat.label}</p>
+                    <p className="text-xs text-gray-400">{cat.count} opportunities &rarr;</p>
+                  </div>
+                </Link>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* ─── CTA BANNER ──────────────────────────────────────── */}
-      <section className="py-6 px-4 sm:px-8">
-        <div className="mx-auto max-w-5xl overflow-hidden rounded-3xl bg-emerald-600 p-10 sm:p-14">
-          <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
+      <section className="py-6 px-4 sm:px-8 bg-gradient-to-b from-emerald-50/40 to-white">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-80px' }}
+          variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
+          className="mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-600 p-10 sm:p-14 relative group"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-white/5 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+          <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between relative z-10">
             <div>
-              <h2 className="text-3xl sm:text-4xl font-black leading-tight text-white">
+              <motion.h2 variants={fadeUp} custom={0} className="text-3xl sm:text-4xl font-black leading-tight text-white">
                 Ready to accelerate your career?
-              </h2>
-              <p className="mt-3 max-w-md text-base text-emerald-100">
+              </motion.h2>
+              <motion.p variants={fadeUp} custom={1} className="mt-3 max-w-md text-base text-emerald-100">
                 Join Tadrebk today and get access to exclusive internship opportunities tailored for your growth.
-              </p>
+              </motion.p>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link href="/get-started" className="inline-flex items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-bold text-emerald-600 shadow-sm transition hover:bg-emerald-50">
+            <motion.div variants={fadeUp} custom={2} className="flex flex-col gap-3 sm:flex-row">
+              <Link href="/get-started" className="inline-flex items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-bold text-emerald-600 shadow-sm hover:bg-emerald-50 hover:shadow-lg hover:scale-[1.03] transition-all duration-300">
                 Get Started Free
               </Link>
-              <Link href="/internships" className="inline-flex items-center justify-center rounded-xl border-2 border-white/30 px-6 py-3 text-sm font-bold text-white transition hover:bg-white/10">
+              <Link href="/internships" className="inline-flex items-center justify-center rounded-xl border-2 border-white/30 px-6 py-3 text-sm font-bold text-white transition-all duration-300 hover:bg-white/10 hover:border-white/50 hover:scale-[1.03]">
                 View Opportunities
               </Link>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* ─── FEATURED INTERNSHIPS (keep as is) ────────────────── */}
-      <section className="py-24 relative overflow-hidden bg-gradient-to-b from-white via-emerald-50/50 to-white">
+      {/* ─── FEATURED INTERNSHIPS ──────────────────────────────── */}
+      <section className="py-24 relative overflow-hidden bg-gradient-to-b from-white via-emerald-50/30 to-emerald-50/60">
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-200/40 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-1/3 -left-32 w-80 h-80 bg-sky-200/40 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 right-1/3 w-72 h-72 bg-violet-200/30 rounded-full blur-3xl pointer-events-none" />
         <div className="max-w-7xl mx-auto px-4 relative">
           <Parallax offset={60} className="text-center mb-14">
-            <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-4">
-              Handpicked Opportunities
-            </span>
-            <h2 className="text-4xl md:text-5xl font-black text-[#1a2e35] tracking-tight mb-4">
-              Featured Internships
-            </h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Top companies are actively seeking talent. Don&apos;t miss your chance.
-            </p>
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-80px' }}
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
+            >
+              <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
+                How It Works
+              </motion.h2>
+              <motion.p variants={fadeUp} custom={1} className="text-gray-400 text-sm mt-3 max-w-md mx-auto">
+                Three easy steps to land your next internship.
+              </motion.p>
+            </motion.div>
           </Parallax>
 
           {loading ? (
@@ -415,9 +411,16 @@ export default function HomeComponent() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {internships.map((intern, i) => (
-                <div key={intern._id} className="animate-slide-up" style={{ animationDelay: `${i * 100}ms` }}>
+                <motion.div
+                  key={intern._id}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: '-40px' }}
+                  variants={scaleIn}
+                  custom={i}
+                >
                   <InternshipCard internship={intern} />
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
@@ -436,32 +439,33 @@ export default function HomeComponent() {
       </section>
 
       {/* ─── FOR STUDENTS / FOR COMPANIES ─────────────────────── */}
-      <section className="py-6 px-4 sm:px-8">
+      <section className="py-6 px-4 sm:px-8 bg-gradient-to-b from-emerald-50/60 to-white overflow-hidden">
         <div className="mx-auto max-w-5xl grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div className="rounded-3xl bg-gray-900 p-10">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-900/60 text-emerald-400">
+          {/* For Students */}
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+            variants={scaleIn}
+            custom={0}
+            whileHover={{ y: -6, transition: { duration: 0.3 } }}
+            className="rounded-3xl bg-gray-900 p-10 relative overflow-hidden group cursor-default"
+          >
+            <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-900/60 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
               <i className="fas fa-users text-lg" />
             </div>
             <h3 className="text-2xl font-black text-white">For Students</h3>
             <p className="mt-3 text-sm leading-relaxed text-gray-400">
               Create your profile, discover internships that match your skills, and launch your career — all for free.
             </p>
-            <Link href="/get-started" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-600">
+            <Link href="/get-started" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-white transition-all duration-300 hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.03]">
               Get Started Free <i className="fas fa-arrow-right text-xs" />
             </Link>
-          </div>
-          <div className="rounded-3xl bg-emerald-600 p-10">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-white">
-              <i className="fas fa-briefcase text-lg" />
-            </div>
-            <h3 className="text-2xl font-black text-white">For Companies</h3>
-            <p className="mt-3 text-sm leading-relaxed text-emerald-100">
-              Post internship opportunities and find the best emerging talent from Egypt&apos;s top universities.
-            </p>
-            <Link href="/get-started" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-emerald-600 transition hover:bg-emerald-50">
-              Post an Internship <i className="fas fa-arrow-right text-xs" />
-            </Link>
-          </div>
+          </motion.div>
+
+          {/* For Companies — mini dashboard */}
+          <CompanyMiniDashboard />
         </div>
       </section>
     </>

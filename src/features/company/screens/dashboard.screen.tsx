@@ -236,9 +236,9 @@ export default function CompanyDashboardScreen() {
 
       {/* Delete confirmation modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDeleteTarget(null)} />
-          <div className="relative bg-white rounded-[2rem] p-10 shadow-2xl max-w-sm w-full mx-4 text-center animate-fade-in-up">
+          <div className="relative bg-white rounded-[2rem] p-6 sm:p-10 shadow-2xl max-w-sm w-full text-center animate-fade-in-up">
             <div className="w-16 h-16 rounded-[1.25rem] bg-red-50 flex items-center justify-center mx-auto mb-5">
               <svg className="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
@@ -260,9 +260,9 @@ export default function CompanyDashboardScreen() {
       )}
       {/* Pending approval modal */}
       {showPendingModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowPendingModal(false)} />
-          <div className="relative bg-white rounded-[2rem] p-10 shadow-2xl max-w-md w-full mx-4 text-center animate-scale-in">
+          <div className="relative bg-white rounded-[2rem] p-6 sm:p-10 shadow-2xl max-w-md w-full text-center animate-scale-in">
             <div className="w-16 h-16 rounded-[1.25rem] bg-amber-50 flex items-center justify-center mx-auto mb-5">
               <i className="fas fa-clock text-2xl text-amber-500" />
             </div>

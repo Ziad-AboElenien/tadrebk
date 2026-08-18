@@ -83,7 +83,7 @@ export default function StudentProfileScreen() {
         gender: (user.gender as 'male' | 'female' | '') || '',
         skills: user.skills?.join(', ') || '',
         categories: (user.categories as string[]) || [],
-        courses: (user.courses || []).map((c: any) => ({ name: c.name || '' })),
+        courses: (user.courses || []).filter((c: any) => c.name && c.name.trim()).map((c: any) => ({ name: c.name })),
       });
     }
   }, [user, reset]);
@@ -102,7 +102,7 @@ export default function StudentProfileScreen() {
         dateOfBirth: data.dateOfBirth || undefined,
         gender: data.gender || undefined,
         skills: data.skills ? data.skills.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
-        categories: data.categories?.length ? data.categories as Category[] : undefined,
+        categories: data.categories as Category[] | undefined,
         courses: data.courses?.length ? data.courses : undefined,
       });
       const fresh = await userService.getUserProfile(userId);
@@ -339,7 +339,7 @@ export default function StudentProfileScreen() {
 
         {/* Edit form / Profile display */}
         {editing ? (
-          <form onSubmit={handleSubmit(onSubmit)} className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
+          <form onSubmit={handleSubmit(onSubmit, (errs) => { console.error('Validation errors:', errs); toastHelper.error('Please fix the highlighted fields.'); })} className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
             <h2 className="font-bold text-dark text-lg">Edit details</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="First name" error={errors.firstName?.message} {...register('firstName')} />

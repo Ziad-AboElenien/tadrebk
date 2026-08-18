@@ -21,7 +21,7 @@ export default function GetStartedPage() {
         <span className="inline-block bg-emerald-50 text-primary text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">
           Welcome to Tadrebk
         </span>
-        <h1 className="text-4xl md:text-5xl font-black text-dark mb-4 leading-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-dark mb-4 leading-tight">
           Who are you joining as?
         </h1>
         <p className="text-gray-400 text-lg">
@@ -35,7 +35,7 @@ export default function GetStartedPage() {
         <button
           onClick={() => choose('student')}
           id="get-started-student-btn"
-          className="group relative bg-white border-2 border-gray-100 hover:border-primary rounded-3xl p-8 text-left transition-all duration-300 hover:shadow-[0_20px_60px_rgba(16,185,129,0.12)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="group relative bg-white border-2 border-gray-100 hover:border-primary rounded-3xl p-6 sm:p-8 text-left transition-all duration-300 hover:shadow-[0_20px_60px_rgba(16,185,129,0.12)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           {/* Icon */}
           <div className="w-14 h-14 bg-emerald-50 group-hover:bg-primary rounded-2xl flex items-center justify-center mb-6 transition-colors duration-300">
@@ -59,7 +59,7 @@ export default function GetStartedPage() {
         <button
           onClick={() => choose('company')}
           id="get-started-company-btn"
-          className="group relative bg-white border-2 border-gray-100 hover:border-dark rounded-3xl p-8 text-left transition-all duration-300 hover:shadow-[0_20px_60px_rgba(26,46,53,0.08)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dark"
+          className="group relative bg-white border-2 border-gray-100 hover:border-dark rounded-3xl p-6 sm:p-8 text-left transition-all duration-300 hover:shadow-[0_20px_60px_rgba(26,46,53,0.08)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dark"
         >
           {/* Icon */}
           <div className="w-14 h-14 bg-gray-100 group-hover:bg-dark rounded-2xl flex items-center justify-center mb-6 transition-colors duration-300">

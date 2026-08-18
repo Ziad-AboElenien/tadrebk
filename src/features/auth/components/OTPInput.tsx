@@ -62,7 +62,7 @@ export default function OTPInput({
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="flex gap-3">
+      <div className="flex gap-2 sm:gap-3">
         {Array.from({ length }).map((_, i) => (
           <input
             key={i}
@@ -79,7 +79,7 @@ export default function OTPInput({
             onPaste={handlePaste}
             onFocus={(e) => e.target.select()}
             className={[
-              'w-12 h-14 text-center text-xl font-bold border-2 rounded-xl transition-all duration-200',
+              'w-10 sm:w-12 h-14 text-center text-xl font-bold border-2 rounded-xl transition-all duration-200',
               'focus:outline-none focus:ring-0',
               digits[i]
                 ? 'border-primary bg-primary/5 text-dark'

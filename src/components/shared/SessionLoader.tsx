@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setUser } from '@/store/userSlice';
 import { setCompany } from '@/store/companySlice';
@@ -15,7 +16,9 @@ import { LS_USER_ROLE } from '@/lib/constants';
  */
 export default function SessionLoader({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
-  const { isAuthenticated, userId } = useAppSelector((s) => s.auth);
+  const router = useRouter();
+  const pathname = usePathname();
+  const { isAuthenticated, userId, role } = useAppSelector((s) => s.auth);
   const currentUser = useAppSelector((s) => s.user.currentUser);
   const currentCompany = useAppSelector((s) => s.company.currentCompany);
   const loaded = useRef(false);
@@ -63,6 +66,13 @@ export default function SessionLoader({ children }: { children: React.ReactNode 
           const full = await companyService.getCompanyById(owned._id);
           dispatch(setCompany(full));
           dispatch(setRole('company'));
+        } else {
+          // Student with no categories → redirect to onboarding
+          const isOnOnboarding = pathname === '/onboarding';
+          const hasCategories = user.categories && user.categories.length > 0;
+          if (!hasCategories && !isOnOnboarding) {
+            router.replace('/onboarding');
+          }
         }
       } catch {
         // Token invalid — logout will have happened via the axios interceptor
@@ -76,7 +86,16 @@ export default function SessionLoader({ children }: { children: React.ReactNode 
     } else {
       dispatch(setStatus('succeeded'));
     }
-  }, [isAuthenticated, userId, currentUser, currentCompany, dispatch]);
+  }, [isAuthenticated, userId, currentUser, currentCompany, dispatch, pathname, router]);
+
+  // Guard: if a student has no categories, keep them on /onboarding
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser || role === 'company' || role === 'admin') return;
+    if (pathname === '/onboarding') return;
+    if (!currentUser.categories || currentUser.categories.length === 0) {
+      router.replace('/onboarding');
+    }
+  }, [isAuthenticated, currentUser, role, pathname, router]);
 
   return <>{children}</>;
 }

@@ -110,7 +110,7 @@ export default function FaqPage() {
           ))}
 
           {/* CTA */}
-          <div className="text-center bg-white rounded-[32px] border border-gray-50 shadow-sm p-10">
+          <div className="text-center bg-white rounded-[32px] border border-gray-50 shadow-sm p-6 sm:p-10">
             <h3 className="text-2xl font-black text-[#1a2e35] mb-2">Still have questions?</h3>
             <p className="text-gray-400 text-sm mb-6">
               Our support team is happy to help with anything not covered here.

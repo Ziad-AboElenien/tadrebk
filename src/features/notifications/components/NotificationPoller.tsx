@@ -38,7 +38,7 @@ export default function NotificationPoller() {
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
               <i className="fas fa-bell text-emerald-500 text-sm" />
             </div>
-            <div>
+            <div className="max-w-[250px]">
               <p className="text-sm font-semibold text-dark">New Notification{diff > 1 ? 's' : ''}</p>
               <p className="text-xs text-gray-500">You have {diff} unread notification{diff > 1 ? 's' : ''}</p>
             </div>
