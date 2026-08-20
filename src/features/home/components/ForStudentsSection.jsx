@@ -11,7 +11,7 @@ export default function ForStudentsSection() {
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: '-40px' }}
+          viewport={{ once: true, margin: '50px' }}
           variants={scaleIn}
           custom={0}
           whileHover={{ y: -6, transition: { duration: 0.3 } }}
@@ -32,7 +32,7 @@ export default function ForStudentsSection() {
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: '-40px' }}
+          viewport={{ once: true, margin: '50px' }}
           variants={scaleIn}
           custom={1}
           whileHover={{ y: -6, transition: { duration: 0.3 } }}

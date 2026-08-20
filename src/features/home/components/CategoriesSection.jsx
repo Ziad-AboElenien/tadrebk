@@ -23,8 +23,8 @@ export default function CategoriesSection() {
             <motion.div
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, margin: '-80px' }}
-              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
+              viewport={{ once: true, margin: '50px' }}
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
             >
               <motion.span variants={fadeUp} custom={0} className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-1 block">Explore Fields</motion.span>
               <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
@@ -54,7 +54,7 @@ export default function CategoriesSection() {
               key={cat.label}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, margin: '-40px' }}
+              viewport={{ once: true, margin: '50px' }}
               variants={scaleIn}
               custom={i}
             >
