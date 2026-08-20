@@ -10,8 +10,8 @@ export default function CtaBannerSection() {
       <motion.div
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, margin: '-80px' }}
-        variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
+        viewport={{ once: true, margin: '50px' }}
+        variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
         className="mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-600 p-10 sm:p-14 relative group"
       >
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-white/5 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />

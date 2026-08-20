@@ -21,8 +21,8 @@ export default function HowItWorksSection() {
           <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: '-80px' }}
-            variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
+            viewport={{ once: true, margin: '50px' }}
+            variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
           >
             <motion.h2 variants={fadeUp} custom={0} className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
               How It Works
@@ -39,7 +39,7 @@ export default function HowItWorksSection() {
               key={item.step}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, margin: '-40px' }}
+              viewport={{ once: true, margin: '50px' }}
               variants={scaleIn}
               custom={i}
               whileHover={{ y: -8, transition: { duration: 0.3 } }}

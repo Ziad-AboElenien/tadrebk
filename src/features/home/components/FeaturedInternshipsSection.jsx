@@ -38,8 +38,8 @@ export default function FeaturedInternshipsSection() {
           <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: '-80px' }}
-            variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.12 } } }}
+            viewport={{ once: true, margin: '50px' }}
+            variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
           >
             <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
               Featured Internships
@@ -67,7 +67,7 @@ export default function FeaturedInternshipsSection() {
                 key={intern._id}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: true, margin: '-40px' }}
+                viewport={{ once: true, margin: '100px' }}
                 variants={scaleIn}
                 custom={i}
               >
