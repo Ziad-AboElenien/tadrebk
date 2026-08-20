@@ -98,14 +98,18 @@ export default function NotificationsScreen() {
     if (n.read) return;
     try {
       await notificationService.markAsRead(n._id);
-      await fetchPage(page);
-      await refreshCount();
-    } catch { toastHelper.error('Failed to mark as read'); }
+      setItems((prev) => prev.map((item) => item._id === n._id ? { ...item, read: true } : item));
+      refreshCount();
+    } catch { /* ignore */ }
   }
 
   async function handleCardClick(n: Notification) {
-    if (!n.read) await handleMarkAsRead(n);
     const href = getNotificationHref(n);
+    if (!n.read) {
+      handleMarkAsRead(n);
+      if (href) router.push(href);
+      return;
+    }
     if (href) router.push(href);
   }
 

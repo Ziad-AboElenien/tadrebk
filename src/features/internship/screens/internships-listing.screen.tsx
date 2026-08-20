@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Internship, getInternshipTracks } from '@/features/internship/types';
@@ -110,6 +110,7 @@ function InternshipsContent() {
 
   const [internships, setInternships] = useState<Internship[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -118,6 +119,7 @@ function InternshipsContent() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [filterOpen, setFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   // Company cache
   const [companyMap, setCompanyMap] = useState<Record<string, Company>>({});
@@ -166,14 +168,20 @@ function InternshipsContent() {
 
   const fetchInternships = useCallback(async () => {
     try {
-      setLoading(true);
-      const params: any = { page, limit: cityFilter ? 100 : 12 };
-      if (filters.title) params.title = filters.title;
+      const isPagination = page > 1;
+      if (isPagination) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+      const params: any = { page, limit: (cityFilter || filters.title) ? 100 : 12 };
       if (filters.type) params.type = filters.type;
       if (filters.location) params.location = filters.location;
       const result = await internshipService.listInternships(params);
 
       let filtered = Array.isArray(result?.internships) ? result.internships : [];
+      const doClientPaginate = cityFilter || filters.title;
+
       if (cityFilter) {
         const matchingIds = new Set(
           Object.values(companyMap)
@@ -188,6 +196,39 @@ function InternshipsContent() {
             return cid && matchingIds.has(cid);
           });
         }
+      }
+
+      // Client-side search: match by title, track, skills, company — then sort by priority
+      if (filters.title) {
+        const q = filters.title.toLowerCase();
+        const titleHits: Internship[] = [];
+        const trackHits: Internship[] = [];
+        const skillHits: Internship[] = [];
+        const companyHits: Internship[] = [];
+
+        filtered.forEach((internship) => {
+          const titleMatch = internship.title?.toLowerCase().includes(q);
+          const tracks = Array.isArray(internship.track) ? internship.track : [];
+          const trackMatch = tracks.some((t) => t.toLowerCase().includes(q));
+          const skills = [
+            ...(Array.isArray(internship.technicalSkills) ? internship.technicalSkills : []),
+            ...(Array.isArray(internship.softSkills) ? internship.softSkills : []),
+          ].map((s) => s.toLowerCase()).join(' ');
+          const skillMatch = skills.includes(q);
+          const company = companyFromInternship(internship);
+          const companyMatch = company?.name?.toLowerCase().includes(q);
+
+          if (titleMatch) titleHits.push(internship);
+          else if (trackMatch) trackHits.push(internship);
+          else if (skillMatch) skillHits.push(internship);
+          else if (companyMatch) companyHits.push(internship);
+        });
+
+        filtered = [...titleHits, ...trackHits, ...skillHits, ...companyHits];
+      }
+
+      // Client-side pagination
+      if (doClientPaginate) {
         const perPage = 12;
         const totalFiltered = filtered.length;
         setTotalPages(Math.ceil(totalFiltered / perPage) || 1);
@@ -212,10 +253,21 @@ function InternshipsContent() {
       toast.error(error.response?.data?.message || 'Failed to load internships', { position: 'bottom-right' });
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   }, [filters, page, cityFilter, companyMap, userCategories]);
 
   useEffect(() => { fetchInternships(); }, [fetchInternships]);
+
+  // Scroll to results when page changes — wait for DOM to update
+  useEffect(() => {
+    if (!loading && !loadingMore && resultsRef.current) {
+      const id = requestAnimationFrame(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      return () => cancelAnimationFrame(id);
+    }
+  }, [page, loading, loadingMore]);
 
   // Close filter drawer on Escape
   useEffect(() => {
@@ -314,7 +366,7 @@ function InternshipsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       {/* ── Search bar ─────────────────────────────────────── */}
       <div className="border-b border-gray-100 bg-gray-100 px-4 py-5 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row">
@@ -445,7 +497,7 @@ function InternshipsContent() {
           </aside>
 
           {/* ── Cards grid ─────────────────────────────────── */}
-          <div className="min-w-0">
+          <div className="min-w-0" ref={resultsRef}>
             {loading ? (
               <div className="flex justify-center py-12"><Spinner /></div>
             ) : internships.length === 0 ? (
@@ -453,7 +505,12 @@ function InternshipsContent() {
                 <p className="text-gray-600 text-lg">No internships found matching your filters</p>
               </div>
             ) : (
-              <>
+              <div className="relative">
+                {loadingMore && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/60 backdrop-blur-sm">
+                    <Spinner />
+                  </div>
+                )}
                 {/* Grid View */}
                 {viewMode === 'grid' && (
                 <div className="grid grid-cols-1 gap-x-3 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -763,7 +820,7 @@ function InternshipsContent() {
                     </p>
                   </div>
                 )}
-              </>
+              </div>
             )}
           </div>
         </div>

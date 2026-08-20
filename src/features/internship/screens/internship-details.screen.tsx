@@ -212,14 +212,14 @@ export default function InternshipDetailsScreen() {
     <div className="min-h-screen bg-gray-50">
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         {/* ── Breadcrumb ─────────────────────────────────── */}
-        <div className="mb-5 flex items-center gap-2 text-sm text-gray-400">
-          <Link href="/internships" className="hover:text-gray-600">Internships</Link>
-          <span>›</span>
-          <span className="font-semibold text-gray-700">{internship.title}</span>
+        <div className="mb-5 flex items-center gap-2 text-sm text-gray-400 min-w-0">
+          <Link href="/internships" className="hover:text-gray-600 shrink-0">Internships</Link>
+          <span className="shrink-0">›</span>
+          <span className="font-semibold text-gray-700 break-words">{internship.title}</span>
         </div>
 
         {/* ── Header card ────────────────────────────────── */}
-        <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm sm:p-8">
+        <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm sm:p-8 overflow-hidden">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex gap-5">
               {company ? (
@@ -235,18 +235,18 @@ export default function InternshipDetailsScreen() {
               ) : (
                 <div className="h-16 w-16 flex-shrink-0 rounded-2xl bg-gradient-to-br from-pink-200 via-yellow-100 to-sky-200" />
               )}
-              <div>
-                <h1 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">{internship.title}</h1>
-                <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-400">
+              <div className="min-w-0">
+                <h1 className="text-2xl font-extrabold text-gray-900 sm:text-3xl break-words">{internship.title}</h1>
+                <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-400 min-w-0">
                   {company && (
-                    <Link href={`/companies/${company._id}`} className="flex items-center gap-1.5 font-semibold text-gray-600 hover:text-primary transition-colors">
-                      <i className="fas fa-briefcase text-xs" />
-                      {company.name}
+                    <Link href={`/companies/${company._id}`} className="flex items-center gap-1.5 font-semibold text-gray-600 hover:text-primary transition-colors min-w-0">
+                      <i className="fas fa-briefcase text-xs shrink-0" />
+                      <span className="break-words">{company.name}</span>
                     </Link>
                   )}
-                  <span className="flex items-center gap-1.5">
-                    <i className="fas fa-users text-xs" />
-                    {company?.address || locationLabels[internship.location] || internship.location}
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <i className="fas fa-users text-xs shrink-0" />
+                    <span className="break-words">{company?.address || locationLabels[internship.location] || internship.location}</span>
                   </span>
                   {internship.createdAt && (
                     <span className="flex items-center gap-1.5">
@@ -274,7 +274,7 @@ export default function InternshipDetailsScreen() {
             </div>
 
             {!internship.closed && (
-              <div className="flex flex-shrink-0 gap-3 sm:flex-col sm:items-stretch">
+              <div className="flex flex-wrap flex-shrink-0 gap-3 sm:flex-col sm:items-stretch">
                 <button
                   onClick={handleSave}
                   className="flex items-center justify-center gap-2 rounded-xl border-2 border-gray-100 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-gray-200"
@@ -317,14 +317,14 @@ export default function InternshipDetailsScreen() {
         {/* ── Body grid ──────────────────────────────────── */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Left column */}
-          <div className="space-y-8 rounded-2xl bg-white p-6 shadow-sm sm:p-8 lg:col-span-2">
+          <div className="space-y-8 rounded-2xl bg-white p-6 shadow-sm sm:p-8 lg:col-span-2 overflow-hidden">
             {/* Overview */}
             <section>
               <h2 className="flex items-center gap-2 text-xl font-extrabold text-gray-900">
                 <i className="fas fa-info-circle text-emerald-500 text-lg" />
                 Overview
               </h2>
-              <p className="mt-4 text-sm leading-relaxed text-gray-600 whitespace-pre-wrap">
+              <p className="mt-4 text-sm leading-relaxed text-gray-600 whitespace-pre-wrap break-words min-w-0">
                 {internship.description}
               </p>
             </section>
@@ -358,15 +358,15 @@ export default function InternshipDetailsScreen() {
                 </h2>
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {internship.technicalSkills?.map((skill) => (
-                    <div key={skill} className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
-                      <i className="fas fa-check-circle mt-0.5 text-emerald-500" />
-                      <p className="text-sm leading-relaxed text-gray-600">{skill}</p>
+                    <div key={skill} className="flex items-start gap-3 rounded-xl bg-gray-50 p-4 overflow-hidden">
+                      <i className="fas fa-check-circle mt-0.5 text-emerald-500 shrink-0" />
+                      <p className="text-sm leading-relaxed text-gray-600 break-words min-w-0">{skill}</p>
                     </div>
                   ))}
                   {internship.softSkills?.map((skill) => (
-                    <div key={skill} className="flex items-start gap-3 rounded-xl bg-gray-50 p-4">
-                      <i className="fas fa-check-circle mt-0.5 text-emerald-500" />
-                      <p className="text-sm leading-relaxed text-gray-600">{skill}</p>
+                    <div key={skill} className="flex items-start gap-3 rounded-xl bg-gray-50 p-4 overflow-hidden">
+                      <i className="fas fa-check-circle mt-0.5 text-emerald-500 shrink-0" />
+                      <p className="text-sm leading-relaxed text-gray-600 break-words min-w-0">{skill}</p>
                     </div>
                   ))}
                 </div>
@@ -377,7 +377,7 @@ export default function InternshipDetailsScreen() {
           {/* Right column */}
           <div className="space-y-6">
             {/* Quick Facts */}
-            <div className="rounded-2xl bg-gray-100 p-6">
+            <div className="rounded-2xl bg-gray-100 p-6 overflow-hidden">
               <h3 className="mb-5 flex items-center gap-2 text-base font-extrabold text-gray-900">
                 <i className="fas fa-info-circle text-emerald-500" />
                 Quick Facts
@@ -387,27 +387,27 @@ export default function InternshipDetailsScreen() {
                   <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white text-emerald-500 shadow-sm">
                     <i className="fas fa-clock text-sm" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Work Hours</p>
-                    <p className="text-sm font-bold text-gray-900">{internship.workingTime || 'Not specified'}</p>
+                    <p className="text-sm font-bold text-gray-900 break-words">{internship.workingTime || 'Not specified'}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white text-emerald-500 shadow-sm">
                     <i className="fas fa-map-marker-alt text-sm" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Location</p>
-                    <p className="text-sm font-bold text-gray-900">{company?.address || locationLabels[internship.location] || internship.location}</p>
+                    <p className="text-sm font-bold text-gray-900 break-words">{company?.address || locationLabels[internship.location] || internship.location}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white text-emerald-500 shadow-sm">
                     <i className="fas fa-calendar text-sm" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Posted</p>
-                    <p className="text-sm font-bold text-gray-900">
+                    <p className="text-sm font-bold text-gray-900 break-words">
                       {internship.createdAt
                         ? new Date(internship.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
                         : 'Not specified'}
@@ -443,9 +443,9 @@ export default function InternshipDetailsScreen() {
             </div>
 
             {/* CV Builder card */}
-            <div className="rounded-2xl bg-gray-900 p-6 text-white">
+            <div className="rounded-2xl bg-gray-900 p-6 text-white overflow-hidden">
               <h3 className="mb-2 text-base font-extrabold">Need Help with your CV?</h3>
-              <p className="mb-4 text-sm leading-relaxed text-gray-300">
+              <p className="mb-4 text-sm leading-relaxed text-gray-300 break-words min-w-0">
                 Our AI-powered CV builder is specifically designed for Egyptian students looking for top-tier internships.
               </p>
               <button className="w-full rounded-xl bg-white/10 py-2.5 text-sm font-semibold text-white transition hover:bg-white/20">
@@ -458,8 +458,8 @@ export default function InternshipDetailsScreen() {
         {/* ── About company ──────────────────────────────── */}
         {company && (
           <div className="mt-6 overflow-hidden rounded-2xl bg-white shadow-sm">
-            <div className="flex items-center justify-between bg-gray-900 px-6 py-5 sm:px-8">
-              <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between bg-gray-900 px-6 py-5 sm:px-8 overflow-hidden">
+              <div className="flex items-center gap-4 min-w-0">
                 <MediaImage
                   src={getCompanyImgUrl(company.logo)}
                   alt={company.name}
@@ -467,9 +467,9 @@ export default function InternshipDetailsScreen() {
                   imgClassName="w-full h-full object-cover"
                   iconClassName="fas fa-building text-lg text-gray-300"
                 />
-                <div>
-                  <h3 className="text-lg font-extrabold text-white">About {company.name}</h3>
-                  <div className="mt-1 flex items-center gap-4 text-xs text-gray-300">
+                <div className="min-w-0">
+                  <h3 className="text-lg font-extrabold text-white break-words">About {company.name}</h3>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-300">
                     {company.numberOfEmployees && (
                       <span className="flex items-center gap-1.5">
                         <i className="fas fa-users text-xs" />
@@ -485,7 +485,7 @@ export default function InternshipDetailsScreen() {
                   </div>
                 </div>
               </div>
-              <Link href={`/companies/${company._id}`}>
+              <Link href={`/companies/${company._id}`} className="shrink-0">
                 <button className="rounded-xl bg-white/10 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/20">
                   View Profile
                 </button>
@@ -494,7 +494,7 @@ export default function InternshipDetailsScreen() {
 
             <div className="px-6 py-6 sm:px-8">
               {company.description && (
-                <p className="text-sm italic leading-relaxed text-gray-500">
+                <p className="text-sm italic leading-relaxed text-gray-500 break-words min-w-0">
                   &ldquo;{company.description}&rdquo;
                 </p>
               )}
@@ -502,8 +502,8 @@ export default function InternshipDetailsScreen() {
               {moreInternships.length > 0 && (
                 <>
                   <div className="my-6 h-px bg-gray-100" />
-                  <div className="mb-4 flex items-center gap-2">
-                    <p className="text-sm font-extrabold uppercase tracking-wide text-gray-900">
+                  <div className="mb-4 flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-extrabold uppercase tracking-wide text-gray-900 break-words">
                       More Opportunities at {company.name}
                     </p>
                     <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
@@ -513,8 +513,8 @@ export default function InternshipDetailsScreen() {
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                     {moreInternships.map((intern) => (
                       <Link key={intern._id} href={`/internships/${intern._id}`}>
-                        <div className="cursor-pointer rounded-xl border border-gray-100 p-4 transition hover:border-emerald-200 hover:shadow-sm">
-                          <p className="text-sm font-bold text-gray-900">{intern.title}</p>
+                        <div className="cursor-pointer rounded-xl border border-gray-100 p-4 transition hover:border-emerald-200 hover:shadow-sm overflow-hidden">
+                          <p className="text-sm font-bold text-gray-900 break-words">{intern.title}</p>
                           <div className="mt-2 flex items-center gap-3 text-xs text-gray-400">
                             <span className="flex items-center gap-1">
                               <i className="fas fa-clock text-xs" />
