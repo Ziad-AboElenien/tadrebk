@@ -100,7 +100,7 @@ export default function StudentProfileScreen() {
         bio: data.bio || undefined,
         headline: data.headline || undefined,
         address: data.address || undefined,
-        dateOfBirth: data.dateOfBirth || undefined,
+        dateOfBirth: data.dateOfBirth ? `${data.dateOfBirth}T00:00:00.000Z` : undefined,
         gender: data.gender || undefined,
         skills: data.skills ? data.skills.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
         categories: data.categories as Category[] | undefined,
@@ -533,7 +533,7 @@ export default function StudentProfileScreen() {
             {user.bio && (
               <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
                 <h2 className="font-bold text-dark text-lg mb-3 flex items-center gap-2"><i className="fas fa-user-pen text-primary text-base" />About</h2>
-                <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{user.bio}</p>
+                <p className="text-gray-600 leading-relaxed whitespace-pre-wrap break-words">{user.bio}</p>
               </div>
             )}
             {user.skills && user.skills.length > 0 && (
@@ -598,9 +598,15 @@ export default function StudentProfileScreen() {
                       <p className="font-medium text-dark text-sm truncate">{course.name}</p>
                     </div>
                     {course.certificate?.secure_url && (
-                      <a href={course.certificate.secure_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 shrink-0">
+                      <button onClick={() => {
+                        const url = course.certificate?.certificateUrl || course.certificate?.secure_url;
+                        if (!url) return;
+                        const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(url);
+                        if (isImage) { window.open(url, '_blank'); return; }
+                        openFileProxy(url);
+                      }} className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 shrink-0 cursor-pointer">
                         <i className="fas fa-eye text-xs" /> View certificate
-                      </a>
+                      </button>
                     )}
                   </div>
                 ))}</div>
@@ -608,22 +614,7 @@ export default function StudentProfileScreen() {
                 <p className="text-sm text-gray-400">No courses yet. Add your first course to show it on your profile.</p>
               )}
             </div>
-            <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
-              <h2 className="font-bold text-dark text-lg mb-4 flex items-center gap-2"><i className="fas fa-cloud-arrow-up text-primary text-base" />Media</h2>
-              <div className="flex flex-wrap gap-3">
-                <Button variant="outline" size="sm" loading={uploadingProfile} onClick={openProfilePicker}><i className="fas fa-image text-xs" /> Change photo</Button>
-                <Button variant="outline" size="sm" loading={uploadingCover} onClick={openCoverPicker}><i className="fas fa-image text-xs" /> Change cover</Button>
-                <input ref={resumeRef} type="file" accept=".pdf" onChange={handleResumeUpload} className="hidden" />
-                <Button variant="outline" size="sm" loading={uploadingResume} onClick={() => resumeRef.current?.click()}><i className="fas fa-file-pdf text-xs" /> {resumeUrl ? 'Replace resume' : 'Upload resume'}</Button>
-              </div>
-              {resumeUrl && (
-                <div className="mt-4 flex items-center gap-3 rounded-xl bg-gray-50 p-3">
-                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-500"><i className="fas fa-file-pdf" /></span>
-                  <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-gray-900 truncate">Resume uploaded</p><p className="text-xs text-gray-400">Ready for employers</p></div>
-                   <button type="button" onClick={() => openFileProxy(resumeUrl)} className="text-emerald-500 hover:text-emerald-600"><i className="fas fa-external-link-alt" /></button>
-                </div>
-              )}
-            </div>
+
           </>
         )}
 

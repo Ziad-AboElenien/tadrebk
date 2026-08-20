@@ -20,12 +20,19 @@ export interface Experience {
   feedbackCreatedAt: string | null;
 }
 
+export interface CourseCertificate {
+  secure_url?: string;
+  certificateUrl?: string;
+  public_id?: string;
+}
+
 export interface Course {
   _id?: string;
   name: string;
   link?: string;
   attachmentUrl?: string;
   attachmentType?: 'image' | 'pdf';
+  certificate?: CourseCertificate;
 }
 
 export interface CloudinaryResource {

@@ -234,14 +234,6 @@ export default function Navbar() {
                         My Profile
                       </Link>
                       <Link
-                        href="/my-applications"
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                      >
-                        <i className="fas fa-paper-plane w-4 text-center text-gray-400" />
-                        My Applications
-                      </Link>
-                      <Link
                         href="/activity"
                         onClick={() => setUserMenuOpen(false)}
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
@@ -361,14 +353,6 @@ export default function Navbar() {
                         My Profile
                       </Link>
                       <Link
-                        href="/dashboard"
-                        onClick={() => { setUserMenuOpen(false); setMenuOpen(false); }}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                      >
-                        <i className="fas fa-paper-plane w-4 text-center text-gray-400" />
-                        My Applications
-                      </Link>
-                      <Link
                         href="/activity"
                         onClick={() => { setUserMenuOpen(false); setMenuOpen(false); }}
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
@@ -480,9 +464,6 @@ export default function Navbar() {
                     <>
                       <Link href="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                         <i className="fas fa-user w-5 text-center text-gray-400" /> My Profile
-                      </Link>
-                      <Link href="/my-applications" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
-                        <i className="fas fa-paper-plane w-5 text-center text-gray-400" /> My Applications
                       </Link>
                       <Link href="/activity" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                         <i className="fas fa-chart-line w-5 text-center text-gray-400" /> Activity

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/store';
@@ -8,22 +8,19 @@ import { logout } from '@/store/authSlice';
 import { applicationService, Application } from '@/features/student/services/application.service';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { Internship } from '@/features/internship/types';
-import { getCompanyIdFromInternship } from '@/features/internship/types';
 import { getCompanyImgUrl } from '@/features/company/types';
 import { getUserImgUrl } from '@/features/student/types';
 import { useBlankImage } from '@/lib/use-blank-image';
-import { openFileProxy } from '@/lib/file-proxy';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import Pagination from '@/components/ui/Pagination';
-import { userService } from '@/features/student/services/user.service';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
 const LS_SAVED = 'tadrebk_saved_internships';
 
-type FilterStatus = 'all' | 'pending' | 'accepted' | 'rejected';
+type FilterStatus = 'all' | 'pending' | 'accepted' | 'rejected' | 'completed';
 
 export default function StudentDashboardScreen() {
   const router = useRouter();
@@ -35,11 +32,6 @@ export default function StudentDashboardScreen() {
   const [savedInternships, setSavedInternships] = useState<Internship[]>([]);
   const [loadingSaved, setLoadingSaved] = useState(true);
 
-  // Resume
-  const [uploadingResume, setUploadingResume] = useState(false);
-  const [resumeUrl, setResumeUrl] = useState<string | null>((user as any)?.resume || null);
-  const resumeRef = useRef<HTMLInputElement>(null);
-
   // Applications
   const [applications, setApplications] = useState<Application[]>([]);
   const [loadingApps, setLoadingApps] = useState(true);
@@ -47,6 +39,22 @@ export default function StudentDashboardScreen() {
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const FILTER_KEYS = ['all', 'pending', 'accepted', 'rejected', 'completed'] as const;
+  const filterBtnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const filterContainerRef = useRef<HTMLDivElement>(null);
+  const [pillStyle, setPillStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
+
+  useEffect(() => {
+    const idx = FILTER_KEYS.indexOf(filter);
+    const btn = filterBtnRefs.current[idx];
+    const container = filterContainerRef.current;
+    if (btn && container) {
+      const containerRect = container.getBoundingClientRect();
+      const btnRect = btn.getBoundingClientRect();
+      setPillStyle({ left: btnRect.left - containerRect.left, width: btnRect.width });
+    }
+  }, [filter]);
 
   useEffect(() => {
     (async () => {
@@ -68,10 +76,14 @@ export default function StudentDashboardScreen() {
     try {
       setLoadingApps(true);
       const params: Record<string, any> = { page, limit: 10 };
-      if (filter !== 'all') params.status = filter;
+      if (filter !== 'all' && filter !== 'completed') params.status = filter;
       const result = await applicationService.getUserApplications(userId, params);
-      setApplications(result.applications);
-      setTotalPages(result.pagination.pages);
+      let apps = result.applications;
+      if (filter === 'completed') {
+        apps = apps.filter((a) => a.status === 'accepted' && a.completed);
+      }
+      setApplications(apps);
+      setTotalPages(filter === 'completed' ? 1 : result.pagination.pages);
     } catch { toastHelper.error('Failed to load applications'); }
     finally { setLoadingApps(false); }
   }, [userId, page, filter]);
@@ -88,14 +100,6 @@ export default function StudentDashboardScreen() {
     } catch (err) { toastHelper.error(getErrorMessage(err)); }
     finally { setCancellingId(null); }
   }, [fetchApplications]);
-
-  async function handleResumeUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingResume(true);
-    try { const url = await userService.uploadResume(file); setResumeUrl(url); toastHelper.success('Resume uploaded!'); }
-    catch { toastHelper.error('Failed to upload resume'); } finally { setUploadingResume(false); if (resumeRef.current) resumeRef.current.value = ''; }
-  }
 
   const handleSignOut = useCallback(() => {
     dispatch(logout());
@@ -116,32 +120,32 @@ export default function StudentDashboardScreen() {
     return (
       <div className="min-h-screen bg-gray-50">
         <main className="mx-auto max-w-6xl px-4 sm:px-8 py-8">
-          <div className="mb-6"><div className="h-8 w-64 bg-gray-200 rounded-full animate-pulse" /><div className="h-4 w-80 bg-gray-100 rounded-full animate-pulse mt-2" /></div>
-          <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
-            <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
-              <div className="h-20 bg-gray-100 animate-pulse" />
-              <div className="px-6 pb-6">
-                <div className="-mt-10 flex flex-wrap items-end justify-between gap-4">
-                  <div className="flex items-end gap-4 flex-wrap">
-                    <div className="h-20 w-20 flex-shrink-0 rounded-2xl border-4 border-white bg-gray-200 animate-pulse" />
-                    <div className="pb-1 space-y-2">
-                      <div className="h-5 w-40 bg-gray-200 rounded-full animate-pulse" />
-                      <div className="h-3 w-56 bg-gray-100 rounded-full animate-pulse" />
-                    </div>
-                  </div>
+          <div className="mb-8 flex items-center justify-between">
+            <div><div className="h-8 w-64 bg-gray-200 rounded-full animate-pulse" /><div className="h-4 w-80 bg-gray-100 rounded-full animate-pulse mt-2" /></div>
+            <div className="h-10 w-40 bg-emerald-200 rounded-xl animate-pulse" />
+          </div>
+        <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px] items-start">
+            <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+              <div className="h-36 bg-gradient-to-r from-emerald-200 to-teal-200 animate-pulse" />
+              <div className="px-8 pb-8 -mt-16 text-center">
+                <div className="flex justify-center"><div className="h-32 w-32 rounded-[1.75rem] border-4 border-white bg-gray-200 animate-pulse" /></div>
+                <div className="mt-5 h-7 w-48 bg-gray-200 rounded-full animate-pulse mx-auto" />
+                <div className="mt-2 h-4 w-36 bg-gray-100 rounded-full animate-pulse mx-auto" />
+                <div className="mt-6 inline-flex gap-2">
+                  {[1,2,3].map((i) => <div key={i} className="h-10 w-24 bg-gray-100 rounded-xl animate-pulse" />)}
+                </div>
+                <div className="mt-6 grid grid-cols-3 gap-3">
+                  {[1,2,3].map((i) => <div key={i} className="h-16 bg-gray-50 rounded-2xl animate-pulse" />)}
                 </div>
               </div>
             </div>
-            <div className="rounded-2xl bg-white p-6 shadow-sm space-y-3">
-              <div className="h-5 w-28 bg-gray-200 rounded-full animate-pulse" />
-              <div className="h-10 bg-gray-100 rounded-xl animate-pulse" />
-              <div className="h-10 bg-gray-100 rounded-xl animate-pulse" />
-              <div className="h-10 bg-gray-100 rounded-xl animate-pulse" />
+            <div className="flex flex-col gap-6">
+              <div className="rounded-3xl bg-white p-6 shadow-sm"><div className="h-5 w-28 bg-gray-200 rounded-full animate-pulse" /><div className="mt-4 space-y-3">{[1,2].map((i) => <div key={i} className="h-12 bg-gray-50 rounded-xl animate-pulse" />)}</div></div>
+              <div className="rounded-3xl bg-white p-6 shadow-sm mt-auto"><div className="h-12 bg-gray-50 rounded-xl animate-pulse" /></div>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-            {[0,1,2].map((i) => <div key={i} className="h-28 bg-white border border-gray-100 rounded-2xl shadow-sm animate-pulse" />)}
-          </div>
+          <div className="flex gap-2 mb-6">{[1,2,3,4,5].map((i) => <div key={i} className="h-9 w-20 bg-gray-200 rounded-full animate-pulse" />)}</div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">{[1,2].map((i) => <div key={i} className="h-32 bg-white border border-gray-100 rounded-2xl shadow-sm animate-pulse" />)}</div>
         </main>
       </div>
     );
@@ -159,18 +163,20 @@ export default function StudentDashboardScreen() {
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="mx-auto max-w-6xl px-4 sm:px-8 py-8">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        {/* Welcome header */}
+        <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold text-gray-900">Welcome back, {firstName}!</h1>
             <p className="mt-1 text-sm text-gray-400">
               {savedCount > 0 ? `You have ${savedCount} saved internships. Keep applying!` : 'Start exploring internships that match your skills.'}
             </p>
           </div>
-          <div className="flex gap-3">
-            <Link href="/internships"><button className="rounded-xl border-2 border-gray-100 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-gray-200">Browse More</button></Link>
-          </div>
+          <Link href="/internships" className="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-600 hover:shadow-md">
+            <i className="fas fa-search mr-2" />Browse Internships
+          </Link>
         </div>
 
+        {/* Email verification */}
         {user.isConfirmed === false && (
           <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
@@ -180,68 +186,104 @@ export default function StudentDashboardScreen() {
                 <p className="text-xs text-amber-700 mt-0.5">Please confirm your email address to receive notifications and acceptance emails.</p>
               </div>
             </div>
-            <Link
-              href="/confirm-email"
-              className="shrink-0 rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700 transition shadow-sm"
-            >
+            <Link href="/confirm-email" className="shrink-0 rounded-lg bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700 transition shadow-sm">
               Verify Now
             </Link>
           </div>
         )}
 
+        {/* ── Profile Card + Quick Links ── */}
         <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
-          <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
-            <div className="h-20 bg-gradient-to-r from-emerald-400 to-emerald-600" />
-            <div className="px-6 pb-6">
-              <div className="-mt-10 flex flex-wrap items-end justify-between gap-4">
-                <div className="flex items-end gap-4 flex-wrap">
-                  <div className="relative h-20 w-20 flex-shrink-0 rounded-2xl border-4 border-white bg-gray-900 overflow-hidden flex items-center justify-center text-white text-2xl font-bold">
-                    {profileBlank.showImage ? <img src={getUserImgUrl(user.profilePicture)!} alt="" className="w-full h-full object-cover" onLoad={profileBlank.onImgLoad} /> : <i className="fas fa-user text-2xl text-gray-200" />}
-                    <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
-                  </div>
-                  <div className="pb-1">
-                    <h2 className="text-xl font-extrabold text-gray-900">{displayName}</h2>
-                    <p className="flex items-center gap-1.5 text-sm text-gray-400"><i className="fas fa-briefcase text-xs" />{education?.institution || 'Not specified'}</p>
+          {/* Profile Card */}
+          <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+            <div className="relative bg-gradient-to-br from-emerald-500 via-emerald-400 to-teal-500 px-8 pt-10 pb-20">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.15),transparent_50%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.08),transparent_50%)]" />
+            </div>
+            <div className="px-8 pb-8 -mt-20 text-center">
+              {/* Avatar */}
+              <div className="flex justify-center">
+                <div className="relative">
+                  <div className="absolute -inset-1.5 rounded-[2rem] bg-gradient-to-br from-emerald-400 to-teal-500 opacity-60 blur-sm" />
+                  <div className="relative h-32 w-32 flex-shrink-0 rounded-[1.75rem] border-4 border-white bg-gray-900 overflow-hidden shadow-2xl">
+                    {profileBlank.showImage ? (
+                      <img src={getUserImgUrl(user.profilePicture)!} alt="" className="w-full h-full object-cover" onLoad={profileBlank.onImgLoad} />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600">
+                        <i className="fas fa-user text-4xl text-white/80" />
+                      </div>
+                    )}
+                    <span className="absolute bottom-2 right-2 h-4 w-4 rounded-full border-2 border-white bg-emerald-500 shadow-sm" />
                   </div>
                 </div>
-                <Link href="/profile" className="pb-1 text-sm font-semibold text-emerald-500 hover:underline">Edit Profile</Link>
               </div>
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-5">
-                <div className="min-w-0"><p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Major</p><p className="mt-1 text-sm font-bold text-gray-900 truncate">{education?.field || 'Not specified'}</p></div>
-                <div className="min-w-0"><p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Graduation</p><p className="mt-1 text-sm font-bold text-gray-900 truncate">{education?.endDate ? `Class of ${new Date(education.endDate).getFullYear()}` : 'Not specified'}</p></div>
-                <div className="min-w-0"><p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Email</p><p className="mt-1 text-sm font-bold text-gray-900 truncate">{user?.email || '—'}</p></div>
+
+              {/* Name & info */}
+              <h2 className="mt-5 text-2xl sm:text-3xl font-black text-gray-900 leading-tight">{displayName}</h2>
+              <p className="mt-1.5 text-sm text-gray-400">{education?.institution || 'Not specified'}</p>
+
+              {/* Info grid */}
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                <div className="rounded-2xl bg-gray-50 px-4 py-3.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Major</p>
+                  <p className="mt-1 text-sm font-bold text-gray-900 truncate">{education?.field || 'Not specified'}</p>
+                </div>
+                <div className="rounded-2xl bg-gray-50 px-4 py-3.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Graduation</p>
+                  <p className="mt-1 text-sm font-bold text-gray-900 truncate">{education?.endDate ? `Class of ${new Date(education.endDate).getFullYear()}` : 'Not specified'}</p>
+                </div>
+                <div className="rounded-2xl bg-gray-50 px-4 py-3.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Email</p>
+                  <p className="mt-1 text-sm font-bold text-gray-900 truncate">{user?.email || '—'}</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-            <h3 className="text-base font-extrabold text-gray-900">Quick Links</h3>
-            <div className="mt-4 space-y-3">
-              <Link href="/profile" className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 text-sm font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition"><i className="fas fa-user-pen text-emerald-500 w-5 text-center" />Edit Profile</Link>
-              <Link href="/internships" className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 text-sm font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition"><i className="fas fa-search text-emerald-500 w-5 text-center" />Browse Internships</Link>
-              <Link href="/profile" className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 text-sm font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition"><i className="fas fa-cog text-emerald-500 w-5 text-center" />Account Settings</Link>
+          {/* Quick Links */}
+          <div className="flex flex-col gap-6">
+            <div className="rounded-3xl bg-white p-6 shadow-sm">
+              <h3 className="text-base font-extrabold text-gray-900">Quick Links</h3>
+              <div className="mt-4 space-y-3">
+                <Link href="/profile" className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 text-sm font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500"><i className="fas fa-user text-xs" /></span>
+                  View Profile
+                </Link>
+                <Link href="/internships" className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 text-sm font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500"><i className="fas fa-search text-xs" /></span>
+                  Browse Internships
+                </Link>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="rounded-3xl bg-white/60 backdrop-blur-xl border border-white/70 shadow-[0_8px_32px_rgba(0,0,0,0.06)] p-5">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 text-center rounded-2xl bg-white/80 backdrop-blur-sm px-3 py-3 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                  <p className="text-lg font-extrabold text-gray-900">{applications.length || 0}</p>
+                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mt-0.5">Applied</p>
+                </div>
+                <button onClick={() => document.getElementById('saved-internships')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="flex-1 text-center rounded-2xl bg-white/80 backdrop-blur-sm px-3 py-3 shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition hover:shadow-[0_4px_16px_rgba(16,185,129,0.12)] cursor-pointer">
+                  <p className="text-lg font-extrabold text-gray-900">{savedCount}</p>
+                  <p className="text-[11px] font-semibold text-emerald-500 uppercase tracking-wide mt-0.5">Saved</p>
+                </button>
+                <div className="flex-1 text-center rounded-2xl bg-white/80 backdrop-blur-sm px-3 py-3 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+                  <p className="text-lg font-extrabold text-gray-900">{applications.filter((a) => a.status === 'accepted' && a.completed).length}</p>
+                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mt-0.5">Done</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Sign out */}
+            <div className="rounded-3xl bg-white p-6 shadow-sm mt-auto">
+              <button onClick={handleSignOut} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-50 py-3 text-sm font-semibold text-red-500 transition hover:bg-red-50">
+                <i className="fas fa-sign-out-alt" /> Sign Out
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-3">
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <div className="flex items-start justify-between"><p className="text-sm text-gray-400">Total Applied</p><span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-500"><i className="fas fa-paper-plane" /></span></div>
-            <p className="mt-2 text-3xl font-extrabold text-gray-900">{applications.length || '—'}</p>
-          </div>
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <div className="flex items-start justify-between"><p className="text-sm text-gray-400">Resume</p><span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-500"><i className="fas fa-file-pdf" /></span></div>
-            <p className="mt-2 text-3xl font-extrabold text-gray-900">{resumeUrl ? '✓' : '—'}</p>
-            <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-400"><i className="fas fa-clock text-xs" /> {resumeUrl ? 'Uploaded' : 'Not uploaded'}</p>
-          </div>
-          <div className="rounded-2xl bg-white p-5 shadow-sm">
-            <div className="flex items-start justify-between"><p className="text-sm text-gray-400">Saved Roles</p><span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-500"><i className="fas fa-bookmark" /></span></div>
-            <p className="mt-2 text-3xl font-extrabold text-gray-900">{savedCount}</p>
-            <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-400"><i className="fas fa-clock text-xs" /> Stored on your device</p>
-          </div>
-        </div>
-
-        {/* Applications section */}
+        {/* ── Applications section ── */}
         <div className="mb-10">
           <div className="mb-5 flex items-center justify-between">
             <div>
@@ -250,26 +292,36 @@ export default function StudentDashboardScreen() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-            {(['all', 'pending', 'accepted', 'rejected'] as const).map((key) => (
-              <button
-                key={key}
-                onClick={() => setFilter(key)}
-                className={`bg-white border rounded-2xl p-5 shadow-sm text-left transition-all ${
-                  filter === key ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-gray-100 hover:border-gray-200'
-                }`}
-              >
-                <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wide">{key === 'all' ? 'All' : key}</p>
-              </button>
-            ))}
+          {/* Filter tabs */}
+          <div ref={filterContainerRef} className="relative mb-6 rounded-2xl bg-white/50 backdrop-blur-xl border border-white/70 shadow-[0_8px_32px_rgba(0,0,0,0.06)] p-2">
+            <div
+              className="absolute top-2 bottom-2 rounded-xl bg-white/90 backdrop-blur-sm shadow-[0_2px_12px_rgba(16,185,129,0.15)] border border-emerald-100 transition-all duration-300 ease-out"
+              style={{ left: pillStyle.left, width: pillStyle.width }}
+            />
+            <div className="relative flex w-full gap-1.5">
+              {FILTER_KEYS.map((key, i) => (
+                <button
+                  key={key}
+                  ref={(el) => { filterBtnRefs.current[i] = el; }}
+                  onClick={() => setFilter(key)}
+                  className={`flex-1 shrink-0 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors duration-200 ${
+                    filter === key ? 'text-emerald-600' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {key === 'all' ? 'All' : key.charAt(0).toUpperCase() + key.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
 
           {loadingApps ? (
             <div className="flex justify-center py-20"><Spinner /></div>
           ) : applications.length === 0 ? (
             <div className="bg-white border border-gray-100 rounded-3xl shadow-sm text-center py-16 text-gray-400">
-              <i className="fas fa-paper-plane text-3xl mb-3 block" />
-              <p className="font-semibold">No applications</p>
+              <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-paper-plane text-2xl text-gray-300" />
+              </div>
+              <p className="font-semibold text-gray-600">No applications</p>
               <p className="text-sm mt-1">
                 {filter === 'all' ? "You haven't applied to any internships yet." : `No ${filter} applications.`}
               </p>
@@ -290,47 +342,52 @@ export default function StudentDashboardScreen() {
                   const companyLogo = (intern as any)?.companyId?.logo;
                   const logoUrl = getCompanyImgUrl(companyLogo);
                   return (
-                  <div key={app._id} className="p-6 sm:p-8">
+                  <div key={app._id} className="p-6 sm:p-8 hover:bg-gray-50/50 transition-colors">
                     <div className="flex items-start gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white font-bold shrink-0 text-lg">
-                        {title?.[0]?.toUpperCase() || '?'}
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold shrink-0 text-sm">
+                        {companyLogo && logoUrl ? (
+                          <img src={logoUrl} alt="" className="w-full h-full rounded-xl object-contain p-1" />
+                        ) : (
+                          title?.[0]?.toUpperCase() || '?'
+                        )}
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <Link
-                              href={`/internships/${internId}`}
-                              className="font-bold text-dark hover:text-primary transition-colors truncate block text-lg"
-                            >
+                            <Link href={`/internships/${internId}`} className="font-bold text-gray-900 hover:text-emerald-600 transition-colors block text-base leading-snug">
                               {title}
                             </Link>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-gray-500">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-400">
                               {companyName && (
-                                <span className="flex items-center gap-1">
-                                  {logoUrl && <img src={logoUrl} alt="" className="w-4 h-4 rounded object-contain" />}
-                                  {companyName}
-                                </span>
+                                <span className="flex items-center gap-1"><i className="fas fa-building text-[10px]" />{companyName}</span>
                               )}
                               {location && (
-                                <span className="flex items-center gap-1">
-                                  <i className="fas fa-location-dot text-xs text-gray-300" /> {location}
-                                </span>
+                                <span className="flex items-center gap-1"><i className="fas fa-location-dot text-[10px]" />{location}</span>
                               )}
                               {workingTime && (
-                                <span className="flex items-center gap-1">
-                                  <i className="fas fa-clock text-xs text-gray-300" /> {workingTime}
-                                </span>
+                                <span className="flex items-center gap-1"><i className="fas fa-clock text-[10px]" />{workingTime}</span>
                               )}
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center gap-2 shrink-0 flex-wrap">
                             <Badge variant={
-                              app.status === 'accepted' ? 'success' : app.status === 'rejected' ? 'danger' : 'warning'
+                              app.status === 'accepted' && app.completed ? 'success' :
+                              app.status === 'accepted' ? 'success' :
+                              app.status === 'rejected' ? 'danger' : 'warning'
                             }>
-                              {app.status}
+                              {app.status === 'accepted' && app.completed ? 'completed' : app.status}
                             </Badge>
+
+                            {app.status === 'accepted' && app.completed && (
+                              <Link
+                                href={`/certificate?name=${encodeURIComponent(displayName)}&internshipId=${internId}`}
+                                className="rounded-lg bg-amber-500 px-3 py-1.5 text-[11px] font-bold text-white shadow-sm hover:bg-amber-600 transition"
+                              >
+                                <i className="fas fa-certificate mr-1" /> Certificate
+                              </Link>
+                            )}
 
                             {app.status === 'pending' && (
                               <Button
@@ -347,41 +404,21 @@ export default function StudentDashboardScreen() {
                         </div>
 
                         {app.coverLetter && (
-                          <div className="mt-4 bg-gray-50 rounded-xl p-4">
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cover Letter</p>
-                            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{app.coverLetter}</p>
+                          <div className="mt-3 bg-gray-50 rounded-xl p-4">
+                            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Cover Letter</p>
+                            <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed line-clamp-3">{app.coverLetter}</p>
                           </div>
                         )}
 
-                        {app.resume?.secure_url && (
-                          <button
-                            type="button"
-                            onClick={() => openFileProxy(app.resume?.secure_url)}
-                            className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-red-500 hover:text-red-600 transition-colors"
-                          >
-                            <i className="fas fa-file-pdf text-xs" /> View Resume
-                          </button>
-                        )}
-
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs text-gray-400">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5 text-[11px] text-gray-400">
                           {app.createdAt && (
-                            <span>
-                              Applied {new Date(app.createdAt).toLocaleDateString('en-US', {
-                                year: 'numeric', month: 'long', day: 'numeric',
-                              })}
-                            </span>
+                            <span>Applied {new Date(app.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                           )}
                           {app.updatedAt && app.updatedAt !== app.createdAt && (
-                            <span>
-                              Updated {new Date(app.updatedAt).toLocaleDateString('en-US', {
-                                year: 'numeric', month: 'long', day: 'numeric',
-                              })}
-                            </span>
+                            <span>Updated {new Date(app.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                           )}
                           {app.reviewedBy && (
-                            <span className="flex items-center gap-1">
-                              <i className="fas fa-check-circle text-xs" /> Reviewed
-                            </span>
+                            <span className="flex items-center gap-1"><i className="fas fa-check-circle" /> Reviewed</span>
                           )}
                         </div>
                       </div>
@@ -400,52 +437,54 @@ export default function StudentDashboardScreen() {
           )}
         </div>
 
-        {/* Saved internships */}
+        {/* ── Saved Internships ── */}
         {savedInternships.length > 0 && (
-          <section className="mb-10">
+          <section id="saved-internships" className="mb-10">
             <div className="mb-5 flex items-center justify-between">
-              <div><h2 className="text-xl font-extrabold text-gray-900">Saved Internships</h2><p className="text-sm text-gray-400">Roles you&apos;ve bookmarked for later.</p></div>
-              <Link href="/internships" className="text-sm font-semibold text-primary hover:underline">Browse All</Link>
+              <div>
+                <h2 className="text-xl font-extrabold text-gray-900">Saved Internships</h2>
+                <p className="text-sm text-gray-400">Roles you&apos;ve bookmarked for later.</p>
+              </div>
+              <Link href="/internships" className="text-sm font-semibold text-emerald-500 hover:underline">Browse All</Link>
             </div>
             {loadingSaved ? (
               <div className="flex justify-center py-10"><Spinner /></div>
             ) : (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {savedInternships.map((intern) => {
-                const cid = getCompanyIdFromInternship(intern);
                 const companyObj = typeof intern.companyId === 'object' ? (intern.companyId as any) : null;
                 const companyName = companyObj?.name || '';
                 const logoUrl = companyObj ? getCompanyImgUrl(companyObj.logo) : null;
                 return (
                 <Link key={intern._id} href={`/internships/${intern._id}`}>
-                  <div className="rounded-2xl bg-white p-5 shadow-sm hover:shadow-md transition cursor-pointer h-full flex flex-col">
+                  <div className="group rounded-2xl bg-white border border-gray-100 p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer h-full flex flex-col">
                     <div className="flex items-center gap-3">
                       {logoUrl ? (
                         <img src={logoUrl} alt="" className="w-10 h-10 rounded-xl object-contain border border-gray-100" />
                       ) : (
-                        <div className="w-10 h-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                        <div className="w-10 h-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-sm">
                           {intern.title[0]?.toUpperCase() || '?'}
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-gray-900 truncate">{intern.title}</p>
+                        <p className="text-sm font-bold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">{intern.title}</p>
                         <p className="text-xs text-gray-400 truncate">{companyName || 'Internship'}</p>
                       </div>
                     </div>
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-3 flex flex-wrap gap-1.5">
                       {intern.location && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-500">
-                          <i className="fas fa-map-marker-alt text-xs" />{intern.location === 'on-site' ? 'On-site' : intern.location === 'remote' ? 'Remote' : 'Hybrid'}
+                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-500">
+                          <i className="fas fa-map-marker-alt text-[9px]" />{intern.location === 'on-site' ? 'On-site' : intern.location === 'remote' ? 'Remote' : 'Hybrid'}
                         </span>
                       )}
                       {intern.workingTime && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-500">
-                          <i className="fas fa-clock text-xs" />{intern.workingTime}
+                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-500">
+                          <i className="fas fa-clock text-[9px]" />{intern.workingTime}
                         </span>
                       )}
                     </div>
                     <div className="mt-auto pt-4">
-                      <span className="block w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-white shadow-sm text-center hover:bg-primary-dark transition">
+                      <span className="block w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white shadow-sm text-center group-hover:bg-emerald-600 group-hover:shadow-md transition-all">
                         View Details
                       </span>
                     </div>
@@ -458,15 +497,6 @@ export default function StudentDashboardScreen() {
           </section>
         )}
       </main>
-
-      <div className="border-t border-gray-100 bg-white mt-10">
-        <div className="mx-auto max-w-6xl px-4 sm:px-8 py-4 flex justify-between items-center">
-          <p className="text-sm text-gray-400">&copy; 2026 Tadrebk</p>
-          <button onClick={handleSignOut} className="flex items-center gap-2 text-sm font-semibold text-red-500 hover:text-red-600">
-            <i className="fas fa-sign-out-alt" /> Sign Out
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

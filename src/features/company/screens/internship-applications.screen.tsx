@@ -559,9 +559,9 @@ export default function InternshipApplicationsScreen() {
                     )}
 
                     {app.coverLetter && (
-                      <div className="mt-3 bg-gray-50 rounded-xl p-4">
+                      <div className="mt-3 bg-gray-50 rounded-xl p-4 overflow-hidden">
                         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cover Letter</p>
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto">
                           {app.coverLetter}
                         </p>
                       </div>

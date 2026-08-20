@@ -1,5 +1,5 @@
-import MyApplicationsScreen from '@/features/student/screens/my-applications.screen';
+import { redirect } from 'next/navigation';
 
 export default function MyApplicationsPage() {
-  return <MyApplicationsScreen />;
+  redirect('/dashboard');
 }
