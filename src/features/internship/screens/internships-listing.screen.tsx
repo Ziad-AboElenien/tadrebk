@@ -446,9 +446,9 @@ function InternshipsContent() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
           {/* ── Sidebar filters (desktop) ──────────────────── */}
-          <aside className="hidden lg:block fixed top-24 bottom-4 left-[max(1rem,calc((100vw-80rem)/2+1rem))] w-[260px] overflow-y-auto rounded-2xl bg-white p-5 shadow-sm z-40">
+          <aside className="hidden lg:block sticky top-28 self-start h-fit max-h-[calc(100vh-9rem)] overflow-y-auto rounded-2xl bg-white p-5 shadow-sm">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-base font-extrabold text-gray-900">Filters</h2>
               {hasActiveFilters && (
@@ -497,7 +497,7 @@ function InternshipsContent() {
           </aside>
 
           {/* ── Cards grid ─────────────────────────────────── */}
-          <div className="min-w-0 lg:ml-[276px]" ref={resultsRef}>
+          <div className="min-w-0" ref={resultsRef}>
             {loading ? (
               <div className="flex justify-center py-12"><Spinner /></div>
             ) : internships.length === 0 ? (
