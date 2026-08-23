@@ -448,7 +448,7 @@ function InternshipsContent() {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
           {/* ── Sidebar filters (desktop) ──────────────────── */}
-          <aside className="hidden lg:block h-fit rounded-2xl bg-white p-5 shadow-sm">
+          <aside className="hidden lg:block sticky top-24 h-fit rounded-2xl bg-white p-5 shadow-sm">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-base font-extrabold text-gray-900">Filters</h2>
               {hasActiveFilters && (
