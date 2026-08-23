@@ -69,7 +69,7 @@ export default function StudentProfileScreen() {
   }, []);
 
   const {
-    register, handleSubmit, reset, watch, setValue,
+    register, handleSubmit, reset, watch, setValue, setError,
     formState: { errors },
   } = useForm<ProfileFormData>({ resolver: zodResolver(profileSchema) });
 
@@ -100,8 +100,8 @@ export default function StudentProfileScreen() {
         firstName: data.firstName || undefined,
         lastName: data.lastName || undefined,
         phone: data.phone || undefined,
-        bio: data.bio || undefined,
         headline: data.headline || undefined,
+        bio: data.bio || undefined,
         address: data.address || undefined,
         dateOfBirth: data.dateOfBirth ? `${data.dateOfBirth}T00:00:00.000Z` : undefined,
         gender: data.gender || undefined,
@@ -113,7 +113,20 @@ export default function StudentProfileScreen() {
       dispatch(setUser(fresh));
       setEditing(false);
       toastHelper.success('Profile updated!');
-    } catch (err) { setFormError(getErrorMessage(err)); } finally { setSaving(false); }
+    } catch (err) {
+      const msg = getErrorMessage(err);
+      const fieldMap: Record<string, string> = {
+        firstName: 'firstName', lastName: 'lastName', phone: 'phone',
+        email: 'headline', bio: 'bio', address: 'address',
+        dateOfBirth: 'dateOfBirth', gender: 'gender', skills: 'skills',
+      };
+      const matched = Object.keys(fieldMap).find((k) => msg.toLowerCase().includes(k));
+      if (matched) {
+        setError(fieldMap[matched] as any, { message: msg });
+      } else {
+        setFormError(msg);
+      }
+    } finally { setSaving(false); }
   }
 
   async function handleAddCourse(name: string, file?: File) {
@@ -344,7 +357,6 @@ export default function StudentProfileScreen() {
         {/* Edit form / Profile display */}
         {editing ? (
           <form onSubmit={handleSubmit(onSubmit)} className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
-            {formError && <p className="text-red-500 text-xs font-medium bg-red-50 rounded-xl px-4 py-3 border border-red-200">{formError}</p>}
             <h2 className="font-bold text-dark text-lg">Edit details</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="First name" error={errors.firstName?.message} {...register('firstName')} />
@@ -515,9 +527,12 @@ export default function StudentProfileScreen() {
               <p className="mt-2 text-xs text-gray-400">To add a new course, close editing and use the &quot;Add course&quot; button.</p>
             </div>
 
-            <div className="flex gap-4 pt-4 border-t border-gray-100">
-              <Button loading={saving} type="submit">Save changes</Button>
-              <Button variant="outline" type="button" onClick={() => { setEditing(false); setFormError(null); reset(); }}>Cancel</Button>
+            <div className="flex flex-col gap-3 pt-4 border-t border-gray-100">
+              {formError && <p className="text-red-500 text-xs font-medium">{formError}</p>}
+              <div className="flex gap-4">
+                <Button loading={saving} type="submit">Save changes</Button>
+                <Button variant="outline" type="button" onClick={() => { setEditing(false); setFormError(null); reset(); }}>Cancel</Button>
+              </div>
             </div>
           </form>
         ) : (
