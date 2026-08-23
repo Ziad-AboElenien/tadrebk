@@ -53,6 +53,7 @@ export default function StudentProfileScreen() {
   const [showOtherInput, setShowOtherInput] = useState(false);
   const [courseModalOpen, setCourseModalOpen] = useState(false);
   const [courseAdding, setCourseAdding] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const profileRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const resumeRef = useRef<HTMLInputElement>(null);
@@ -93,6 +94,7 @@ export default function StudentProfileScreen() {
   async function onSubmit(data: ProfileFormData) {
     if (!userId) return;
     setSaving(true);
+    setFormError(null);
     try {
       await userService.updateProfile(userId, {
         firstName: data.firstName || undefined,
@@ -111,7 +113,7 @@ export default function StudentProfileScreen() {
       dispatch(setUser(fresh));
       setEditing(false);
       toastHelper.success('Profile updated!');
-    } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setSaving(false); }
+    } catch (err) { setFormError(getErrorMessage(err)); } finally { setSaving(false); }
   }
 
   async function handleAddCourse(name: string, file?: File) {
@@ -324,7 +326,7 @@ export default function StudentProfileScreen() {
                 <p className="text-gray-500 flex items-center gap-1.5 mt-0.5"><i className="fas fa-envelope text-xs" />{user.email}</p>
               </div>
             </div>
-            {!editing && <Button variant="outline" size="sm" leftIcon={<i className="fas fa-pen text-xs" />} onClick={() => setEditing(true)}>Edit profile</Button>}
+            {!editing && <Button variant="outline" size="sm" leftIcon={<i className="fas fa-pen text-xs" />} onClick={() => { setEditing(true); setFormError(null); }}>Edit profile</Button>}
           </div>
 
           {user.headline && !editing && <p className="text-gray-600 mt-3 flex items-center gap-2"><i className="fas fa-briefcase text-gray-300 text-xs" />{user.headline}</p>}
@@ -342,6 +344,13 @@ export default function StudentProfileScreen() {
         {/* Edit form / Profile display */}
         {editing ? (
           <form onSubmit={handleSubmit(onSubmit)} className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
+            {formError && (
+              <div className="flex items-center gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
+                <i className="fas fa-circle-exclamation text-red-400 shrink-0" />
+                <span className="flex-1">{formError}</span>
+                <button type="button" onClick={() => setFormError(null)} className="text-red-400 hover:text-red-600 cursor-pointer"><i className="fas fa-xmark" /></button>
+              </div>
+            )}
             <h2 className="font-bold text-dark text-lg">Edit details</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="First name" error={errors.firstName?.message} {...register('firstName')} />
@@ -514,7 +523,7 @@ export default function StudentProfileScreen() {
 
             <div className="flex gap-4 pt-4 border-t border-gray-100">
               <Button loading={saving} type="submit">Save changes</Button>
-              <Button variant="outline" type="button" onClick={() => { setEditing(false); reset(); }}>Cancel</Button>
+              <Button variant="outline" type="button" onClick={() => { setEditing(false); setFormError(null); reset(); }}>Cancel</Button>
             </div>
           </form>
         ) : (
