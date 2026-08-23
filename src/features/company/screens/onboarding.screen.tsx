@@ -41,6 +41,7 @@ export default function CompanyOnboardingScreen() {
     setValue,
     control,
     watch,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<CompanyOnboardingFormData>({
     resolver: zodResolver(companyOnboardingSchema),
@@ -49,17 +50,21 @@ export default function CompanyOnboardingScreen() {
   const wLocLat = watch('location.lat');
   const wLocLng = watch('location.lng');
   const wIndustry = watch('industry');
+  const [legalError, setLegalError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   async function onSubmit(data: CompanyOnboardingFormData) {
     if (!legalFile) {
-      toastHelper.error('Legal document is required');
+      setLegalError('Legal document is required');
       return;
     }
+    setLegalError(null);
     const industry = data.industry === 'Other' ? data.customIndustry?.trim() : data.industry;
     if (data.industry === 'Other' && !industry) {
-      toastHelper.error('Please specify your industry');
+      setError('customIndustry', { message: 'Please specify your industry' });
       return;
     }
+    setFormError(null);
 
     try {
       const company = await companyService.createCompany({
@@ -75,14 +80,12 @@ export default function CompanyOnboardingScreen() {
 
       dispatch(setCompany(company));
       dispatch(setRole('company'));
-      // Backend just promoted this user to company_owner; the current JWT is stale
-      // ("student") and would 403 on internship/billing routes. Swap it now.
       await refreshAuthTokens();
       localStorage.removeItem(LS_PENDING_ONBOARDING);
       toastHelper.success('Company profile created successfully!');
       router.push('/company/dashboard');
     } catch (err) {
-      toastHelper.error(getErrorMessage(err));
+      setFormError(getErrorMessage(err));
     }
   }
 
@@ -105,6 +108,9 @@ export default function CompanyOnboardingScreen() {
         className="bg-white border border-gray-100 rounded-3xl p-5 sm:p-8 shadow-sm space-y-4"
         noValidate
       >
+        {formError && (
+          <p className="text-red-500 text-xs font-medium bg-red-50 rounded-xl px-4 py-3 border border-red-200">{formError}</p>
+        )}
         <Input
           label="Company name"
           placeholder="Acme Corp"
@@ -197,16 +203,17 @@ export default function CompanyOnboardingScreen() {
           <input
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
-            className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:text-primary file:font-semibold"
+            className={`w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:text-primary file:font-semibold ${legalError ? 'border border-red-400 rounded-xl' : ''}`}
             onChange={(e) => {
               const file = e.target.files?.[0] ?? null;
               setLegalFile(file);
+              setLegalError(null);
               if (file) setValue('legalAttachment', file, { shouldValidate: true });
             }}
           />
-          {errors.legalAttachment && (
+          {(errors.legalAttachment || legalError) && (
             <p className="text-red-500 text-xs font-medium mt-1">
-              Legal document is required
+              {legalError || 'Legal document is required'}
             </p>
           )}
         </div>

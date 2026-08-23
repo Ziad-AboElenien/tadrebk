@@ -84,6 +84,7 @@ export default function SignupForm({ role }: SignupFormProps) {
     handleSubmit,
     watch,
     setValue,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -91,17 +92,14 @@ export default function SignupForm({ role }: SignupFormProps) {
 
   async function onSubmit(data: SignupFormData) {
     if (!isCompany) {
-      const missing: string[] = [];
-      if (!data.university) missing.push('University');
-      if (!data.fieldOfStudy) missing.push('Field of Study');
-      if (data.fieldOfStudy === 'Other' && !data.fieldOfStudyOther) missing.push('Field of Study name');
-      if (!data.degree) missing.push('Degree');
-      if (!data.grade) missing.push('Grade');
-      if (!data.startDate) missing.push('Start Date');
-      if (missing.length > 0) {
-        toastHelper.error(`Please fill in: ${missing.join(', ')}`);
-        return;
-      }
+      let hasError = false;
+      if (!data.university) { setError('university', { message: 'University is required' }); hasError = true; }
+      if (!data.fieldOfStudy) { setError('fieldOfStudy', { message: 'Field of Study is required' }); hasError = true; }
+      if (data.fieldOfStudy === 'Other' && !data.fieldOfStudyOther) { setError('fieldOfStudyOther', { message: 'Please specify your field of study' }); hasError = true; }
+      if (!data.degree) { setError('degree', { message: 'Degree is required' }); hasError = true; }
+      if (!data.grade) { setError('grade', { message: 'Grade is required' }); hasError = true; }
+      if (!data.startDate) { setError('startDate', { message: 'Start Date is required' }); hasError = true; }
+      if (hasError) return;
     }
     try {
       await authService.signup({

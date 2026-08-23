@@ -46,6 +46,7 @@ export default function CompanySettingsScreen() {
     reset,
     watch,
     setValue,
+    setError,
     formState: { errors },
   } = useForm<CompanySettingsFormData>({
     resolver: zodResolver(companySettingsSchema),
@@ -76,7 +77,7 @@ export default function CompanySettingsScreen() {
     if (!company) return;
     const industry = data.industry === 'Other' ? data.customIndustry?.trim() : data.industry;
     if (data.industry === 'Other' && !industry) {
-      toastHelper.error('Please specify your industry');
+      setError('customIndustry', { message: 'Please specify your industry' });
       return;
     }
     setSaving(true);

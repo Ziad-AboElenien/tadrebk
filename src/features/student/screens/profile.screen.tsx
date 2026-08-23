@@ -344,13 +344,7 @@ export default function StudentProfileScreen() {
         {/* Edit form / Profile display */}
         {editing ? (
           <form onSubmit={handleSubmit(onSubmit)} className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
-            {formError && (
-              <div className="flex items-center gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
-                <i className="fas fa-circle-exclamation text-red-400 shrink-0" />
-                <span className="flex-1">{formError}</span>
-                <button type="button" onClick={() => setFormError(null)} className="text-red-400 hover:text-red-600 cursor-pointer"><i className="fas fa-xmark" /></button>
-              </div>
-            )}
+            {formError && <p className="text-red-500 text-xs font-medium bg-red-50 rounded-xl px-4 py-3 border border-red-200">{formError}</p>}
             <h2 className="font-bold text-dark text-lg">Edit details</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="First name" error={errors.firstName?.message} {...register('firstName')} />
