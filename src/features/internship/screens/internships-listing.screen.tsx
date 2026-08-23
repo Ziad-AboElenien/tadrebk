@@ -446,9 +446,10 @@ function InternshipsContent() {
           </button>
         </div>
 
-        <div className="flex gap-8 items-start">
-          {/* ── Sidebar filters (desktop) ──────────────────── */}
-          <aside className="hidden lg:block sticky top-24 shrink-0 w-[260px] h-fit max-h-[calc(100vh-9rem)] overflow-y-auto rounded-2xl bg-white p-5 shadow-sm">
+        <div className="relative">
+          <div className="flex gap-8 items-start">
+            {/* ── Sidebar filters (desktop) ──────────────────── */}
+            <aside className="hidden lg:block sticky top-24 self-start shrink-0 w-[260px] h-fit max-h-[calc(100vh-9rem)] overflow-y-auto rounded-2xl bg-white p-5 shadow-sm">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-base font-extrabold text-gray-900">Filters</h2>
               {hasActiveFilters && (
@@ -823,6 +824,7 @@ function InternshipsContent() {
               </div>
             )}
           </div>
+        </div>
         </div>
 
         {/* ── Mobile filter drawer ────────────────────────── */}
