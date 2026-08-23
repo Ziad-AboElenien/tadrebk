@@ -94,10 +94,10 @@ export default function Navbar() {
 
   return (
     <header
-      className="sticky top-0 z-50 bg-white border-b border-gray-100"
+      className="sticky top-0 z-50 px-3 pt-2 bg-transparent"
     >
       <div
-        className="max-w-7xl mx-auto h-18 flex items-center justify-between gap-6 px-4 sm:px-6"
+        className="max-w-7xl mx-auto h-18 flex items-center justify-between gap-6 px-4 sm:px-6 rounded-full bg-white/40 backdrop-blur-xl border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.10)]"
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
