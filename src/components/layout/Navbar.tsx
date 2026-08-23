@@ -94,7 +94,7 @@ export default function Navbar() {
 
   return (
     <header
-      className="sticky top-0 z-50 px-3 pt-2 bg-transparent"
+      className="fixed top-0 left-0 right-0 z-50 px-3 pt-2 bg-transparent"
     >
       <div
         className="max-w-7xl mx-auto h-18 flex items-center justify-between gap-6 px-4 sm:px-6 rounded-full bg-white/40 backdrop-blur-xl border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.10)]"
