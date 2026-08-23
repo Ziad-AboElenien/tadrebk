@@ -278,7 +278,7 @@ export default function CompanySettingsScreen() {
                 placeholder="Tell us about your company..."
               />
               {errors.description && (
-                <p className="text-red-500 text-xs font-medium">{errors.description.message}</p>
+                <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium"><i className="fas fa-circle-exclamation text-[10px] shrink-0" />{errors.description.message}</p>
               )}
             </div>
 

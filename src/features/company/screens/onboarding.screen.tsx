@@ -109,7 +109,7 @@ export default function CompanyOnboardingScreen() {
         noValidate
       >
         {formError && (
-          <p className="text-red-500 text-xs font-medium bg-red-50 rounded-xl px-4 py-3 border border-red-200">{formError}</p>
+          <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium bg-red-50 rounded-xl px-4 py-3 border border-red-200"><i className="fas fa-circle-exclamation text-[10px] shrink-0" />{formError}</p>
         )}
         <Input
           label="Company name"
@@ -128,8 +128,8 @@ export default function CompanyOnboardingScreen() {
             {...register('description')}
           />
           {errors.description && (
-            <p className="text-red-500 text-xs font-medium mt-1">
-              {errors.description.message}
+            <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium mt-1">
+              <i className="fas fa-circle-exclamation text-[10px] shrink-0" />{errors.description.message}
             </p>
           )}
         </div>
@@ -212,8 +212,8 @@ export default function CompanyOnboardingScreen() {
             }}
           />
           {(errors.legalAttachment || legalError) && (
-            <p className="text-red-500 text-xs font-medium mt-1">
-              {legalError || 'Legal document is required'}
+            <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium mt-1">
+              <i className="fas fa-circle-exclamation text-[10px] shrink-0" />{legalError || 'Legal document is required'}
             </p>
           )}
         </div>

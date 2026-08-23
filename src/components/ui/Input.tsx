@@ -55,7 +55,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             </span>
           )}
         </div>
-        {error && <p className="text-red-500 text-xs font-medium">{error}</p>}
+        {error && <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium"><i className="fas fa-circle-exclamation text-[10px] shrink-0" />{error}</p>}
         {hint && !error && (
           <p className="text-gray-400 text-xs">{hint}</p>
         )}

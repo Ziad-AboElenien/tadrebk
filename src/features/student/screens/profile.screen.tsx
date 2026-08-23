@@ -362,11 +362,14 @@ export default function StudentProfileScreen() {
               <Input label="First name" error={errors.firstName?.message} {...register('firstName')} />
               <Input label="Last name" error={errors.lastName?.message} {...register('lastName')} />
             </div>
-            <Input label="Bio" error={errors.headline?.message} {...register('headline')} placeholder="e.g. Computer Science Student at Cairo University" />
+            <Input label="Bio" error={errors.headline?.message} {...register('headline')} maxLength={100} placeholder="e.g. Computer Science Student at Cairo University" hint={`${(watch('headline') || '').length}/100 characters`} />
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-gray-700">About</label>
-              <textarea {...register('bio')} rows={4} className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-gray-300 transition-all duration-200 resize-y border-gray-200" placeholder="Tell us about yourself..." />
-              {errors.bio && <p className="text-red-500 text-xs font-medium">{errors.bio.message}</p>}
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-gray-700">About</label>
+                <span className={`text-xs font-medium ${(watch('bio') || '').length > 450 ? (watch('bio') || '').length > 500 ? 'text-red-500' : 'text-amber-500' : 'text-gray-400'}`}>{(watch('bio') || '').length}/500</span>
+              </div>
+              <textarea {...register('bio')} rows={4} maxLength={500} className={`w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-all duration-200 resize-y ${(watch('bio') || '').length > 500 ? 'border-red-400 focus:ring-red-200 focus:border-red-400' : 'border-gray-200 hover:border-gray-300 focus:ring-primary/40 focus:border-primary'}`} placeholder="Tell us about yourself..." />
+              {errors.bio && <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium"><i className="fas fa-circle-exclamation text-[10px]" />{errors.bio.message}</p>}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="Phone" type="tel" error={errors.phone?.message} {...register('phone')} />
@@ -495,7 +498,7 @@ export default function StudentProfileScreen() {
                 </div>
               )}
 
-              {errors.categories && <p className="text-red-500 text-xs font-medium mt-1">{errors.categories.message}</p>}
+              {errors.categories && <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium mt-1"><i className="fas fa-circle-exclamation text-[10px] shrink-0" />{errors.categories.message}</p>}
             </div>
 
             {/* Courses */}
@@ -528,7 +531,7 @@ export default function StudentProfileScreen() {
             </div>
 
             <div className="flex flex-col gap-3 pt-4 border-t border-gray-100">
-              {formError && <p className="text-red-500 text-xs font-medium">{formError}</p>}
+              {formError && <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium"><i className="fas fa-circle-exclamation text-[10px] shrink-0" />{formError}</p>}
               <div className="flex gap-4">
                 <Button loading={saving} type="submit">Save changes</Button>
                 <Button variant="outline" type="button" onClick={() => { setEditing(false); setFormError(null); reset(); }}>Cancel</Button>
