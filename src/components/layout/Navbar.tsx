@@ -110,7 +110,7 @@ export default function Navbar() {
           'max-w-7xl mx-auto h-18 flex items-center justify-between gap-6 px-4 sm:px-6 transition-all duration-500',
           scrolled
             ? 'rounded-full bg-white/40 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.10)]'
-            : 'border border-transparent',
+            : '',
         ].join(' ')}
       >
         {/* Logo */}
