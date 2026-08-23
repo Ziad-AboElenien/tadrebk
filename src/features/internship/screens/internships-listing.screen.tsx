@@ -117,7 +117,6 @@ function InternshipsContent() {
   const [query, setQuery] = useState(searchParams.get('title') || '');
   const [locationInput, setLocationInput] = useState(searchParams.get('location') || '');
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [filterOpen, setFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -269,16 +268,6 @@ function InternshipsContent() {
     }
   }, [page, loading, loadingMore]);
 
-  // Close filter drawer on Escape
-  useEffect(() => {
-    if (!filterOpen) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setFilterOpen(false);
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [filterOpen]);
-
   // Auto-search on type (debounced)
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -323,40 +312,6 @@ function InternshipsContent() {
   const hasActiveFilters = filters.title || filters.type || filters.location;
 
   // Collapsible filter sections
-  function FilterGroup({ title, options, value, onChange }: {
-    title: string;
-    options: { label: string; value: string }[];
-    value: string;
-    onChange: (v: string) => void;
-  }) {
-    const [open, setOpen] = useState(true);
-    return (
-      <div className="border-b border-gray-100 py-4">
-        <button
-          onClick={() => setOpen((o) => !o)}
-          className="flex w-full items-center justify-between text-sm font-bold text-gray-900"
-        >
-          {title}
-          <i className={`fas fa-chevron-down h-4 w-4 text-gray-400 transition-transform ${open ? '' : '-rotate-90'}`} />
-        </button>
-        {open && (
-          <div className="mt-3 space-y-2.5">
-            {options.map((opt) => (
-              <label key={opt.value} className="flex cursor-pointer items-center gap-2.5 text-sm text-gray-600">
-                <input
-                  type="checkbox"
-                  checked={value === opt.value}
-                  onChange={() => onChange(value === opt.value ? '' : opt.value)}
-                  className="h-4 w-4 rounded border-gray-300 text-emerald-500 focus:ring-emerald-400"
-                />
-                {opt.label}
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
 
   function companyFromInternship(internship: Internship): Company | null {
     if (internship.company) return internship.company as Company;
@@ -401,7 +356,7 @@ function InternshipsContent() {
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         {/* ── Results header ─────────────────────────────── */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-extrabold text-gray-900">All Internships</h1>
             <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-500">
@@ -430,211 +385,287 @@ function InternshipsContent() {
           </div>
         </div>
 
-        {/* ── Mobile filter button ────────────────────────── */}
-        <div className="lg:hidden mb-4 flex items-center gap-2">
-          <button
-            onClick={() => setFilterOpen(true)}
-            className="flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-bold text-gray-700 shadow-sm border border-gray-200"
-          >
-            <i className="fas fa-sliders-h text-emerald-500" />
-            Filters
-            {hasActiveFilters && (
-              <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white">
-                {(filters.type ? 1 : 0) + (filters.location ? 1 : 0)}
-              </span>
-            )}
-          </button>
+        {/* ── Horizontal filter chips ──────────────────── */}
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          {[
+            { label: 'Full-time', key: 'type', value: 'full-time', icon: 'fa-briefcase' },
+            { label: 'Part-time', key: 'type', value: 'part-time', icon: 'fa-clock' },
+            { label: 'On-site', key: 'location', value: 'on-site', icon: 'fa-building' },
+            { label: 'Remote', key: 'location', value: 'remote', icon: 'fa-globe' },
+            { label: 'Hybrid', key: 'location', value: 'hybrid', icon: 'fa-code-branch' },
+          ].map((chip) => {
+            const active = (filters as any)[chip.key] === chip.value;
+            return (
+              <button
+                key={chip.value}
+                onClick={() => handleFilterChange(chip.key, active ? '' : chip.value)}
+                className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+                  active
+                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+                    : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300 hover:text-emerald-600'
+                }`}
+              >
+                <i className={`fas ${chip.icon} text-xs`} />
+                {chip.label}
+                {active && <i className="fas fa-times text-[10px] ml-0.5" />}
+              </button>
+            );
+          })}
+          {hasActiveFilters && (
+            <button onClick={clearAll} className="text-sm font-semibold text-gray-400 hover:text-red-500 transition-colors ml-1">
+              Clear all
+            </button>
+          )}
         </div>
 
-        <div className="relative">
-          <div className="flex gap-8 items-start">
-            {/* ── Sidebar filters (desktop) ──────────────────── */}
-            <aside className="hidden lg:block sticky top-24 self-start shrink-0 w-[260px] h-fit max-h-[calc(100vh-9rem)] overflow-y-auto rounded-2xl bg-white p-5 shadow-sm">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-extrabold text-gray-900">Filters</h2>
+        {/* ── Cards ──────────────────────────────────── */}
+        <div ref={resultsRef}>
+          {loading ? (
+            <div className="flex justify-center py-12"><Spinner /></div>
+          ) : internships.length === 0 ? (
+            <div className="text-center py-12">
+              <i className="fas fa-search text-4xl text-gray-200 mb-4" />
+              <p className="text-gray-600 text-lg font-semibold">No internships found</p>
+              <p className="text-gray-400 text-sm mt-1">Try adjusting your filters or search terms</p>
               {hasActiveFilters && (
-                <button onClick={clearAll} className="text-sm font-semibold text-emerald-500 hover:underline">
-                  Clear all
+                <button onClick={clearAll} className="mt-4 rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 transition">
+                  Clear Filters
                 </button>
               )}
             </div>
+          ) : (
+            <div className="relative">
+              {loadingMore && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/60 backdrop-blur-sm">
+                  <Spinner />
+                </div>
+              )}
+              {/* Grid View */}
+              {viewMode === 'grid' && (
+              <div className="grid grid-cols-1 gap-x-3 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
+                {internships.map((internship) => {
+                  const company = companyFromInternship(internship);
+                  const logoUrl = company ? getCompanyImgUrl(company.logo) : null;
+                  const saved = savedIds.has(internship._id);
 
-            <FilterGroup
-              title="Working Time"
-              options={[
-                { label: 'Full-time', value: 'full-time' },
-                { label: 'Part-time', value: 'part-time' },
-              ]}
-              value={filters.type}
-              onChange={(v) => handleFilterChange('type', v)}
-            />
+                  return (
+                    <div
+                      key={internship._id}
+                      className="group flex flex-col rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                    >
+                      <Link href={`/internships/${internship._id}`} className="flex flex-col flex-1">
+                        <div className="p-5 pb-0 flex-1">
+                          <div className="flex items-start justify-between mb-4">
+                            <MediaImage
+                              src={logoUrl}
+                              alt=""
+                              boxClassName="h-12 w-12 flex-shrink-0 rounded-xl overflow-hidden ring-2 ring-gray-50 group-hover:ring-emerald-200 transition-all"
+                              imgClassName="w-full h-full object-cover"
+                              iconClassName="fas fa-building text-lg text-gray-300"
+                            />
+                            <div className="flex flex-col items-end gap-1.5">
+                              {internship.location && (
+                                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                                  internship.location === 'remote' ? 'bg-violet-50 text-violet-600' :
+                                  internship.location === 'hybrid' ? 'bg-blue-50 text-blue-600' :
+                                  'bg-amber-50 text-amber-600'
+                                }`}>
+                                  <i className={`fas fa-${
+                                    internship.location === 'remote' ? 'globe' :
+                                    internship.location === 'hybrid' ? 'code-branch' : 'map-marker-alt'
+                                  } text-[9px]`} />
+                                  {locationLabels[internship.location] || internship.location}
+                                </span>
+                              )}
+                              {internship.workingTime && (
+                                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-gray-100 text-gray-600">
+                                  <i className="fas fa-clock text-[9px]" />
+                                  {internship.workingTime === 'full-time' ? 'Full-time' : 'Part-time'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
 
-            <FilterGroup
-              title="Location"
-              options={[
-                { label: 'On-site', value: 'on-site' },
-                { label: 'Remote', value: 'remote' },
-                { label: 'Hybrid', value: 'hybrid' },
-              ]}
-              value={filters.location}
-              onChange={(v) => handleFilterChange('location', v)}
-            />
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                              {company?.name || 'Unknown Company'}
+                            </span>
+                            {internship.closed && (
+                              <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600 leading-none">
+                                Closed
+                              </span>
+                            )}
+                          </div>
 
-            {/* Fast Track CTA */}
-            <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
-              <p className="mb-1 flex items-center gap-1.5 text-sm font-bold text-emerald-700">
-                <i className="fas fa-bolt h-4 w-4" />
-                Fast Track
-              </p>
-              <p className="mb-3 text-xs leading-relaxed text-emerald-700/80">
-                Create a student profile to get personalized recommendations and apply in one click.
-              </p>
-              <Link href={mounted && isAuthenticated ? '/profile' : '/signup/student'}>
-                <button className="w-full rounded-xl bg-white py-2 text-sm font-bold text-emerald-600 shadow-sm transition hover:bg-emerald-50">
-                  Create Profile
-                </button>
-              </Link>
-            </div>
-          </aside>
+                          <h3 className="text-base font-bold leading-snug text-gray-900 line-clamp-2 group-hover:text-emerald-600 transition-colors">
+                            {internship.title}
+                          </h3>
 
-          {/* ── Cards grid ─────────────────────────────────── */}
-          <div className="min-w-0 flex-1" ref={resultsRef}>
-            {loading ? (
-              <div className="flex justify-center py-12"><Spinner /></div>
-            ) : internships.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-600 text-lg">No internships found matching your filters</p>
+                          <div className="mt-3 space-y-2 text-sm text-gray-500">
+                            <p className="flex items-center gap-2">
+                              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 shrink-0">
+                                <i className="fas fa-map-marker-alt text-[10px]" />
+                              </span>
+                              {company?.address || locationLabels[internship.location] || internship.location}
+                            </p>
+                            {(() => {
+                              const skills = Array.isArray(internship.technicalSkills) ? internship.technicalSkills : [];
+                              if (skills.length === 0) return null;
+                              return (
+                                <p className="flex items-center gap-2">
+                                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 shrink-0">
+                                    <i className="fas fa-code text-[10px]" />
+                                  </span>
+                                  <span className="truncate">
+                                    {skills.slice(0, 2).join(', ')}
+                                    {skills.length > 2 && ` +${skills.length - 2}`}
+                                  </span>
+                                </p>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      </Link>
+
+                      {(() => {
+                        const tracks = Array.isArray(internship.track) && internship.track.length
+                          ? internship.track
+                          : internship.categories || [];
+                        if (tracks.length === 0) return null;
+                        const visible = tracks.slice(0, 2);
+                        const rest = tracks.length - visible.length;
+                        return (
+                          <div className="flex flex-wrap gap-1.5 px-5 pt-3 mb-4">
+                            {visible.map((track) => (
+                              <span
+                                key={track}
+                                className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-100"
+                              >
+                                {CATEGORY_LABELS[track as Category] || track}
+                              </span>
+                            ))}
+                            {rest > 0 && (
+                              <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-500">
+                                +{rest}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      <div className="flex items-center gap-2 px-5 pt-5 pb-4 border-t border-gray-100 mt-auto">
+                        <Link
+                          href={canApply ? `/internships/${internship._id}` : '#'}
+                          className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-center transition-all ${
+                            canApply
+                              ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:shadow-md hover:from-emerald-600 hover:to-emerald-700 active:scale-[0.98]'
+                              : 'bg-gray-200 text-gray-400 cursor-default'
+                          }`}
+                        >
+                          Apply Now
+                        </Link>
+                        <button
+                          onClick={() => handleSave(internship._id)}
+                          aria-label="Save internship"
+                          className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border-2 transition-all ${
+                            saved
+                              ? 'border-emerald-200 bg-emerald-50 text-emerald-500'
+                              : 'border-gray-100 text-gray-400 hover:border-emerald-200 hover:text-emerald-500 hover:bg-emerald-50'
+                          }`}
+                        >
+                          <i className="fas fa-bookmark" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ) : (
-              <div className="relative">
-                {loadingMore && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/60 backdrop-blur-sm">
-                    <Spinner />
-                  </div>
-                )}
-                {/* Grid View */}
-                {viewMode === 'grid' && (
-                <div className="grid grid-cols-1 gap-x-3 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
+              )}
+
+              {/* List View */}
+              {viewMode === 'list' && (
+                <div className="space-y-4">
                   {internships.map((internship) => {
                     const company = companyFromInternship(internship);
                     const logoUrl = company ? getCompanyImgUrl(company.logo) : null;
                     const saved = savedIds.has(internship._id);
-
                     return (
                       <div
                         key={internship._id}
-                        className="group flex flex-col rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                        className="group flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-5 sm:px-6 sm:py-5 w-full max-w-full"
                       >
-                        <Link href={`/internships/${internship._id}`} className="flex flex-col flex-1">
-                          <div className="p-5 pb-0 flex-1">
-                            {/* Logo + badges row */}
-                            <div className="flex items-start justify-between mb-4">
-                              <MediaImage
-                                src={logoUrl}
-                                alt=""
-                                boxClassName="h-12 w-12 flex-shrink-0 rounded-xl overflow-hidden ring-2 ring-gray-50 group-hover:ring-emerald-200 transition-all"
-                                imgClassName="w-full h-full object-cover"
-                                iconClassName="fas fa-building text-lg text-gray-300"
-                              />
-                              <div className="flex flex-col items-end gap-1.5">
-                                {internship.location && (
-                                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                                    internship.location === 'remote' ? 'bg-violet-50 text-violet-600' :
-                                    internship.location === 'hybrid' ? 'bg-blue-50 text-blue-600' :
-                                    'bg-amber-50 text-amber-600'
-                                  }`}>
-                                    <i className={`fas fa-${
-                                      internship.location === 'remote' ? 'globe' :
-                                      internship.location === 'hybrid' ? 'code-branch' : 'map-marker-alt'
-                                    } text-[9px]`} />
-                                    {locationLabels[internship.location] || internship.location}
+                        <Link href={`/internships/${internship._id}`} className="shrink-0">
+                          <MediaImage
+                            src={logoUrl}
+                            alt=""
+                            boxClassName="h-14 w-14 rounded-xl overflow-hidden ring-2 ring-gray-50"
+                            imgClassName="w-full h-full object-cover"
+                            iconClassName="fas fa-building text-lg text-gray-300"
+                          />
+                        </Link>
+
+                        <Link href={`/internships/${internship._id}`} className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-xs font-semibold text-emerald-600">{company?.name || 'Unknown Company'}</span>
+                            {internship.closed && (
+                              <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">Closed</span>
+                            )}
+                          </div>
+                          <h3 className="text-base font-bold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">
+                            {internship.title}
+                          </h3>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <i className="fas fa-map-marker-alt text-emerald-400 text-[10px]" />
+                              {company?.address || locationLabels[internship.location] || internship.location}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <i className="fas fa-clock text-emerald-400 text-[10px]" />
+                              {internship.workingTime === 'full-time' ? 'Full-time' : 'Part-time'}
+                            </span>
+                            {(() => {
+                              const skills = Array.isArray(internship.technicalSkills) ? internship.technicalSkills : [];
+                              if (skills.length === 0) return null;
+                              return (
+                                <span className="flex items-center gap-1 truncate">
+                                  <i className="fas fa-code text-emerald-400 text-[10px]" />
+                                  {skills.slice(0, 2).join(', ')}
+                                  {skills.length > 2 && ` +${skills.length - 2}`}
+                                </span>
+                              );
+                            })()}
+                          </div>
+                          {(() => {
+                            const tracks = Array.isArray(internship.track) && internship.track.length > 0
+                              ? internship.track
+                              : internship.categories || [];
+                            if (tracks.length === 0) return null;
+                            const visible = tracks.slice(0, 2);
+                            const rest = tracks.length - visible.length;
+                            return (
+                              <div className="flex flex-wrap gap-1.5 mt-2">
+                                {visible.map((track) => (
+                                  <span
+                                    key={track}
+                                    className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-100"
+                                  >
+                                    {CATEGORY_LABELS[track as Category] || track}
                                   </span>
-                                )}
-                                {internship.workingTime && (
-                                  <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-gray-100 text-gray-600">
-                                    <i className="fas fa-clock text-[9px]" />
-                                    {internship.workingTime === 'full-time' ? 'Full-time' : 'Part-time'}
+                                ))}
+                                {rest > 0 && (
+                                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-500">
+                                    +{rest}
                                   </span>
                                 )}
                               </div>
-                            </div>
-
-                            {/* Company name */}
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
-                                {company?.name || 'Unknown Company'}
-                              </span>
-                              {internship.closed && (
-                                <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600 leading-none">
-                                  Closed
-                                </span>
-                              )}
-                            </div>
-
-                            {/* Title */}
-                            <h3 className="text-base font-bold leading-snug text-gray-900 line-clamp-2 group-hover:text-emerald-600 transition-colors">
-                              {internship.title}
-                            </h3>
-
-                            {/* Details */}
-                            <div className="mt-3 space-y-2 text-sm text-gray-500">
-                              <p className="flex items-center gap-2">
-                                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 shrink-0">
-                                  <i className="fas fa-map-marker-alt text-[10px]" />
-                                </span>
-                                {company?.address || locationLabels[internship.location] || internship.location}
-                              </p>
-                              {(() => {
-                                const skills = Array.isArray(internship.technicalSkills) ? internship.technicalSkills : [];
-                                if (skills.length === 0) return null;
-                                return (
-                                  <p className="flex items-center gap-2">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 shrink-0">
-                                      <i className="fas fa-code text-[10px]" />
-                                    </span>
-                                    <span className="truncate">
-                                      {skills.slice(0, 2).join(', ')}
-                                      {skills.length > 2 && ` +${skills.length - 2}`}
-                                    </span>
-                                  </p>
-                                );
-                              })()}
-                            </div>
-                          </div>
+                            );
+                          })()}
                         </Link>
 
-                        {/* Tracks */}
-                        {(() => {
-                          const tracks = Array.isArray(internship.track) && internship.track.length
-                            ? internship.track
-                            : internship.categories || [];
-                          if (tracks.length === 0) return null;
-                          const visible = tracks.slice(0, 2);
-                          const rest = tracks.length - visible.length;
-                          return (
-                            <div className="flex flex-wrap gap-1.5 px-5 pt-3 mb-4">
-                              {visible.map((track) => (
-                                <span
-                                  key={track}
-                                  className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-100"
-                                >
-                                  {CATEGORY_LABELS[track as Category] || track}
-                                </span>
-                              ))}
-                              {rest > 0 && (
-                                <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-500">
-                                  +{rest}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })()}
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 px-5 pt-5 pb-4 border-t border-gray-100 mt-auto">
+                        <div className="flex items-center gap-2 shrink-0">
                           <Link
                             href={canApply ? `/internships/${internship._id}` : '#'}
-                            className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-center transition-all ${
+                            className={`rounded-xl px-5 py-2.5 text-sm font-bold text-center transition-all ${
                               canApply
                                 ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:shadow-md hover:from-emerald-600 hover:to-emerald-700 active:scale-[0.98]'
                                 : 'bg-gray-200 text-gray-400 cursor-default'
@@ -658,215 +689,60 @@ function InternshipsContent() {
                     );
                   })}
                 </div>
-                )}
+              )}
 
-                {/* List View */}
-                {viewMode === 'list' && (
-                  <div className="space-y-4">
-                    {internships.map((internship) => {
-                      const company = companyFromInternship(internship);
-                      const logoUrl = company ? getCompanyImgUrl(company.logo) : null;
-                      const saved = savedIds.has(internship._id);
-                      return (
-                        <div
-                          key={internship._id}
-                          className="group flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-5 sm:px-6 sm:py-5 w-full max-w-full"
-                        >
-                          {/* Logo */}
-                          <Link href={`/internships/${internship._id}`} className="shrink-0">
-                            <MediaImage
-                              src={logoUrl}
-                              alt=""
-                              boxClassName="h-14 w-14 rounded-xl overflow-hidden ring-2 ring-gray-50"
-                              imgClassName="w-full h-full object-cover"
-                              iconClassName="fas fa-building text-lg text-gray-300"
-                            />
-                          </Link>
-
-                          {/* Info */}
-                          <Link href={`/internships/${internship._id}`} className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <span className="text-xs font-semibold text-emerald-600">{company?.name || 'Unknown Company'}</span>
-                              {internship.closed && (
-                                <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">Closed</span>
-                              )}
-                            </div>
-                            <h3 className="text-base font-bold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">
-                              {internship.title}
-                            </h3>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 flex-wrap">
-                              <span className="flex items-center gap-1">
-                                <i className="fas fa-map-marker-alt text-emerald-400 text-[10px]" />
-                                {company?.address || locationLabels[internship.location] || internship.location}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <i className="fas fa-clock text-emerald-400 text-[10px]" />
-                                {internship.workingTime === 'full-time' ? 'Full-time' : 'Part-time'}
-                              </span>
-                              {(() => {
-                                const skills = Array.isArray(internship.technicalSkills) ? internship.technicalSkills : [];
-                                if (skills.length === 0) return null;
-                                return (
-                                  <span className="flex items-center gap-1 truncate">
-                                    <i className="fas fa-code text-emerald-400 text-[10px]" />
-                                    {skills.slice(0, 2).join(', ')}
-                                    {skills.length > 2 && ` +${skills.length - 2}`}
-                                  </span>
-                                );
-                              })()}
-                            </div>
-                            {(() => {
-                              const tracks = Array.isArray(internship.track) && internship.track.length > 0
-                                ? internship.track
-                                : internship.categories || [];
-                              if (tracks.length === 0) return null;
-                              const visible = tracks.slice(0, 2);
-                              const rest = tracks.length - visible.length;
-                              return (
-                                <div className="flex flex-wrap gap-1.5 mt-2">
-                                  {visible.map((track) => (
-                                    <span
-                                      key={track}
-                                      className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-100"
-                                    >
-                                      {CATEGORY_LABELS[track as Category] || track}
-                                    </span>
-                                  ))}
-                                  {rest > 0 && (
-                                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-500">
-                                      +{rest}
-                                    </span>
-                                  )}
-                                </div>
-                              );
-                            })()}
-                          </Link>
-
-                          {/* Actions */}
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Link
-                              href={canApply ? `/internships/${internship._id}` : '#'}
-                              className={`rounded-xl px-5 py-2.5 text-sm font-bold text-center transition-all ${
-                                canApply
-                                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:shadow-md hover:from-emerald-600 hover:to-emerald-700 active:scale-[0.98]'
-                                  : 'bg-gray-200 text-gray-400 cursor-default'
-                              }`}
-                            >
-                              Apply Now
-                            </Link>
-                            <button
-                              onClick={() => handleSave(internship._id)}
-                              aria-label="Save internship"
-                              className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border-2 transition-all ${
-                                saved
-                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-500'
-                                  : 'border-gray-100 text-gray-400 hover:border-emerald-200 hover:text-emerald-500 hover:bg-emerald-50'
-                              }`}
-                            >
-                              <i className="fas fa-bookmark" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-10 flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <i className="fas fa-chevron-left text-xs" />
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter((p) => {
+                        if (totalPages <= 7) return true;
+                        if (p === 1 || p === totalPages) return true;
+                        if (Math.abs(p - page) <= 1) return true;
+                        return false;
+                      })
+                      .reduce<(number | '...')[]>((acc, p, idx, arr) => {
+                        if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('...');
+                        acc.push(p);
+                        return acc;
+                      }, [])
+                      .map((item, i) =>
+                        item === '...' ? (
+                          <span key={`e${i}`} className="w-10 h-10 flex items-center justify-center text-gray-400 text-sm">...</span>
+                        ) : (
+                          <button
+                            key={item}
+                            onClick={() => setPage(item)}
+                            className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all ${item === page ? 'bg-emerald-500 text-white shadow-md' : 'border border-gray-200 text-gray-600 hover:border-emerald-500 hover:text-emerald-500'}`}
+                          >
+                            {item}
+                          </button>
+                        )
+                      )}
+                    <button
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <i className="fas fa-chevron-right text-xs" />
+                    </button>
                   </div>
-                )}
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-10 flex flex-col items-center gap-2">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                        className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        <i className="fas fa-chevron-left text-xs" />
-                      </button>
-                      {Array.from({ length: totalPages }, (_, i) => i + 1)
-                        .filter((p) => {
-                          if (totalPages <= 7) return true;
-                          if (p === 1 || p === totalPages) return true;
-                          if (Math.abs(p - page) <= 1) return true;
-                          return false;
-                        })
-                        .reduce<(number | '...')[]>((acc, p, idx, arr) => {
-                          if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('...');
-                          acc.push(p);
-                          return acc;
-                        }, [])
-                        .map((item, i) =>
-                          item === '...' ? (
-                            <span key={`e${i}`} className="w-10 h-10 flex items-center justify-center text-gray-400 text-sm">...</span>
-                          ) : (
-                            <button
-                              key={item}
-                              onClick={() => setPage(item)}
-                              className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all ${item === page ? 'bg-emerald-500 text-white shadow-md' : 'border border-gray-200 text-gray-600 hover:border-emerald-500 hover:text-emerald-500'}`}
-                            >
-                              {item}
-                            </button>
-                          )
-                        )}
-                      <button
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={page === totalPages}
-                        className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        <i className="fas fa-chevron-right text-xs" />
-                      </button>
-                    </div>
-                    <p className="text-sm text-gray-400">
-                      Page {page} of {totalPages}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-        </div>
-
-        {/* ── Mobile filter drawer ────────────────────────── */}
-        {filterOpen && (
-          <>
-            <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden" onClick={() => setFilterOpen(false)} />
-            <div className="fixed inset-y-0 right-0 z-50 w-72 max-w-[85vw] bg-white shadow-2xl lg:hidden overflow-y-auto">
-              <div className="flex items-center justify-between px-5 py-5 border-b border-gray-100">
-                <h2 className="text-base font-extrabold text-gray-900">Filters</h2>
-                <button onClick={() => setFilterOpen(false)} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100">
-                  <i className="fas fa-xmark text-lg text-gray-500" />
-                </button>
-              </div>
-              <div className="px-5 py-4">
-                {hasActiveFilters && (
-                  <button onClick={() => { clearAll(); setFilterOpen(false); }} className="mb-4 text-sm font-semibold text-emerald-500 hover:underline">
-                    Clear all
-                  </button>
-                )}
-                <FilterGroup
-                  title="Working Time"
-                  options={[
-                    { label: 'Full-time', value: 'full-time' },
-                    { label: 'Part-time', value: 'part-time' },
-                  ]}
-                  value={filters.type}
-                  onChange={(v) => handleFilterChange('type', v)}
-                />
-                <FilterGroup
-                  title="Location"
-                  options={[
-                    { label: 'On-site', value: 'on-site' },
-                    { label: 'Remote', value: 'remote' },
-                    { label: 'Hybrid', value: 'hybrid' },
-                  ]}
-                  value={filters.location}
-                  onChange={(v) => handleFilterChange('location', v)}
-                />
-              </div>
+                  <p className="text-sm text-gray-400">
+                    Page {page} of {totalPages}
+                  </p>
+                </div>
+              )}
             </div>
-          </>
-        )}
+          )}
+        </div>
 
         {/* ── Popular categories ──────────────────────────── */}
         <section className="mt-14">
