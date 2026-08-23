@@ -14,6 +14,7 @@ import { openFileProxy } from '@/lib/file-proxy';
 import { profileSchema, type ProfileFormData } from '@/features/auth/schemas/auth.schemas';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import ChipInput from '@/components/ui/ChipInput';
 import Select from '@/components/ui/Select';
 import ImageMenu from '@/components/ui/ImageMenu';
 import dynamic from 'next/dynamic';
@@ -82,7 +83,7 @@ export default function StudentProfileScreen() {
         address: user.address || '',
         dateOfBirth: user.dateOfBirth ? user.dateOfBirth.slice(0, 10) : '',
         gender: (user.gender as 'male' | 'female' | '') || '',
-        skills: user.skills?.join(', ') || '',
+        skills: user.skills || [],
         categories: (user.categories as string[]) || [],
         courses: (user.courses || []).filter((c: any) => c.name && c.name.trim()).map((c: any) => ({ name: c.name })),
       });
@@ -102,7 +103,7 @@ export default function StudentProfileScreen() {
         address: data.address || undefined,
         dateOfBirth: data.dateOfBirth ? `${data.dateOfBirth}T00:00:00.000Z` : undefined,
         gender: data.gender || undefined,
-        skills: data.skills ? data.skills.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
+        skills: data.skills?.length ? data.skills : undefined,
         categories: data.categories as Category[] | undefined,
         courses: data.courses?.length ? data.courses : undefined,
       });
@@ -340,15 +341,15 @@ export default function StudentProfileScreen() {
 
         {/* Edit form / Profile display */}
         {editing ? (
-          <form onSubmit={handleSubmit(onSubmit, (errs) => { console.error('Validation errors:', errs); toastHelper.error('Please fix the highlighted fields.'); })} className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
             <h2 className="font-bold text-dark text-lg">Edit details</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="First name" error={errors.firstName?.message} {...register('firstName')} />
               <Input label="Last name" error={errors.lastName?.message} {...register('lastName')} />
             </div>
-            <Input label="Headline" error={errors.headline?.message} {...register('headline')} placeholder="e.g. Computer Science Student at Cairo University" />
+            <Input label="Bio" error={errors.headline?.message} {...register('headline')} placeholder="e.g. Computer Science Student at Cairo University" />
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-gray-700">Bio</label>
+              <label className="text-sm font-semibold text-gray-700">About</label>
               <textarea {...register('bio')} rows={4} className="w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-gray-300 transition-all duration-200 resize-y border-gray-200" placeholder="Tell us about yourself..." />
               {errors.bio && <p className="text-red-500 text-xs font-medium">{errors.bio.message}</p>}
             </div>
@@ -367,7 +368,7 @@ export default function StudentProfileScreen() {
               <Input label="Address" error={errors.address?.message} {...register('address')} />
               <Input label="Date of birth" type="date" error={errors.dateOfBirth?.message} {...register('dateOfBirth')} />
             </div>
-            <Input label="Skills (comma-separated)" error={errors.skills?.message} {...register('skills')} placeholder="e.g. JavaScript, Python, Public Speaking" />
+            <ChipInput label="Skills" error={errors.skills?.message} value={watch('skills') || []} onChange={(items) => setValue('skills', items, { shouldValidate: true })} placeholder="e.g. JavaScript, Python, Public Speaking" />
 
             {/* Categories */}
             <div className="border-t border-gray-100 pt-4">

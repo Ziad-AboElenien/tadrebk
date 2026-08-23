@@ -11,6 +11,7 @@ import { internshipSchema } from '@/features/auth/schemas/auth.schemas';
 type InternshipFormValues = z.output<typeof internshipSchema>;
 import type { InternshipQuestion } from '@/features/internship/types';
 import Input from '@/components/ui/Input';
+import ChipInput from '@/components/ui/ChipInput';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
@@ -29,12 +30,12 @@ export default function EditInternshipScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [technicalSkillsStr, setTechnicalSkillsStr] = useState('');
-  const [softSkillsStr, setSoftSkillsStr] = useState('');
+  const [technicalSkills, setTechnicalSkills] = useState<string[]>([]);
+  const [softSkills, setSoftSkills] = useState<string[]>([]);
   const [technicalError, setTechnicalError] = useState<string | null>(null);
   const [softError, setSoftError] = useState<string | null>(null);
   const [questions, setQuestions] = useState<InternshipQuestion[]>([]);
-  const [preKnowledgeText, setPreKnowledgeText] = useState('');
+  const [preKnowledge, setPreKnowledge] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showCategoryInput, setShowCategoryInput] = useState(false);
   const [categoryText, setCategoryText] = useState('');
@@ -76,10 +77,10 @@ export default function EditInternshipScreen() {
           softSkills: [],
           technicalSkills: [],
         });
-        setSoftSkillsStr(intern.softSkills?.join(', ') || '');
-        setTechnicalSkillsStr(intern.technicalSkills?.join(', ') || '');
+        setSoftSkills(intern.softSkills || []);
+        setTechnicalSkills(intern.technicalSkills || []);
         setQuestions(intern.questions || []);
-        setPreKnowledgeText(intern.preKnowledge?.join(', ') || '');
+        setPreKnowledge(intern.preKnowledge || []);
         setSelectedCategories(
           intern.categories?.length
             ? intern.categories
@@ -142,19 +143,16 @@ export default function EditInternshipScreen() {
     if (!company) return;
     if (selectedCategories.length === 0) {
       setCategoryError('Select at least one track');
-      toastHelper.error('Please select at least one track');
       return;
     }
-    const technicalSkills = technicalSkillsStr.split(',').map((s) => s.trim()).filter(Boolean);
-    const softSkills = softSkillsStr.split(',').map((s) => s.trim()).filter(Boolean);
-    if (technicalSkills.length === 0) {
+    const technicalSkillsArr = technicalSkills.filter(Boolean);
+    const softSkillsArr = softSkills.filter(Boolean);
+    if (technicalSkillsArr.length === 0) {
       setTechnicalError('Add at least one technical skill');
-      toastHelper.error('Please add at least one technical skill');
       return;
     }
-    if (softSkills.length === 0) {
+    if (softSkillsArr.length === 0) {
       setSoftError('Add at least one soft skill');
-      toastHelper.error('Please add at least one soft skill');
       return;
     }
     setCategoryError(null);
@@ -168,10 +166,10 @@ export default function EditInternshipScreen() {
       });
       await internshipService.updateInternship(company._id, internId, {
         ...data,
-        softSkills,
-        technicalSkills,
+        softSkills: softSkillsArr,
+        technicalSkills: technicalSkillsArr,
         questions: cleaned.length > 0 ? cleaned : undefined,
-        preKnowledge: preKnowledgeText.split(',').map((s) => s.trim()).filter(Boolean),
+        preKnowledge: preKnowledge.filter(Boolean),
         track: selectedCategories.length > 0 ? selectedCategories : undefined,
         requiredEducation: universities.map((institution) => ({ institution })),
       });
@@ -252,17 +250,17 @@ export default function EditInternshipScreen() {
           />
         </div>
 
-        <Input
-          label="Technical skills (comma-separated)"
-          value={technicalSkillsStr}
-          onChange={(e) => { setTechnicalSkillsStr(e.target.value); if (technicalError) setTechnicalError(null); }}
+        <ChipInput
+          label="Technical skills"
+          value={technicalSkills}
+          onChange={(items) => { setTechnicalSkills(items); if (technicalError) setTechnicalError(null); }}
           error={technicalError || undefined}
           placeholder="e.g. JavaScript, React, Node.js"
         />
-        <Input
-          label="Soft skills (comma-separated)"
-          value={softSkillsStr}
-          onChange={(e) => { setSoftSkillsStr(e.target.value); if (softError) setSoftError(null); }}
+        <ChipInput
+          label="Soft skills"
+          value={softSkills}
+          onChange={(items) => { setSoftSkills(items); if (softError) setSoftError(null); }}
           error={softError || undefined}
           placeholder="e.g. Communication, Teamwork, Problem-solving"
         />
@@ -406,19 +404,13 @@ export default function EditInternshipScreen() {
         />
 
         {/* Pre-knowledge to start */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-700">
-            Pre-knowledge to Start <span className="text-gray-400 font-normal">(optional, comma-separated)</span>
-          </label>
-          <textarea
-            value={preKnowledgeText}
-            onChange={(e) => setPreKnowledgeText(e.target.value)}
-            rows={4}
-            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-700 outline-none resize-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 placeholder:text-gray-400"
-            placeholder="e.g. Basic JavaScript knowledge, Understanding of REST APIs, Familiarity with Git"
-          />
-          <p className="text-xs text-gray-400">Enter items separated by commas. Each item will appear as a bullet point in the acceptance email.</p>
-        </div>
+        <ChipInput
+          label="Pre-knowledge to Start"
+          value={preKnowledge}
+          onChange={setPreKnowledge}
+          placeholder="e.g. Basic JavaScript knowledge, Understanding of REST APIs"
+          hint="Each item will appear as a bullet point in the acceptance email."
+        />
 
         {/* Questions builder */}
         <div className="space-y-4">

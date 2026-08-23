@@ -156,7 +156,7 @@ export const profileSchema = z.object({
   address: z.string().optional(),
   dateOfBirth: z.string().optional(),
   gender: z.enum(['male', 'female']).optional().or(z.literal('')),
-  skills: z.string().optional(),
+  skills: z.array(z.string()).optional(),
   categories: z.array(z.string()).max(4, 'Maximum 4 categories').optional(),
   education: z.array(z.object({
     institution: z.string().min(1, 'Institution is required'),
