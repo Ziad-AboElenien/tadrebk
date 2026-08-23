@@ -24,12 +24,16 @@ export default function Navbar() {
   const currentCompany = useAppSelector((s) => s.company.currentCompany);
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const userMenuMobileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
+    const handler = () => setScrolled(window.scrollY > 0);
+    window.addEventListener('scroll', handler);
+    return () => window.removeEventListener('scroll', handler);
   }, []);
 
   useEffect(() => {
@@ -94,10 +98,20 @@ export default function Navbar() {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 px-3 pt-2 bg-transparent"
+      className={[
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
+        scrolled
+          ? 'px-3 pt-2 bg-transparent'
+          : 'bg-white border-b border-gray-50',
+      ].join(' ')}
     >
       <div
-        className="max-w-7xl mx-auto h-18 flex items-center justify-between gap-6 px-4 sm:px-6 rounded-full bg-white/40 backdrop-blur-xl border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.10)]"
+        className={[
+          'max-w-7xl mx-auto h-18 flex items-center justify-between gap-6 px-4 sm:px-6 transition-all duration-500',
+          scrolled
+            ? 'rounded-full bg-white/40 backdrop-blur-xl border border-white/50 shadow-[0_8px_32px_rgba(0,0,0,0.10)]'
+            : 'border border-transparent',
+        ].join(' ')}
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -412,7 +426,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
           />
           {/* Panel */}
-          <div className="fixed right-2 w-[min(288px,calc(100vw-1rem))] max-h-[calc(100vh-5rem)] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col animate-grow-from-btn origin-top-right top-18">
+          <div className={`fixed right-2 w-[min(288px,calc(100vw-1rem))] max-h-[calc(100vh-5rem)] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col animate-grow-from-btn origin-top-right ${scrolled ? 'top-20' : 'top-18'}`}>
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-2 border-b border-gray-100">
               <Image src="/images/logoandfav.png" alt="Tadrebk" width={232} height={193} className="h-12 w-auto" />
