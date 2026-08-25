@@ -31,11 +31,16 @@ export default function CompanyDashboardScreen() {
   const fetchData = useCallback(async () => {
     if (!company?._id) { setLoading(false); return; }
     try {
-      const [internshipsRes, creditsRes] = await Promise.all([
-        internshipService.listInternships({ companyId: company._id, limit: 100 }),
+      const [openRes, closedRes, creditsRes] = await Promise.all([
+        internshipService.listInternships({ companyId: company._id, closed: false, limit: 100 }),
+        internshipService.listInternships({ companyId: company._id, closed: true, limit: 100 }),
         billingService.getCredits(company._id).catch(() => null),
       ]);
-      setInternships(internshipsRes.internships);
+      const all = [
+        ...openRes.internships,
+        ...closedRes.internships.filter((c) => !openRes.internships.some((o) => o._id === c._id)),
+      ];
+      setInternships(all);
       setCredits(creditsRes);
     } catch { setInternships([]); }
     finally { setLoading(false); }
