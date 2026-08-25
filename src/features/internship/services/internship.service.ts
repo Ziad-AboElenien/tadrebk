@@ -101,4 +101,18 @@ export const internshipService = {
   async deleteInternship(companyId: string, internId: string): Promise<void> {
     await api.delete(`/company/${companyId}/internships/${internId}`);
   },
+
+  async closeInternship(companyId: string, internId: string): Promise<Internship> {
+    const { data } = await api.patch<InternshipResponse>(
+      `/company/${companyId}/internships/${internId}/close`
+    );
+    return data.data.internship;
+  },
+
+  async reopenInternship(companyId: string, internId: string): Promise<Internship> {
+    const { data } = await api.patch<InternshipResponse>(
+      `/company/${companyId}/internships/${internId}/reopen`
+    );
+    return data.data.internship;
+  },
 };

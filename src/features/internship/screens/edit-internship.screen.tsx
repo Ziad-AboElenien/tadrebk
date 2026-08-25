@@ -41,6 +41,8 @@ export default function EditInternshipScreen() {
   const [categoryText, setCategoryText] = useState('');
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [universities, setUniversities] = useState<string[]>([]);
+  const [isClosed, setIsClosed] = useState(false);
+  const [togglingClosed, setTogglingClosed] = useState(false);
 
   const {
     register,
@@ -91,6 +93,7 @@ export default function EditInternshipScreen() {
         setUniversities(
           (intern.requiredEducation || []).map((e) => e.institution).filter(Boolean),
         );
+        setIsClosed(intern.closed);
       })
       .catch(() => {
         toastHelper.error('Failed to load internship');
@@ -182,6 +185,22 @@ export default function EditInternshipScreen() {
     }
   }
 
+  async function handleToggleClosed() {
+    if (!company) return;
+    setTogglingClosed(true);
+    try {
+      const updated = isClosed
+        ? await internshipService.reopenInternship(company._id, internId)
+        : await internshipService.closeInternship(company._id, internId);
+      setIsClosed(updated.closed);
+      toastHelper.success(updated.closed ? 'Internship closed' : 'Internship reopened');
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setTogglingClosed(false);
+    }
+  }
+
   if (!company) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
@@ -203,7 +222,19 @@ export default function EditInternshipScreen() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-black text-dark mb-8">Edit internship</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <h1 className="text-2xl font-black text-dark">Edit internship</h1>
+        <Button
+          variant="outline"
+          size="sm"
+          loading={togglingClosed}
+          onClick={handleToggleClosed}
+          className={isClosed ? 'border-emerald-200 text-emerald-600 hover:bg-emerald-50' : 'border-amber-200 text-amber-600 hover:bg-amber-50'}
+        >
+          <i className={`fas fa-${isClosed ? 'lock-open' : 'lock'} text-xs mr-1.5`} />
+          {isClosed ? 'Reopen internship' : 'Close internship'}
+        </Button>
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Input

@@ -53,6 +53,8 @@ export default function StudentProfileScreen() {
   const [showOtherInput, setShowOtherInput] = useState(false);
   const [courseModalOpen, setCourseModalOpen] = useState(false);
   const [courseAdding, setCourseAdding] = useState(false);
+  const [editCourseIndex, setEditCourseIndex] = useState<number | null>(null);
+  const [editCourseUpdating, setEditCourseUpdating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const profileRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
@@ -139,6 +141,18 @@ export default function StudentProfileScreen() {
       setCourseModalOpen(false);
       toastHelper.success('Course added!');
     } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setCourseAdding(false); }
+  }
+
+  async function handleUpdateCourse(name?: string, file?: File) {
+    if (!userId || editCourseIndex === null) return;
+    setEditCourseUpdating(true);
+    try {
+      await userService.updateCourse(editCourseIndex, name, file);
+      const fresh = await userService.getUserProfile(userId);
+      dispatch(setUser(fresh));
+      setEditCourseIndex(null);
+      toastHelper.success('Course updated!');
+    } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setEditCourseUpdating(false); }
   }
 
   function onFileSelect(e: React.ChangeEvent<HTMLInputElement>, target: 'profile' | 'cover') {
@@ -619,17 +633,26 @@ export default function StudentProfileScreen() {
                       </div>
                       <p className="font-medium text-dark text-sm truncate">{course.name}</p>
                     </div>
-                    {course.certificate?.secure_url && (
-                      <button onClick={() => {
-                        const url = course.certificate?.certificateUrl || course.certificate?.secure_url;
-                        if (!url) return;
-                        const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(url);
-                        if (isImage) { window.open(url, '_blank'); return; }
-                        openFileProxy(url);
-                      }} className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 shrink-0 cursor-pointer">
-                        <i className="fas fa-eye text-xs" /> View certificate
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => setEditCourseIndex(i)}
+                        className="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center hover:bg-blue-100 transition-colors"
+                        title="Edit course"
+                      >
+                        <i className="fas fa-pen text-xs" />
                       </button>
-                    )}
+                      {course.certificate?.secure_url && (
+                        <button onClick={() => {
+                          const url = course.certificate?.certificateUrl || course.certificate?.secure_url;
+                          if (!url) return;
+                          const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(url);
+                          if (isImage) { window.open(url, '_blank'); return; }
+                          openFileProxy(url);
+                        }} className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 shrink-0 cursor-pointer">
+                          <i className="fas fa-eye text-xs" /> View certificate
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}</div>
               ) : (
@@ -658,6 +681,19 @@ export default function StudentProfileScreen() {
             adding={courseAdding}
             onAdd={handleAddCourse}
             onClose={() => setCourseModalOpen(false)}
+          />
+        )}
+
+        {editCourseIndex !== null && user?.courses?.[editCourseIndex] && (
+          <CourseModal
+            open
+            adding={editCourseUpdating}
+            editMode
+            initialName={user.courses[editCourseIndex].name}
+            hasCertificate={!!user.courses[editCourseIndex].certificate?.secure_url}
+            onAdd={handleAddCourse}
+            onUpdate={handleUpdateCourse}
+            onClose={() => setEditCourseIndex(null)}
           />
         )}
 

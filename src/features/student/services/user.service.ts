@@ -134,6 +134,18 @@ export const userService = {
     });
   },
 
+  async updateCourse(courseIndex: number, name?: string, file?: File): Promise<void> {
+    const formData = new FormData();
+    if (name !== undefined) formData.append('name', name);
+    if (file) formData.append('file', file);
+
+    await api.patch(`/user/courses/${courseIndex}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
   async deleteAccount(userId: string): Promise<void> {
     await api.delete(`/user/${userId}`);
   },

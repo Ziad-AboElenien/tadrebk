@@ -119,42 +119,48 @@ function FallbackCard() {
     <div className="overflow-hidden rounded-2xl bg-white shadow-2xl">
       <div className="flex items-center justify-between bg-gray-50 px-5 py-4">
         <div>
-          <p className="text-sm font-bold text-gray-900">Good morning, Emad <i className="fas fa-hand-wave text-amber-400 text-sm" /></p>
-          <p className="text-xs text-gray-400">You have 3 pending updates today.</p>
+          <p className="text-sm font-bold text-gray-900">Your career starts here <i className="fas fa-rocket text-emerald-500 text-sm" /></p>
+          <p className="text-xs text-gray-400">Join thousands of students landing their dream internships.</p>
         </div>
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-white text-xs font-bold">E</div>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-white text-xs font-bold">
+          <i className="fas fa-user-graduate text-sm" />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3 border-b border-gray-100 px-5 py-4">
-        {[{ label: 'Applications Sent', value: '08' }, { label: 'Active Interviews', value: '12' }].map((s) => (
+        {[
+          { icon: 'fa-briefcase', label: 'Browse Internships', desc: 'Explore openings from top companies' },
+          { icon: 'fa-paper-plane', label: 'Apply in Seconds', desc: 'One-click applications with your profile' },
+        ].map((s) => (
           <div key={s.label} className="rounded-xl bg-gray-50 p-3 text-center">
-            <p className="text-2xl font-extrabold text-gray-900">{s.value}</p>
-            <p className="text-xs text-gray-400">{s.label}</p>
+            <i className={`fas ${s.icon} text-lg text-emerald-500 mb-1`} />
+            <p className="text-xs font-bold text-gray-900">{s.label}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">{s.desc}</p>
           </div>
         ))}
       </div>
       <div className="px-5 py-4">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-xs font-bold text-gray-700">Recent Applications</p>
-          <button className="text-xs text-emerald-500 hover:underline">View All</button>
+          <p className="text-xs font-bold text-gray-700">Why Tadrebk?</p>
         </div>
         <div className="space-y-3">
           {[
-            { role: 'Frontend Developer Intern', co: 'Swvl', status: 'Interviewing', color: 'text-emerald-600 bg-emerald-50' },
-            { role: 'UI/UX Design Intern', co: 'Robosta', status: 'Applied', color: 'text-gray-600 bg-gray-100' },
-            { role: 'Marketing Intern', co: 'Jumia', status: 'Applied', color: 'text-gray-600 bg-gray-100' },
-          ].map((a) => (
-            <div key={a.role} className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-pink-100 to-sky-100" />
-                <div>
-                  <p className="text-xs font-semibold text-gray-900">{a.role}</p>
-                  <p className="text-[10px] text-gray-400">{a.co}</p>
-                </div>
+            { icon: 'fa-check-circle', text: 'Track all your applications in one dashboard' },
+            { icon: 'fa-star', text: 'Get matched with internships that fit your skills' },
+            { icon: 'fa-bell', text: 'Never miss a deadline or new opportunity' },
+          ].map((item) => (
+            <div key={item.text} className="flex items-center gap-2">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-50">
+                <i className={`fas ${item.icon} text-[10px] text-emerald-500`} />
               </div>
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${a.color}`}>{a.status}</span>
+              <p className="text-xs text-gray-600">{item.text}</p>
             </div>
           ))}
         </div>
+      </div>
+      <div className="px-5 pb-5 pt-1">
+        <Link href="/get-started" className="flex items-center justify-center gap-2 w-full rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-bold text-white transition-all duration-300 hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/25">
+          <i className="fas fa-rocket text-[10px]" /> Create Your Free Account
+        </Link>
       </div>
     </div>
   );

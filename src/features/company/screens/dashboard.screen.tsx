@@ -23,6 +23,8 @@ export default function CompanyDashboardScreen() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [togglingClosed, setTogglingClosed] = useState<string | null>(null);
+  const [closeTarget, setCloseTarget] = useState<{ id: string; close: boolean } | null>(null);
   const [showPendingModal, setShowPendingModal] = useState(false);
   const logoBlank = useBlankImage(getCompanyImgUrl(company?.logo));
 
@@ -57,6 +59,23 @@ export default function CompanyDashboardScreen() {
       setDeleting(null);
     }
   }, [company, deleteTarget]);
+
+  const confirmCloseReopen = useCallback(async () => {
+    if (!company || !closeTarget) return;
+    setTogglingClosed(closeTarget.id);
+    setCloseTarget(null);
+    try {
+      const updated = closeTarget.close
+        ? await internshipService.closeInternship(company._id, closeTarget.id)
+        : await internshipService.reopenInternship(company._id, closeTarget.id);
+      setInternships((prev) => prev.map((i) => i._id === closeTarget.id ? updated : i));
+      toastHelper.success(closeTarget.close ? 'Internship closed' : 'Internship reopened');
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setTogglingClosed(null);
+    }
+  }, [company, closeTarget]);
 
   // Session (company profile) is still hydrating after a hard refresh —
   // show a skeleton instead of the "Complete Company Profile" prompt.
@@ -222,6 +241,16 @@ export default function CompanyDashboardScreen() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      loading={togglingClosed === intern._id}
+                      onClick={() => setCloseTarget({ id: intern._id, close: !intern.closed })}
+                      className={intern.closed ? 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50' : 'text-amber-500 hover:text-amber-600 hover:bg-amber-50'}
+                    >
+                      <i className={`fas fa-${intern.closed ? 'lock-open' : 'lock'} text-xs`} />
+                      {intern.closed ? 'Reopen' : 'Close'}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       loading={deleting === intern._id}
                       onClick={() => setDeleteTarget(intern._id)}
                       className="text-red-400 hover:text-red-600 hover:bg-red-50"
@@ -254,6 +283,33 @@ export default function CompanyDashboardScreen() {
                 Delete
               </Button>
               <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Close / Reopen confirmation modal */}
+      {closeTarget && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setCloseTarget(null)} />
+          <div className="relative bg-white rounded-[2rem] p-6 sm:p-10 shadow-2xl max-w-sm w-full text-center animate-fade-in-up">
+            <div className={`w-16 h-16 rounded-[1.25rem] flex items-center justify-center mx-auto mb-5 ${closeTarget.close ? 'bg-amber-50' : 'bg-emerald-50'}`}>
+              <i className={`fas fa-${closeTarget.close ? 'lock text-amber-500' : 'lock-open text-emerald-500'} text-2xl`} />
+            </div>
+            <h2 className="text-xl font-black text-dark mb-2">
+              {closeTarget.close ? 'Close internship?' : 'Reopen internship?'}
+            </h2>
+            <p className="text-sm text-gray-500 mb-8">
+              {closeTarget.close
+                ? 'This internship will be hidden from the public listing and will no longer accept new applications. Existing applications are preserved.'
+                : 'This internship will reappear in the public listing and start accepting new applications again.'}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button onClick={confirmCloseReopen} loading={togglingClosed === closeTarget.id} className={closeTarget.close ? '!bg-amber-500 hover:!bg-amber-600 !shadow-lg !shadow-amber-200 !font-bold' : '!bg-emerald-500 hover:!bg-emerald-600 !shadow-lg !shadow-emerald-200 !font-bold'}>
+                {closeTarget.close ? 'Close' : 'Reopen'}
+              </Button>
+              <Button variant="outline" onClick={() => setCloseTarget(null)}>
                 Cancel
               </Button>
             </div>

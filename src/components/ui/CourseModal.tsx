@@ -7,20 +7,27 @@ import { toastHelper } from '@/lib/toast';
 interface CourseModalProps {
   open: boolean;
   adding?: boolean;
+  /** When provided, the modal operates in "edit" mode instead of "add" mode */
+  editMode?: boolean;
+  /** Initial course name (for edit mode) */
+  initialName?: string;
+  /** Whether the course already has a certificate (for edit mode) */
+  hasCertificate?: boolean;
   onAdd: (name: string, file?: File) => void;
+  onUpdate?: (name?: string, file?: File) => void;
   onClose: () => void;
 }
 
-export default function CourseModal({ open, adding = false, onAdd, onClose }: CourseModalProps) {
+export default function CourseModal({ open, adding = false, editMode = false, initialName = '', hasCertificate = false, onAdd, onUpdate, onClose }: CourseModalProps) {
   const [name, setName] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (open) {
-      setName('');
+      setName(editMode ? initialName : '');
       setFile(null);
     }
-  }, [open]);
+  }, [open, editMode, initialName]);
 
   useEffect(() => {
     if (!open) return;
@@ -33,10 +40,21 @@ export default function CourseModal({ open, adding = false, onAdd, onClose }: Co
 
   if (!open) return null;
 
-  const canSubmit = name.trim().length > 0 && !adding;
+  const trimmedName = name.trim();
+  const canSubmit = editMode
+    ? (trimmedName.length > 0 || file !== null) && !adding
+    : trimmedName.length > 0 && !adding;
 
   function submit() {
-    if (canSubmit) onAdd(name.trim(), file ?? undefined);
+    if (!canSubmit) return;
+    if (editMode && onUpdate) {
+      onUpdate(
+        trimmedName !== initialName ? trimmedName : undefined,
+        file ?? undefined,
+      );
+    } else {
+      onAdd(trimmedName, file ?? undefined);
+    }
   }
 
   return (
@@ -45,7 +63,7 @@ export default function CourseModal({ open, adding = false, onAdd, onClose }: Co
       <div className="relative bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-bold text-dark flex items-center gap-2">
-            <i className="fas fa-certificate text-primary" /> Add course
+            <i className="fas fa-certificate text-primary" /> {editMode ? 'Edit course' : 'Add course'}
           </h3>
           <button
             type="button"
@@ -103,6 +121,10 @@ export default function CourseModal({ open, adding = false, onAdd, onClose }: Co
             <>
               <i className="fas fa-check-circle text-xs" /> {file.name}
             </>
+          ) : editMode && hasCertificate ? (
+            <>
+              <i className="fas fa-upload text-xs" /> Replace certificate
+            </>
           ) : (
             <>
               <i className="fas fa-upload text-xs" /> Upload certificate (image or PDF)
@@ -124,7 +146,7 @@ export default function CourseModal({ open, adding = false, onAdd, onClose }: Co
             Cancel
           </Button>
           <Button fullWidth loading={adding} disabled={!canSubmit} onClick={submit}>
-            Add course
+            {editMode ? 'Save changes' : 'Add course'}
           </Button>
         </div>
       </div>

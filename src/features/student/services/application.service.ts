@@ -186,9 +186,11 @@ export const applicationService = {
     companyId: string,
     internId: string,
     applicationId: string,
+    message?: string,
   ): Promise<void> {
     await api.post(
       `/company/${companyId}/internships/${internId}/applications/${applicationId}/send-acceptance-email`,
+      message ? { message } : undefined,
     );
   },
 

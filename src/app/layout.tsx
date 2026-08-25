@@ -39,9 +39,9 @@ export const metadata: Metadata = {
     follow: true,
   },
   icons: {
-    icon: '/images/logoandfav.png',
-    shortcut: '/images/logoandfav.png',
-    apple: '/images/logoandfav.png',
+    icon: '/images/favicon.png',
+    shortcut: '/images/favicon.png',
+    apple: '/images/favicon.png',
   },
 };
 

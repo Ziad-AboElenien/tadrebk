@@ -55,6 +55,7 @@ export default function InternshipApplicationsScreen() {
   const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
   const [sendingAll, setSendingAll] = useState(false);
   const [emailConfirmTarget, setEmailConfirmTarget] = useState<string | null>(null);
+  const [emailMessage, setEmailMessage] = useState('');
   const [ratingModal, setRatingModal] = useState<{ applicationId: string; studentName: string } | null>(null);
   const [ratingScore, setRatingScore] = useState(5);
   const [ratingComment, setRatingComment] = useState('');
@@ -195,8 +196,10 @@ export default function InternshipApplicationsScreen() {
     if (!company) return;
     setSendingEmailId(applicationId);
     setEmailConfirmTarget(null);
+    const msg = emailMessage.trim() || undefined;
+    setEmailMessage('');
     try {
-      await applicationService.sendAcceptanceEmail(company._id, internId, applicationId);
+      await applicationService.sendAcceptanceEmail(company._id, internId, applicationId, msg);
       toastHelper.success('Acceptance email sent!');
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
@@ -208,13 +211,15 @@ export default function InternshipApplicationsScreen() {
   async function handleSendAllEmails() {
     if (!company) return;
     setEmailConfirmTarget(null);
+    const msg = emailMessage.trim() || undefined;
+    setEmailMessage('');
     const accepted = applications.filter((a) => a.status === 'accepted');
     setSendingAll(true);
     let sent = 0;
     let failed = 0;
     for (const app of accepted) {
       try {
-        await applicationService.sendAcceptanceEmail(company._id, internId, app._id);
+        await applicationService.sendAcceptanceEmail(company._id, internId, app._id, msg);
         sent++;
       } catch {
         failed++;
@@ -586,7 +591,7 @@ export default function InternshipApplicationsScreen() {
       {/* Email confirmation modal */}
       {emailConfirmTarget && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setEmailConfirmTarget(null)} />
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setEmailConfirmTarget(null); setEmailMessage(''); }} />
           <div className="relative bg-white rounded-[2rem] p-6 sm:p-10 shadow-2xl max-w-sm w-full text-center animate-fade-in-up">
             <div className="w-16 h-16 rounded-[1.25rem] bg-emerald-50 flex items-center justify-center mx-auto mb-5">
               <svg className="w-8 h-8 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -595,11 +600,23 @@ export default function InternshipApplicationsScreen() {
               </svg>
             </div>
             <h2 className="text-xl font-black text-dark mb-2">Send acceptance email?</h2>
-            <p className="text-sm text-gray-500 mb-8">
+            <p className="text-sm text-gray-500 mb-4">
               {emailConfirmTarget === 'all'
                 ? `This will send acceptance emails to all ${applications.filter((a) => a.status === 'accepted').length} accepted applicants.`
                 : 'An acceptance email will be sent to this applicant.'}
             </p>
+            <div className="mb-6 text-left">
+              <label className="block mb-1.5 text-sm font-semibold text-gray-700">
+                Message <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <textarea
+                value={emailMessage}
+                onChange={(e) => setEmailMessage(e.target.value)}
+                rows={3}
+                placeholder="e.g. Welcome to the team! We're excited to have you on board..."
+                className="w-full border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary resize-none"
+              />
+            </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
                 onClick={() => emailConfirmTarget === 'all' ? handleSendAllEmails() : handleSendAcceptanceEmail(emailConfirmTarget as string)}
@@ -607,7 +624,7 @@ export default function InternshipApplicationsScreen() {
               >
                 <i className="fas fa-envelope mr-2" /> Send
               </Button>
-              <Button variant="outline" onClick={() => setEmailConfirmTarget(null)}>
+              <Button variant="outline" onClick={() => { setEmailConfirmTarget(null); setEmailMessage(''); }}>
                 Cancel
               </Button>
             </div>
