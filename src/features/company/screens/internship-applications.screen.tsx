@@ -52,10 +52,6 @@ export default function InternshipApplicationsScreen() {
   const universityRef = useRef<HTMLDivElement>(null);
   const universityFetchedRef = useRef(false);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
-  const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
-  const [sendingAll, setSendingAll] = useState(false);
-  const [emailConfirmTarget, setEmailConfirmTarget] = useState<string | null>(null);
-  const [emailMessage, setEmailMessage] = useState('');
   const [ratingModal, setRatingModal] = useState<{ applicationId: string; studentName: string } | null>(null);
   const [ratingScore, setRatingScore] = useState(5);
   const [ratingComment, setRatingComment] = useState('');
@@ -190,44 +186,6 @@ export default function InternshipApplicationsScreen() {
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     }
-  }
-
-  async function handleSendAcceptanceEmail(applicationId: string) {
-    if (!company) return;
-    setSendingEmailId(applicationId);
-    setEmailConfirmTarget(null);
-    const msg = emailMessage.trim() || undefined;
-    setEmailMessage('');
-    try {
-      await applicationService.sendAcceptanceEmail(company._id, internId, applicationId, msg);
-      toastHelper.success('Acceptance email sent!');
-    } catch (err) {
-      toastHelper.error(getErrorMessage(err));
-    } finally {
-      setSendingEmailId(null);
-    }
-  }
-
-  async function handleSendAllEmails() {
-    if (!company) return;
-    setEmailConfirmTarget(null);
-    const msg = emailMessage.trim() || undefined;
-    setEmailMessage('');
-    const accepted = applications.filter((a) => a.status === 'accepted');
-    setSendingAll(true);
-    let sent = 0;
-    let failed = 0;
-    for (const app of accepted) {
-      try {
-        await applicationService.sendAcceptanceEmail(company._id, internId, app._id, msg);
-        sent++;
-      } catch {
-        failed++;
-      }
-    }
-    setSendingAll(false);
-    if (sent > 0) toastHelper.success(`${sent} acceptance email${sent > 1 ? 's' : ''} sent!`);
-    if (failed > 0) toastHelper.error(`${failed} email${failed > 1 ? 's' : ''} failed`);
   }
 
   const filtered = applications.filter((a) => {
@@ -388,8 +346,7 @@ export default function InternshipApplicationsScreen() {
         <div className="mb-6 flex justify-end">
           <Button
             variant="primary"
-            loading={sendingAll}
-            onClick={() => setEmailConfirmTarget('all')}
+            onClick={() => router.push(`/company/internships/${internId}/compose-email?target=all`)}
           >
             <i className="fas fa-envelope text-xs mr-1" /> Send Email to All ({statusCounts.accepted})
           </Button>
@@ -518,8 +475,7 @@ export default function InternshipApplicationsScreen() {
                             <Button
                               variant="outline"
                               size="sm"
-                              loading={sendingEmailId === app._id}
-                              onClick={() => setEmailConfirmTarget(app._id)}
+                              onClick={() => router.push(`/company/internships/${internId}/compose-email?target=${app._id}`)}
                               className="border-emerald-200 text-emerald-600 hover:bg-emerald-50"
                             >
                               <i className="fas fa-envelope text-xs mr-1" /> Send Email
@@ -587,50 +543,6 @@ export default function InternshipApplicationsScreen() {
           </div>
         )}
       </div>
-
-      {/* Email confirmation modal */}
-      {emailConfirmTarget && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => { setEmailConfirmTarget(null); setEmailMessage(''); }} />
-          <div className="relative bg-white rounded-[2rem] p-6 sm:p-10 shadow-2xl max-w-sm w-full text-center animate-fade-in-up">
-            <div className="w-16 h-16 rounded-[1.25rem] bg-emerald-50 flex items-center justify-center mx-auto mb-5">
-              <svg className="w-8 h-8 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                <polyline points="22,6 12,13 2,6" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-black text-dark mb-2">Send acceptance email?</h2>
-            <p className="text-sm text-gray-500 mb-4">
-              {emailConfirmTarget === 'all'
-                ? `This will send acceptance emails to all ${applications.filter((a) => a.status === 'accepted').length} accepted applicants.`
-                : 'An acceptance email will be sent to this applicant.'}
-            </p>
-            <div className="mb-6 text-left">
-              <label className="block mb-1.5 text-sm font-semibold text-gray-700">
-                Message <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <textarea
-                value={emailMessage}
-                onChange={(e) => setEmailMessage(e.target.value)}
-                rows={3}
-                placeholder="e.g. Welcome to the team! We're excited to have you on board..."
-                className="w-full border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary resize-none"
-              />
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button
-                onClick={() => emailConfirmTarget === 'all' ? handleSendAllEmails() : handleSendAcceptanceEmail(emailConfirmTarget as string)}
-                className="!bg-gradient-to-r !from-emerald-500 !to-emerald-600 !shadow-lg !shadow-emerald-200 !font-bold"
-              >
-                <i className="fas fa-envelope mr-2" /> Send
-              </Button>
-              <Button variant="outline" onClick={() => { setEmailConfirmTarget(null); setEmailMessage(''); }}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Rating Modal */}
       {ratingModal && (
