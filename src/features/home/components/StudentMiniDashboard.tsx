@@ -119,7 +119,7 @@ function FallbackCard() {
     <div className="w-full max-w-[760px] mx-auto overflow-hidden rounded-[28px] bg-white shadow-[0_20px_50px_-12px_rgba(16,24,17,0.15)]">
       {/* Header */}
       <div className="px-8 pt-7 pb-6 bg-gradient-to-r from-[#E9F7F1] to-[#F6FBF9]">
-        <h1 className="text-[22px] font-bold text-[#16241D]">Welcome 👋</h1>
+        <h1 className="text-[22px] font-bold text-[#16241D]">Welcome <i className="fas fa-hand-sparkles text-[#16A667] text-[18px]" /></h1>
         <p className="text-[13.5px] text-[#6B7C74] mt-1">Sign in to see your applications and interviews here.</p>
       </div>
 
@@ -127,7 +127,7 @@ function FallbackCard() {
       <div className="px-8 pt-6 grid grid-cols-2 gap-4">
         <div className="relative rounded-2xl bg-[#F5F7F6] p-5 overflow-hidden" style={{ backgroundImage: 'repeating-linear-gradient(0deg, #CBD6D1, #CBD6D1 6px, transparent 6px, transparent 12px), repeating-linear-gradient(90deg, #CBD6D1, #CBD6D1 6px, transparent 6px, transparent 12px), repeating-linear-gradient(180deg, #CBD6D1, #CBD6D1 6px, transparent 6px, transparent 12px), repeating-linear-gradient(270deg, #CBD6D1, #CBD6D1 6px, transparent 6px, transparent 12px)', backgroundSize: '2px 100%, 100% 2px, 2px 100%, 100% 2px', backgroundPosition: '0 0, 0 0, 100% 0, 0 100%', backgroundRepeat: 'no-repeat' }}>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] font-semibold text-[#9AA69E] bg-white px-2 py-0.5 rounded-full">🔒 Locked</span>
+            <span className="text-[11px] font-semibold text-[#9AA69E] bg-white px-2 py-0.5 rounded-full"><i className="fas fa-lock text-[9px] mr-1" />Locked</span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#16A667] animate-pulse" />
           </div>
           <div className="text-[26px] font-extrabold text-[#C6CFC9] tracking-wide mt-2">—</div>
@@ -135,7 +135,7 @@ function FallbackCard() {
         </div>
         <div className="relative rounded-2xl bg-[#F5F7F6] p-5 overflow-hidden" style={{ backgroundImage: 'repeating-linear-gradient(0deg, #CBD6D1, #CBD6D1 6px, transparent 6px, transparent 12px), repeating-linear-gradient(90deg, #CBD6D1, #CBD6D1 6px, transparent 6px, transparent 12px), repeating-linear-gradient(180deg, #CBD6D1, #CBD6D1 6px, transparent 6px, transparent 12px), repeating-linear-gradient(270deg, #CBD6D1, #CBD6D1 6px, transparent 6px, transparent 12px)', backgroundSize: '2px 100%, 100% 2px, 2px 100%, 100% 2px', backgroundPosition: '0 0, 0 0, 100% 0, 0 100%', backgroundRepeat: 'no-repeat' }}>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] font-semibold text-[#9AA69E] bg-white px-2 py-0.5 rounded-full">🔒 Locked</span>
+            <span className="text-[11px] font-semibold text-[#9AA69E] bg-white px-2 py-0.5 rounded-full"><i className="fas fa-lock text-[9px] mr-1" />Locked</span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#16A667] animate-pulse" />
           </div>
           <div className="text-[26px] font-extrabold text-[#C6CFC9] tracking-wide mt-2">—</div>
@@ -150,7 +150,7 @@ function FallbackCard() {
           <span className="text-[13px] text-[#B7C0BB] font-medium">Nothing yet</span>
         </div>
         <div className="rounded-2xl border border-[#EDF1EF] p-6 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#EFF6F3] flex items-center justify-center text-[20px] shrink-0">📄</div>
+          <div className="w-12 h-12 rounded-xl bg-[#EFF6F3] flex items-center justify-center shrink-0"><i className="fas fa-file-lines text-[#16A667] text-[20px]" /></div>
           <div className="flex-1">
             <p className="text-[13.5px] font-semibold text-[#16241D]">Every job you apply to will show up here</p>
             <p className="text-[12.5px] text-[#8B978F] mt-0.5">Apply to your first job to get started</p>
@@ -166,24 +166,24 @@ function FallbackCard() {
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#1EC08C] to-[#0F9C6C] p-4 h-[110px] flex flex-col justify-between text-white">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-[15px]">💼</div>
+            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center"><i className="fas fa-briefcase text-white text-[13px]" /></div>
             <div>
               <p className="text-[12.5px] font-bold leading-tight">UI/UX Designer</p>
-              <p className="text-[10.5px] text-white/80 mt-0.5">📍 Remote</p>
+              <p className="text-[10.5px] text-white/80 mt-0.5"><i className="fas fa-location-dot text-[9px] mr-0.5" />Remote</p>
             </div>
           </div>
           <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#6C8CF5] to-[#4C6AE0] p-4 h-[110px] flex flex-col justify-between text-white">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-[15px]">💼</div>
+            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center"><i className="fas fa-briefcase text-white text-[13px]" /></div>
             <div>
               <p className="text-[12.5px] font-bold leading-tight">Front-End Developer</p>
-              <p className="text-[10.5px] text-white/80 mt-0.5">📍 On-site</p>
+              <p className="text-[10.5px] text-white/80 mt-0.5"><i className="fas fa-location-dot text-[9px] mr-0.5" />On-site</p>
             </div>
           </div>
           <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#F5A623] to-[#E08900] p-4 h-[110px] flex flex-col justify-between text-white">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-[15px]">💼</div>
+            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center"><i className="fas fa-briefcase text-white text-[13px]" /></div>
             <div>
               <p className="text-[12.5px] font-bold leading-tight">Marketing Specialist</p>
-              <p className="text-[10.5px] text-white/80 mt-0.5">📍 On-site</p>
+              <p className="text-[10.5px] text-white/80 mt-0.5"><i className="fas fa-location-dot text-[9px] mr-0.5" />On-site</p>
             </div>
           </div>
         </div>
