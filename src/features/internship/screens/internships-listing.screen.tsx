@@ -258,13 +258,17 @@ function InternshipsContent() {
 
   useEffect(() => { fetchInternships(); }, [fetchInternships]);
 
-  // Scroll to results when page changes — wait for DOM to update
+  // Scroll to results only when page changes — not on filter changes
+  const prevPage = useRef(page);
   useEffect(() => {
-    if (!loading && !loadingMore && resultsRef.current) {
-      const id = requestAnimationFrame(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-      return () => cancelAnimationFrame(id);
+    if (page !== prevPage.current) {
+      prevPage.current = page;
+      if (!loading && !loadingMore && resultsRef.current) {
+        const id = requestAnimationFrame(() => {
+          resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        return () => cancelAnimationFrame(id);
+      }
     }
   }, [page, loading, loadingMore]);
 

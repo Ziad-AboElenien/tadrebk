@@ -353,7 +353,21 @@ export default function StudentProfileScreen() {
                 <p className="text-gray-500 flex items-center gap-1.5 mt-0.5"><i className="fas fa-envelope text-xs" />{user.email}</p>
               </div>
             </div>
-            {!editing && <Button variant="outline" size="sm" leftIcon={<i className="fas fa-pen text-xs" />} onClick={() => { setEditing(true); setFormError(null); }}>Edit profile</Button>}
+            {!editing && (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" leftIcon={<i className="fas fa-pen text-xs" />} onClick={() => { setEditing(true); setFormError(null); }}>Edit profile</Button>
+                <input ref={resumeRef} id="resume-input" type="file" accept=".pdf" className="hidden" onChange={handleResumeUpload} />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  loading={uploadingResume}
+                  leftIcon={<i className="fas fa-file-pdf text-xs" />}
+                  onClick={() => document.getElementById('resume-input')?.click()}
+                >
+                  {user.resume || resumeUrl ? 'Update CV' : 'Upload CV'}
+                </Button>
+              </div>
+            )}
           </div>
 
           {user.headline && !editing && <p className="text-gray-600 mt-3 flex items-center gap-2"><i className="fas fa-briefcase text-gray-300 text-xs" />{user.headline}</p>}
