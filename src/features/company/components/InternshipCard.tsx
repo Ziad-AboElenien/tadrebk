@@ -1,37 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState, useEffect, useCallback, memo } from 'react';
+import { useMemo, memo } from 'react';
 import { Internship, getInternshipTracks } from '@/features/internship/types';
 import type { Company } from '@/features/company/types';
 import { getCompanyImgUrl } from '@/features/company/types';
 import { CATEGORY_LABELS } from '@/features/student/types';
 import MediaImage from '@/components/ui/MediaImage';
 
-const LS_SAVED = 'tadrebk_saved_internships';
-
 const locationLabels: Record<string, string> = { 'on-site': 'On-site', remote: 'Remote', hybrid: 'Hybrid' };
-
-function isSaved(id: string): boolean {
-  if (typeof window === 'undefined') return false;
-  try {
-    const saved = JSON.parse(localStorage.getItem(LS_SAVED) || '[]');
-    return saved.includes(id);
-  } catch { return false; }
-}
-
-function toggleSaved(id: string): boolean {
-  try {
-    const saved: string[] = JSON.parse(localStorage.getItem(LS_SAVED) || '[]');
-    const idx = saved.indexOf(id);
-    if (idx > -1) { saved.splice(idx, 1); localStorage.setItem(LS_SAVED, JSON.stringify(saved)); return false; }
-    else { saved.push(id); localStorage.setItem(LS_SAVED, JSON.stringify(saved)); return true; }
-  } catch { return false; }
-}
 
 interface InternshipCardProps {
   internship: Internship;
   compact?: boolean;
+  saved?: boolean;
+  onSave?: (id: string) => void;
 }
 
 function companyFromInternship(internship: Internship): Company | null {
@@ -43,20 +26,18 @@ function companyFromInternship(internship: Internship): Company | null {
 function InternshipCardInner({
   internship,
   compact = false,
+  saved = false,
+  onSave,
 }: InternshipCardProps) {
-  const [saved, setSaved] = useState(false);
   const company = useMemo(() => companyFromInternship(internship), [internship]);
   const logoUrl = useMemo(() => (company ? getCompanyImgUrl(company.logo) : null), [company]);
   const tracks = useMemo(() => getInternshipTracks(internship), [internship]);
 
-  useEffect(() => { setSaved(isSaved(internship._id)); }, [internship._id]);
-
-  const handleSave = useCallback((e: React.MouseEvent) => {
+  const handleSave = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const now = toggleSaved(internship._id);
-    setSaved(now);
-  }, [internship._id]);
+    onSave?.(internship._id);
+  };
 
   if (compact) {
     return (

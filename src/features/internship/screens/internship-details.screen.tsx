@@ -16,23 +16,6 @@ import { CATEGORY_LABELS } from '@/features/student/types';
 import { getErrorMessage, getErrorUrl } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
-const LS_SAVED = 'tadrebk_saved_internships';
-
-function isSaved(id: string): boolean {
-  if (typeof window === 'undefined') return false;
-  try { return JSON.parse(localStorage.getItem(LS_SAVED) || '[]').includes(id); }
-  catch { return false; }
-}
-
-function toggleSaved(id: string): boolean {
-  try {
-    const saved: string[] = JSON.parse(localStorage.getItem(LS_SAVED) || '[]');
-    const idx = saved.indexOf(id);
-    if (idx > -1) { saved.splice(idx, 1); localStorage.setItem(LS_SAVED, JSON.stringify(saved)); return false; }
-    else { saved.push(id); localStorage.setItem(LS_SAVED, JSON.stringify(saved)); return true; }
-  } catch { return false; }
-}
-
 const locationLabels: Record<string, string> = { 'on-site': 'On-site', remote: 'Remote', hybrid: 'Hybrid' };
 
 export default function InternshipDetailsScreen() {
@@ -53,7 +36,14 @@ export default function InternshipDetailsScreen() {
   const [showApplySuccess, setShowApplySuccess] = useState(false);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
 
-  useEffect(() => { setSaved(isSaved(internId)); }, [internId]);
+  useEffect(() => {
+    if (!isAuthenticated || !internId) return;
+    internshipService.getSavedInternships(1, 500)
+      .then((res) => {
+        setSaved(res.internships.some((i) => i._id === internId));
+      })
+      .catch(() => {});
+  }, [internId, isAuthenticated]);
 
   // Check if user already applied
   useEffect(() => {
@@ -183,11 +173,22 @@ export default function InternshipDetailsScreen() {
     }
   }, [internship, internId]);
 
-  const handleSave = useCallback(() => {
-    const now = toggleSaved(internId);
-    setSaved(now);
-    toastHelper.success(now ? 'Saved!' : 'Removed from saved');
-  }, [internId]);
+  const handleSave = useCallback(async () => {
+    const wasSaved = saved;
+    setSaved(!wasSaved);
+    try {
+      if (wasSaved) {
+        await internshipService.unsaveInternship(internId);
+        toastHelper.success('Removed from saved');
+      } else {
+        await internshipService.saveInternship(internId);
+        toastHelper.success('Saved!');
+      }
+    } catch {
+      setSaved(wasSaved);
+      toastHelper.error('Failed to update saved status');
+    }
+  }, [internId, saved]);
 
   if (loading) {
     return (

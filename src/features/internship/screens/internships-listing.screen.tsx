@@ -15,8 +15,6 @@ import { CATEGORY_LABELS, type Category } from '@/features/student/types';
 import { toast } from 'react-toastify';
 import { toastHelper } from '@/lib/toast';
 
-const LS_SAVED = 'tadrebk_saved_internships';
-
 // Map each user category to keywords that may appear in internship title or skills
 const CATEGORY_KEYWORDS: Record<Category, string[]> = {
   frontend: ['frontend', 'front-end', 'front end', 'react', 'angular', 'vue', 'nextjs', 'next.js', 'javascript', 'typescript', 'css', 'html'],
@@ -70,21 +68,6 @@ function matchesTrack(internship: Internship, categories: Category[]): boolean {
       (c) => t === c || (c.length >= 3 && t.includes(c)) || (t.length >= 3 && c.includes(t))
     )
   );
-}
-
-function isSaved(id: string): boolean {
-  if (typeof window === 'undefined') return false;
-  try { return JSON.parse(localStorage.getItem(LS_SAVED) || '[]').includes(id); }
-  catch { return false; }
-}
-
-function toggleSaved(id: string): boolean {
-  try {
-    const saved: string[] = JSON.parse(localStorage.getItem(LS_SAVED) || '[]');
-    const idx = saved.indexOf(id);
-    if (idx > -1) { saved.splice(idx, 1); localStorage.setItem(LS_SAVED, JSON.stringify(saved)); return false; }
-    else { saved.push(id); localStorage.setItem(LS_SAVED, JSON.stringify(saved)); return true; }
-  } catch { return false; }
 }
 
 const locationLabels: Record<string, string> = { 'on-site': 'On-site', remote: 'Remote', hybrid: 'Hybrid' };
@@ -162,6 +145,16 @@ function InternshipsContent() {
       .catch(() => {});
   }, []);
 
+  // Fetch saved internships from API
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    internshipService.getSavedInternships(1, 500)
+      .then((res) => {
+        setSavedIds(new Set(res.internships.map((i) => i._id)));
+      })
+      .catch(() => {});
+  }, [isAuthenticated]);
+
   // Fetch real category counts
   const CATEGORIES = ['Software', 'Design', 'Marketing', 'Finance', 'Data', 'HR'];
   useEffect(() => {
@@ -185,14 +178,6 @@ function InternshipsContent() {
     type: (searchParams.get('type') || '') as '' | 'full-time' | 'part-time',
     location: (searchParams.get('location') || '') as string,
   });
-
-  // Load saved state
-  useEffect(() => {
-    try {
-      const ids: string[] = JSON.parse(localStorage.getItem(LS_SAVED) || '[]');
-      setSavedIds(new Set(ids));
-    } catch { /* ignore */ }
-  }, []);
 
   const fetchInternships = useCallback(async () => {
     try {
@@ -332,15 +317,32 @@ function InternshipsContent() {
     setPage(1);
   }, []);
 
-  const handleSave = useCallback((id: string) => {
-    const now = toggleSaved(id);
+  const handleSave = useCallback(async (id: string) => {
+    const wasSaved = savedIds.has(id);
+    // Optimistic update
     setSavedIds((prev) => {
       const next = new Set(prev);
-      if (now) next.add(id); else next.delete(id);
+      if (wasSaved) next.delete(id); else next.add(id);
       return next;
     });
-    toastHelper.success(now ? 'Saved!' : 'Removed from saved');
-  }, []);
+    try {
+      if (wasSaved) {
+        await internshipService.unsaveInternship(id);
+        toastHelper.success('Removed from saved');
+      } else {
+        await internshipService.saveInternship(id);
+        toastHelper.success('Saved!');
+      }
+    } catch {
+      // Revert on error
+      setSavedIds((prev) => {
+        const next = new Set(prev);
+        if (wasSaved) next.add(id); else next.delete(id);
+        return next;
+      });
+      toastHelper.error('Failed to update saved status');
+    }
+  }, [savedIds]);
 
   const hasActiveFilters = filters.title || filters.type || filters.location;
 

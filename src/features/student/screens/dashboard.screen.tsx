@@ -18,8 +18,6 @@ import Pagination from '@/components/ui/Pagination';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
-const LS_SAVED = 'tadrebk_saved_internships';
-
 type FilterStatus = 'all' | 'pending' | 'accepted' | 'rejected' | 'completed';
 
 export default function StudentDashboardScreen() {
@@ -59,13 +57,8 @@ export default function StudentDashboardScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const ids: string[] = JSON.parse(localStorage.getItem(LS_SAVED) || '[]');
-        if (ids.length > 0) {
-          const results = await Promise.allSettled(ids.map((id) => internshipService.getInternshipById(id)));
-          const internships: Internship[] = [];
-          results.forEach((r) => { if (r.status === 'fulfilled') internships.push(r.value); });
-          setSavedInternships(internships);
-        }
+        const res = await internshipService.getSavedInternships(1, 50);
+        setSavedInternships(res.internships);
       } catch { /* ignore */ }
       finally { setLoadingSaved(false); }
     })();

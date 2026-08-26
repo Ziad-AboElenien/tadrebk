@@ -115,4 +115,23 @@ export const internshipService = {
     );
     return data.data.internship;
   },
+
+  async getSavedInternships(page = 1, limit = 50): Promise<{
+    internships: Internship[];
+    pagination: { page: number; limit: number; total: number; pages: number };
+  }> {
+    const { data } = await api.get<InternshipListResponse>('/internships/saved', { params: { page, limit } });
+    return {
+      internships: data.data.internships,
+      pagination: data.data.pagination,
+    };
+  },
+
+  async saveInternship(internId: string): Promise<void> {
+    await api.post(`/internships/${internId}/save`);
+  },
+
+  async unsaveInternship(internId: string): Promise<void> {
+    await api.delete(`/internships/${internId}/save`);
+  },
 };
