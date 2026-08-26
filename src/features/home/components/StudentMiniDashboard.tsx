@@ -123,9 +123,9 @@ function FallbackCard() {
           <h1 className="text-[22px] font-bold text-[#16241D]">Welcome 👋</h1>
           <p className="text-[13.5px] text-[#6B7C74] mt-1">Sign in to see your applications and interviews here.</p>
         </div>
-        <Link href="/login/student" className="shrink-0 mt-1 bg-[#16A667] hover:bg-[#128F58] transition-colors text-white text-[13.5px] font-semibold px-4 py-2 rounded-full shadow-sm">
+        <span className="shrink-0 mt-1 bg-[#16A667] text-white text-[13.5px] font-semibold px-4 py-2 rounded-full shadow-sm">
           Sign in
-        </Link>
+        </span>
       </div>
 
       {/* Locked stats */}
@@ -160,7 +160,7 @@ function FallbackCard() {
             <p className="text-[13.5px] font-semibold text-[#16241D]">Every job you apply to will show up here</p>
             <p className="text-[12.5px] text-[#8B978F] mt-0.5">Sign in and apply to your first job</p>
           </div>
-          <Link href="/login/student" className="shrink-0 text-[12.5px] font-semibold text-[#16A667] hover:underline">Sign in now</Link>
+          <span className="shrink-0 text-[12.5px] font-semibold text-[#16A667]">Sign in now</span>
         </div>
       </div>
 
@@ -168,7 +168,7 @@ function FallbackCard() {
       <div className="px-8 pt-7 pb-8">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[15px] font-bold text-[#16241D]">Recommended for you</h2>
-          <Link href="/internships" className="text-[13px] text-[#16A667] font-semibold cursor-pointer hover:underline">Browse all</Link>
+          <span className="text-[13px] text-[#16A667] font-semibold">Browse all</span>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#1EC08C] to-[#0F9C6C] p-4 h-[110px] flex flex-col justify-between text-white">
@@ -198,9 +198,9 @@ function FallbackCard() {
       {/* Bottom CTA strip */}
       <div className="bg-[#16241D] px-8 py-4 flex items-center justify-between">
         <p className="text-[13px] text-white/80">Waiting for what? Your data will be saved once you sign up.</p>
-        <Link href="/get-started" className="bg-[#16A667] hover:bg-[#1CBE78] transition-colors text-white text-[13px] font-semibold px-5 py-2 rounded-full">
+        <span className="bg-[#16A667] text-white text-[13px] font-semibold px-5 py-2 rounded-full">
           Create account
-        </Link>
+        </span>
       </div>
     </div>
   );
