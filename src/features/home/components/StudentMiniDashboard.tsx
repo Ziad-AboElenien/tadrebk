@@ -190,11 +190,8 @@ function FallbackCard() {
       </div>
 
       {/* Bottom CTA strip */}
-      <div className="bg-[#16241D] px-8 py-4 flex items-center justify-between">
+      <div className="bg-[#16241D] px-8 py-4">
         <p className="text-[13px] text-white/80">Waiting for what? Your data will be saved once you sign up.</p>
-        <span className="bg-[#16A667] text-white text-[13px] font-semibold px-5 py-2 rounded-full">
-          Create account
-        </span>
       </div>
     </div>
   );
