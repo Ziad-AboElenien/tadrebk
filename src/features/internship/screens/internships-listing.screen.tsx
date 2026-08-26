@@ -91,9 +91,38 @@ const locationLabels: Record<string, string> = { 'on-site': 'On-site', remote: '
 
 export default function InternshipsListingScreen() {
   return (
-    <Suspense fallback={<div className="flex justify-center py-12"><Spinner /></div>}>
+    <Suspense fallback={<ListingSkeleton />}>
       <InternshipsContent />
     </Suspense>
+  );
+}
+
+function ListingSkeleton() {
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-pulse space-y-6">
+      <div className="h-8 w-56 rounded bg-gray-200" />
+      <div className="flex gap-3">
+        <div className="h-10 w-72 rounded-xl bg-gray-200" />
+        <div className="h-10 w-32 rounded-xl bg-gray-200" />
+        <div className="h-10 w-32 rounded-xl bg-gray-200" />
+      </div>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+            <div className="h-36 bg-gray-200" />
+            <div className="p-4 space-y-3">
+              <div className="h-5 w-3/4 rounded bg-gray-200" />
+              <div className="h-4 w-1/2 rounded bg-gray-200" />
+              <div className="flex gap-2">
+                <div className="h-6 w-16 rounded-full bg-gray-200" />
+                <div className="h-6 w-16 rounded-full bg-gray-200" />
+              </div>
+              <div className="h-8 w-24 rounded-lg bg-gray-200" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -425,7 +454,22 @@ function InternshipsContent() {
         {/* ── Cards ──────────────────────────────────── */}
         <div ref={resultsRef}>
           {loading ? (
-            <div className="flex justify-center py-12"><Spinner /></div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 animate-pulse">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="h-36 bg-gray-200" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-5 w-3/4 rounded bg-gray-200" />
+                    <div className="h-4 w-1/2 rounded bg-gray-200" />
+                    <div className="flex gap-2">
+                      <div className="h-6 w-16 rounded-full bg-gray-200" />
+                      <div className="h-6 w-16 rounded-full bg-gray-200" />
+                    </div>
+                    <div className="h-8 w-24 rounded-lg bg-gray-200" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : internships.length === 0 ? (
             <div className="text-center py-12">
               <i className="fas fa-search text-4xl text-gray-200 mb-4" />
