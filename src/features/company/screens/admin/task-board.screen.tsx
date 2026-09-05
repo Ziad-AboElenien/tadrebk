@@ -23,7 +23,6 @@ import { taskService } from '@/features/company/services/task.service';
 import { Task, TaskStatus } from '@/features/company/types/management';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
-import Spinner from '@/components/ui/Spinner';
 
 const PRIORITY_STYLES: Record<string, string> = {
   HIGH: 'bg-rose-50 text-rose-500',
@@ -158,7 +157,38 @@ export default function TaskBoardScreen() {
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-20"><Spinner /></div>
+            <div className="grid grid-cols-1 gap-4 overflow-x-auto sm:grid-cols-2 lg:grid-cols-4 animate-pulse">
+              {[0, 1, 2, 3].map((col) => (
+                <div key={col} className="min-w-[260px] rounded-2xl bg-slate-100/60 p-3">
+                  <div className="flex items-center justify-between px-1 pb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 rounded bg-slate-200" />
+                      <div className="h-3.5 w-24 rounded-full bg-slate-200" />
+                    </div>
+                    <div className="h-5 w-7 rounded-full bg-slate-200" />
+                  </div>
+                  <div className="space-y-3">
+                    {[0, 1, 2].map((card) => (
+                      <div key={card} className="rounded-xl border border-slate-200 bg-white p-4">
+                        <div className="space-y-2">
+                          <div className="h-3.5 w-full rounded-full bg-slate-200" />
+                          <div className="h-3.5 w-3/4 rounded-full bg-slate-200" />
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                          <div className="h-5 w-20 rounded-full bg-slate-200" />
+                          <div className="h-5 w-16 rounded-full bg-slate-200" />
+                        </div>
+                        <div className="mt-4 flex items-center gap-3 border-t border-slate-100 pt-3">
+                          <div className="h-7 w-7 rounded-full bg-slate-200" />
+                          <div className="h-2.5 w-20 rounded-full bg-slate-200" />
+                          <div className="ml-auto h-2.5 w-12 rounded-full bg-slate-200" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 overflow-x-auto sm:grid-cols-2 lg:grid-cols-4">
               {STATUS_ORDER.map((col) => (

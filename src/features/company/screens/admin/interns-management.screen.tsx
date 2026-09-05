@@ -20,7 +20,6 @@ import { internService } from '@/features/company/services/intern.service';
 import { Intern } from '@/features/company/types/management';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
-import Spinner from '@/components/ui/Spinner';
 
 const STATUS_STYLES: Record<string, string> = {
   Active: 'bg-emerald-50 text-emerald-600',
@@ -151,7 +150,41 @@ export default function InternsManagementScreen() {
 
             <div className="mt-4 overflow-x-auto">
               {loading ? (
-                <div className="flex justify-center py-16"><Spinner /></div>
+                <div className="animate-pulse">
+                  <div className="flex gap-16 border-b border-slate-100 pb-3 text-xs uppercase tracking-wide text-slate-400">
+                    <div className="h-2.5 w-24 rounded-full bg-slate-200" />
+                    <div className="h-2.5 w-32 rounded-full bg-slate-200" />
+                    <div className="h-2.5 w-20 rounded-full bg-slate-200" />
+                    <div className="h-2.5 w-20 rounded-full bg-slate-200" />
+                    <div className="h-2.5 w-14 rounded-full bg-slate-200" />
+                    <div className="h-2.5 w-16 rounded-full bg-slate-200" />
+                  </div>
+                  <div className="divide-y divide-slate-50">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <div key={i} className="flex items-center gap-16 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-slate-200" />
+                          <div className="space-y-2">
+                            <div className="h-3.5 w-28 rounded-full bg-slate-200" />
+                            <div className="h-2.5 w-20 rounded-full bg-slate-200" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="h-3.5 w-36 rounded-full bg-slate-200" />
+                          <div className="h-2.5 w-24 rounded-full bg-slate-200" />
+                        </div>
+                        <div className="h-6 w-20 rounded-full bg-slate-200" />
+                        <div className="h-3.5 w-24 rounded-full bg-slate-200" />
+                        <div className="h-3.5 w-16 rounded-full bg-slate-200" />
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 rounded-lg bg-slate-200" />
+                          <div className="h-8 w-8 rounded-lg bg-slate-200" />
+                          <div className="h-8 w-8 rounded-lg bg-slate-200" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ) : (
                 <table className="w-full min-w-[800px] text-left text-sm">
                   <thead>

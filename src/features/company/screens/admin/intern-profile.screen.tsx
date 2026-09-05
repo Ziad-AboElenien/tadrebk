@@ -29,7 +29,6 @@ import { internService } from '@/features/company/services/intern.service';
 import { Intern } from '@/features/company/types/management';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
-import Spinner from '@/components/ui/Spinner';
 
 const SKILLS = [
   { label: 'Frontend Architecture', pct: 85 },
@@ -86,7 +85,91 @@ export default function InternProfileScreen() {
         <Sidebar active="Interns" />
         <div className="flex flex-1 flex-col overflow-hidden">
           <TopBar title="Intern Profile" />
-          <div className="flex justify-center py-20"><Spinner /></div>
+          <main className="flex-1 space-y-6 p-8 animate-pulse">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-36 rounded-lg bg-slate-200" />
+                <div className="h-7 w-24 rounded-full bg-slate-200" />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-24 rounded-lg bg-slate-200" />
+                <div className="h-9 w-9 rounded-lg bg-slate-200" />
+                <div className="h-9 w-32 rounded-lg bg-slate-200" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="space-y-6">
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center">
+                  <div className="mx-auto h-24 w-24 rounded-full bg-slate-200" />
+                  <div className="mx-auto mt-4 h-4 w-32 rounded-full bg-slate-200" />
+                  <div className="mx-auto mt-2 h-3 w-24 rounded-full bg-slate-200" />
+                  <div className="mx-auto mt-4 h-6 w-20 rounded-full bg-slate-200" />
+                  <div className="mt-6 grid grid-cols-2 divide-x divide-slate-100 border-t border-slate-100 pt-4">
+                    <div className="space-y-2">
+                      <div className="mx-auto h-3 w-16 rounded-full bg-slate-200" />
+                      <div className="mx-auto h-4 w-10 rounded-full bg-slate-200" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="mx-auto h-3 w-16 rounded-full bg-slate-200" />
+                      <div className="mx-auto h-4 w-14 rounded-full bg-slate-200" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-6">
+                  <div className="h-4 w-40 rounded-full bg-slate-200" />
+                  <div className="mt-5 space-y-4">
+                    {[0, 1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="h-4 w-4 rounded bg-slate-200" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-3 w-20 rounded-full bg-slate-200" />
+                          <div className="h-3.5 w-full max-w-[180px] rounded-full bg-slate-200" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-slate-900 p-6">
+                  <div className="h-4 w-36 rounded-full bg-slate-700" />
+                  <div className="mt-4 h-3 w-full rounded-full bg-slate-700" />
+                  <div className="mt-2 h-3 w-3/4 rounded-full bg-slate-700" />
+                </div>
+              </div>
+
+              <div className="space-y-6 lg:col-span-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5">
+                      <div className="h-8 w-8 rounded-lg bg-slate-200" />
+                      <div className="mt-3 h-6 w-16 rounded-full bg-slate-200" />
+                      <div className="mt-2 h-3 w-24 rounded-full bg-slate-200" />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-6">
+                  <div className="flex gap-6 border-b border-slate-100">
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="h-4 w-24 rounded-full bg-slate-200 pb-3" />
+                    ))}
+                  </div>
+                  <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div className="space-y-4">
+                      <div className="h-3 w-24 rounded-full bg-slate-200" />
+                      <div className="h-40 rounded-xl bg-slate-100" />
+                    </div>
+                    <div className="space-y-4">
+                      <div className="h-3 w-24 rounded-full bg-slate-200" />
+                      <div className="h-40 rounded-xl bg-slate-100" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     );
