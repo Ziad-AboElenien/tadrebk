@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Plus,
-  Users,
+  Briefcase,
   CheckSquare,
   CheckCircle2,
   ClipboardList,
@@ -19,6 +19,7 @@ import { internService } from '@/features/company/services/intern.service';
 import { taskService } from '@/features/company/services/task.service';
 import { programService } from '@/features/company/services/program.service';
 import { projectService } from '@/features/company/services/project.service';
+import { internshipService } from '@/features/internship/services/internship.service';
 import {
   Program,
   Project,
@@ -77,6 +78,7 @@ interface DashboardData {
   activeInterns: number;
   alumniInterns: number;
   pendingInterns: number;
+  activeInternships: number;
   totalTasks: number;
   tasksByStatus: Record<TaskStatus, number>;
   programs: Program[];
@@ -96,7 +98,7 @@ export default function AdminDashboardScreen() {
     if (!companyId) return;
     setLoading(true);
     try {
-      const [internsAll, internsActive, internsAlumni, tasksRes, progRes, projRes, performers] =
+      const [internsAll, internsActive, internsAlumni, tasksRes, progRes, projRes, performers, activeInternshipRes] =
         await Promise.all([
           internService.listInterns(companyId, { limit: 1 }),
           internService.listInterns(companyId, { status: 'active', limit: 1 }),
@@ -105,6 +107,7 @@ export default function AdminDashboardScreen() {
           programService.listPrograms(companyId, { limit: 100 }),
           projectService.listProjects(companyId, { limit: 100 }),
           internService.listInterns(companyId, { sort: 'points', limit: 3 }),
+          internshipService.listInternships({ companyId, closed: false, limit: 1 }),
         ]);
 
       const totalInterns = internsAll.pagination?.total ?? internsAll.data.length;
@@ -155,6 +158,7 @@ export default function AdminDashboardScreen() {
         activeInterns,
         alumniInterns,
         pendingInterns: Math.max(0, totalInterns - activeInterns - alumniInterns),
+        activeInternships: activeInternshipRes.pagination?.total ?? activeInternshipRes.internships.length,
         totalTasks: tasksRes.pagination?.total ?? tasksRes.tasks.length,
         tasksByStatus,
         programs: progRes.data,
@@ -177,12 +181,12 @@ export default function AdminDashboardScreen() {
 
   const stats = [
     {
-      label: 'Active Interns',
-      value: String(data?.activeInterns ?? 0),
-      icon: Users,
-      badge: data ? `${data.pendingInterns} pending` : undefined,
-      delta: data ? `${data.totalInterns} total` : undefined,
-      deltaLabel: 'interns',
+      label: 'Active Internships',
+      value: String(data?.activeInternships ?? 0),
+      icon: Briefcase,
+      badge: data ? `${data.activeInterns} active interns` : undefined,
+      delta: data ? `${data.totalInterns} total interns` : undefined,
+      deltaLabel: 'enrolled',
     },
     {
       label: 'Tasks in Progress',
