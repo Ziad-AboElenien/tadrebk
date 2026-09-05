@@ -20,10 +20,11 @@ export interface UpdateProgramPayload {
   coverImage?: { public_id: string; secure_url: string };
 }
 
-interface ProgramListResponse {
-  data: Program[];
-  pagination: Pagination;
-  msg: string;
+interface ProgramListEnvelope {
+  data?: Program[] | { programs?: Program[]; pagination?: Pagination };
+  programs?: Program[];
+  pagination?: Pagination;
+  msg?: string;
 }
 
 interface ProgramResponse {
@@ -45,8 +46,23 @@ export const programService = {
       limit?: number;
     },
   ): Promise<ListResponse<Program>> {
-    const { data } = await api.get<ProgramListResponse>(`/company/${companyId}/programs`, { params });
-    return { data: data.data, pagination: data.pagination };
+    const { data } = await api.get<ProgramListEnvelope>(
+      `/company/${companyId}/programs`,
+      { params },
+    );
+
+    const nested = Array.isArray(data?.data)
+      ? { programs: data.data as Program[], pagination: data.pagination }
+      : (data?.data as { programs?: Program[]; pagination?: Pagination } | undefined);
+    const programs = nested?.programs ?? data?.programs ?? [];
+    const pagination = nested?.pagination ?? data?.pagination;
+
+    return {
+      data: programs,
+      pagination: pagination
+        ? { ...pagination, total: pagination.total ?? programs.length }
+        : { page: 1, limit: programs.length, pages: 1, total: programs.length },
+    };
   },
 
   async getProgram(companyId: string, programId: string): Promise<Program> {

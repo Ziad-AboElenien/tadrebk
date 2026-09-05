@@ -21,10 +21,11 @@ export interface UpdateProjectPayload {
   status?: 'active' | 'completed' | 'archived';
 }
 
-interface ProjectListResponse {
-  data: Project[];
-  pagination: Pagination;
-  msg: string;
+interface ProjectListEnvelope {
+  data?: Project[] | { projects?: Project[]; pagination?: Pagination };
+  projects?: Project[];
+  pagination?: Pagination;
+  msg?: string;
 }
 
 interface ProjectResponse {
@@ -42,8 +43,23 @@ export const projectService = {
       limit?: number;
     },
   ): Promise<ListResponse<Project>> {
-    const { data } = await api.get<ProjectListResponse>(`/company/${companyId}/projects`, { params });
-    return { data: data.data, pagination: data.pagination };
+    const { data } = await api.get<ProjectListEnvelope>(
+      `/company/${companyId}/projects`,
+      { params },
+    );
+
+    const nested = Array.isArray(data?.data)
+      ? { projects: data.data as Project[], pagination: data.pagination }
+      : (data?.data as { projects?: Project[]; pagination?: Pagination } | undefined);
+    const projects = nested?.projects ?? data?.projects ?? [];
+    const pagination = nested?.pagination ?? data?.pagination;
+
+    return {
+      data: projects,
+      pagination: pagination
+        ? { ...pagination, total: pagination.total ?? projects.length }
+        : { page: 1, limit: projects.length, pages: 1, total: projects.length },
+    };
   },
 
   async getProject(companyId: string, projectId: string): Promise<Project> {

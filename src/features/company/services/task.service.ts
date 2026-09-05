@@ -3,8 +3,6 @@ import {
   Task,
   TaskStatus,
   TaskPriority,
-  TaskAttachment,
-  ListResponse,
   Pagination,
 } from '@/features/company/types/management';
 
@@ -30,11 +28,12 @@ export interface UpdateTaskPayload {
 }
 
 interface TaskListEnvelope {
-  data: {
-    tasks: Task[];
-    pagination: Pagination;
-  };
-  msg: string;
+  data?:
+    | { tasks?: Task[]; pagination?: Pagination }
+    | Task[];
+  tasks?: Task[];
+  pagination?: Pagination;
+  msg?: string;
 }
 
 interface TaskResponse {
@@ -75,7 +74,21 @@ export const taskService = {
     },
   ): Promise<{ tasks: Task[]; pagination: Pagination }> {
     const { data } = await api.get<TaskListEnvelope>(`/company/${companyId}/tasks`, { params });
-    return { tasks: data.data.tasks, pagination: data.data.pagination };
+
+    // Accept `{ data: { tasks, pagination } }`, flat `{ tasks, pagination }`,
+    // or `{ data: Task[] }` — normalize before returning.
+    const nested = Array.isArray(data?.data)
+      ? { tasks: data.data as Task[], pagination: data.pagination }
+      : (data?.data as { tasks?: Task[]; pagination?: Pagination } | undefined);
+    const tasks = nested?.tasks ?? data?.tasks ?? [];
+    const pagination = nested?.pagination ?? data?.pagination;
+
+    return {
+      tasks,
+      pagination: pagination
+        ? { ...pagination, total: pagination.total ?? tasks.length }
+        : { page: 1, limit: tasks.length, pages: 1, total: tasks.length },
+    };
   },
 
   async getTask(companyId: string, taskId: string): Promise<Task> {

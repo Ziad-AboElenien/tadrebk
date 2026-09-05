@@ -56,7 +56,7 @@ export default function InternsManagementScreen() {
         limit: 20,
       });
       setInterns(res.data);
-      setTotal(res.pagination.total);
+      setTotal(res.pagination?.total ?? res.data.length);
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     } finally {

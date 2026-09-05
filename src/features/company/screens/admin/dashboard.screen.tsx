@@ -53,9 +53,9 @@ export default function AdminDashboardScreen() {
           taskService.listTasks(company._id, { status: 'complete', limit: 1 }),
           programService.listPrograms(company._id, { limit: 100 }),
         ]);
-        setInternsCount(interns.pagination.total);
-        setInProgressCount(inProgress.pagination.total);
-        setCompletedCount(completed.pagination.total);
+        setInternsCount(interns.pagination?.total ?? interns.data.length);
+        setInProgressCount(inProgress.pagination?.total ?? inProgress.tasks.length);
+        setCompletedCount(completed.pagination?.total ?? completed.tasks.length);
         setPrograms(progRes.data);
       } catch (err) {
         toastHelper.error(getErrorMessage(err));
