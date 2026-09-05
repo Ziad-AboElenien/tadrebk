@@ -53,7 +53,7 @@ const REQUIREMENTS = [
 const TABS = ['Performance Overview', 'Task History', 'Feedback & Reviews'];
 
 function formatDate(dateStr?: string | null): string {
-  if (!dateStr) return '—';
+  if (!dateStr) return 'â€”';
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
@@ -85,7 +85,7 @@ export default function InternProfileScreen() {
         <Sidebar active="Interns" />
         <div className="flex flex-1 flex-col overflow-hidden">
           <TopBar title="Intern Profile" />
-          <main className="flex-1 space-y-6 p-8 animate-pulse">
+          <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8 animate-pulse">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-36 rounded-lg bg-slate-200" />
@@ -202,9 +202,9 @@ export default function InternProfileScreen() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar title="Intern Profile" />
 
-        <main className="flex-1 space-y-6 overflow-y-auto p-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap items-center gap-3">
               <Link href="/company/admin/interns" className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
                 <ArrowLeft size={15} /> Back to Interns
               </Link>
@@ -213,7 +213,7 @@ export default function InternProfileScreen() {
               </span>
               <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white">Active</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
                 <Share2 size={15} /> Share
               </button>
@@ -232,7 +232,7 @@ export default function InternProfileScreen() {
                 <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-blue-700 text-2xl font-semibold text-white">
                   {initials || '?'}
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-slate-900">{name || '—'}</h3>
+                <h3 className="mt-4 text-lg font-semibold text-slate-900">{name || 'â€”'}</h3>
                 <p className="text-sm text-slate-400">{intern.headline || 'Intern'}</p>
                 <div className="mt-3 flex justify-center gap-2">
                   <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600">
@@ -255,12 +255,12 @@ export default function InternProfileScreen() {
                 <h3 className="font-semibold text-slate-900">Personal Information</h3>
                 <dl className="mt-4 space-y-4 text-sm">
                   {[
-                    { icon: GraduationCap, label: 'SKILLS', value: (intern.skills || []).join(', ') || '—' },
+                    { icon: GraduationCap, label: 'SKILLS', value: (intern.skills || []).join(', ') || 'â€”' },
                     { icon: Mail, label: 'EMAIL ADDRESS', value: email },
-                    { icon: Phone, label: 'PHONE NUMBER', value: phone || '—' },
-                    { icon: MapPin, label: 'LOCATION', value: '—' },
-                    { icon: Building2, label: 'HEADLINE', value: intern.headline || '—' },
-                    { icon: CalendarRange, label: 'INTERNSHIP PERIOD', value: `${formatDate(intern.internshipStartDate)} — ${formatDate(intern.internshipEndDate)}` },
+                    { icon: Phone, label: 'PHONE NUMBER', value: phone || 'â€”' },
+                    { icon: MapPin, label: 'LOCATION', value: 'â€”' },
+                    { icon: Building2, label: 'HEADLINE', value: intern.headline || 'â€”' },
+                    { icon: CalendarRange, label: 'INTERNSHIP PERIOD', value: `${formatDate(intern.internshipStartDate)} â€” ${formatDate(intern.internshipEndDate)}` },
                   ].map((f) => (
                     <div key={f.label} className="flex items-start gap-3">
                       <f.icon size={16} className="mt-0.5 text-slate-400" />

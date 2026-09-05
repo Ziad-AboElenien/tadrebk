@@ -94,7 +94,7 @@ export default function AdminDashboardScreen() {
           }
         />
 
-        <main className="flex-1 space-y-6 p-8">
+        <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
           <div>
             <h2 className="text-2xl font-semibold text-slate-900">Welcome back, Admin</h2>
             <p className="text-sm text-slate-500">Here&apos;s what&apos;s happening with your internship programs today.</p>

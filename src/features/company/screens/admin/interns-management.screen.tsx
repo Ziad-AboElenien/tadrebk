@@ -39,6 +39,7 @@ function initials(name: string) {
 
 export default function InternsManagementScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
+  const companyId = company?._id;
   const [interns, setInterns] = useState<Intern[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -46,10 +47,10 @@ export default function InternsManagementScreen() {
   const [status, setStatus] = useState<'active' | 'alumni' | 'all'>('all');
 
   const fetchInterns = useCallback(async () => {
-    if (!company?._id) return;
+    if (!companyId) return;
     setLoading(true);
     try {
-      const res = await internService.listInterns(company._id, {
+      const res = await internService.listInterns(companyId, {
         status,
         search: search || undefined,
         limit: 20,
@@ -61,7 +62,7 @@ export default function InternsManagementScreen() {
     } finally {
       setLoading(false);
     }
-  }, [company?._id, status, search]);
+  }, [companyId, status, search]);
 
   useEffect(() => {
     const t = setTimeout(fetchInterns, search ? 400 : 0);
@@ -88,13 +89,13 @@ export default function InternsManagementScreen() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar title="Interns Management" />
 
-        <main className="flex-1 space-y-6 p-8">
-          <div className="flex items-start justify-between">
+        <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h2 className="text-2xl font-semibold text-slate-900">Program Overview</h2>
+              <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Program Overview</h2>
               <p className="text-sm text-slate-500">Snapshot of your current internship talent pool.</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
                 <Download size={15} /> Export Roster
               </button>
@@ -222,7 +223,7 @@ export default function InternsManagementScreen() {
                               </Link>
                             </td>
                             <td className="py-3.5">
-                              <p className="text-slate-700">{i.headline || '—'}</p>
+                              <p className="text-slate-700">{i.headline || 'â€”'}</p>
                               <p className="text-xs text-slate-400">{i.totalPoints} pts</p>
                             </td>
                             <td className="py-3.5">
@@ -233,7 +234,7 @@ export default function InternsManagementScreen() {
                                 <Calendar size={13} className="text-slate-400" />
                                 {i.enrolledAt
                                   ? new Date(i.enrolledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                                  : '—'}
+                                  : 'â€”'}
                               </span>
                             </td>
                             <td className="py-3.5">

@@ -56,7 +56,7 @@ export default function LeaderboardScreen() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar title="Internship Leaderboard" />
 
-        <main className="flex-1 space-y-6 overflow-y-auto p-8">
+        <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-2xl font-semibold text-slate-900">Top Talent Ranking</h2>
@@ -202,7 +202,7 @@ export default function LeaderboardScreen() {
                       <td className="py-3">
                         {r.trend === 'up' && <ArrowUpRight size={16} className="text-emerald-500" />}
                         {r.trend === 'down' && <ArrowDownRight size={16} className="text-rose-500" />}
-                        {r.trend === 'flat' && <span className="text-slate-300">—</span>}
+                        {r.trend === 'flat' && <span className="text-slate-300">â€”</span>}
                       </td>
                       <td className="py-3 text-right">
                         <MoreVertical size={16} className="text-slate-300" />
@@ -235,7 +235,7 @@ export default function LeaderboardScreen() {
                 with points exceeding 2,500.
               </p>
               <button className="mt-4 flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium hover:bg-emerald-600">
-                View Achievement Rules ↗
+                View Achievement Rules â†—
               </button>
             </div>
           </div>

@@ -62,7 +62,7 @@ export default function EvaluationsDashboardScreen() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar title="Evaluations Dashboard" />
 
-        <main className="flex-1 space-y-6 overflow-y-auto p-8">
+        <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {STATS.map((s) => (
               <div key={s.label} className="rounded-2xl border border-slate-200 bg-white p-5">
@@ -241,7 +241,7 @@ export default function EvaluationsDashboardScreen() {
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Evaluation Completion Rate</p>
               <div className="mt-2 flex items-baseline gap-3">
                 <p className="text-3xl font-bold text-slate-900">82%</p>
-                <span className="text-sm font-medium text-emerald-600">↗ +5%</span>
+                <span className="text-sm font-medium text-emerald-600">â†— +5%</span>
                 <span className="ml-auto text-sm text-slate-400">102/124 Completed</span>
               </div>
               <div className="mt-3 h-2 rounded-full bg-slate-100">
@@ -258,7 +258,7 @@ export default function EvaluationsDashboardScreen() {
                 </p>
                 <p className="text-sm text-slate-400">4.6 avg. performance score</p>
               </div>
-              <button className="text-sm font-medium text-emerald-600">Details →</button>
+              <button className="text-sm font-medium text-emerald-600">Details â†’</button>
             </div>
           </div>
         </main>

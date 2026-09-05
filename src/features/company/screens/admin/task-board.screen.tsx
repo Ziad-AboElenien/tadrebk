@@ -81,6 +81,7 @@ function TaskCard({ task }: { task: Task }) {
 
 export default function TaskBoardScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
+  const companyId = company?._id;
   const [columns, setColumns] = useState<Record<TaskStatus, Task[]>>({
     todo: [],
     in_progress: [],
@@ -91,10 +92,10 @@ export default function TaskBoardScreen() {
   const [loading, setLoading] = useState(true);
 
   const fetchTasks = useCallback(async () => {
-    if (!company?._id) return;
+    if (!companyId) return;
     setLoading(true);
     try {
-      const res = await taskService.listTasks(company._id, { limit: 100 });
+      const res = await taskService.listTasks(companyId, { limit: 100 });
       const grouped: Record<TaskStatus, Task[]> = {
         todo: [],
         in_progress: [],
@@ -112,9 +113,12 @@ export default function TaskBoardScreen() {
     } finally {
       setLoading(false);
     }
-  }, [company?._id]);
+  }, [companyId]);
 
-  useEffect(() => { fetchTasks(); }, [fetchTasks]);
+  useEffect(() => {
+    const t = setTimeout(fetchTasks, 0);
+    return () => clearTimeout(t);
+  }, [fetchTasks]);
 
   return (
     <div className="flex bg-slate-50">
@@ -123,7 +127,7 @@ export default function TaskBoardScreen() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar title="Task Board" />
 
-        <main className="flex-1 space-y-6 overflow-y-auto p-8">
+        <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-2xl font-semibold text-slate-900">Project Sprint: Oct 2024</h2>

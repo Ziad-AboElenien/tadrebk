@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, Bell, ChevronDown } from 'lucide-react';
+import { Search, Bell, ChevronDown, Menu } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { logout } from '@/store/authSlice';
 import { clearUser } from '@/store/userSlice';
@@ -11,6 +11,7 @@ import { clearCompany } from '@/store/companySlice';
 import * as authService from '@/features/auth/server/auth.service';
 import Avatar from '@/components/ui/Avatar';
 import { getCompanyImgUrl } from '@/features/company/types';
+import { useAdminShell } from '@/components/tadrebk/admin-shell';
 
 type TopBarProps = {
   title: string;
@@ -23,6 +24,7 @@ export default function TopBar({
 }: TopBarProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { toggleSidebar } = useAdminShell();
   const currentCompany = useAppSelector((s) => s.company.currentCompany);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -62,13 +64,23 @@ export default function TopBar({
   ];
 
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-slate-200 bg-slate-50 px-8 py-5">
-      <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
+    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-4 sm:px-6 lg:px-8">
+      <div className="flex min-w-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          aria-label="Open menu"
+          className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
+        >
+          <Menu size={20} />
+        </button>
+        <h1 className="truncate text-lg font-semibold text-slate-900 sm:text-xl">{title}</h1>
+      </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         {actions}
 
-        <div className="relative hidden sm:block">
+        <div className="relative hidden md:block">
           <Search
             size={16}
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -76,7 +88,7 @@ export default function TopBar({
           <input
             type="text"
             placeholder="Search interns, tasks..."
-            className="w-64 rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-600 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+            className="w-56 rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-600 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 lg:w-64"
           />
         </div>
 
@@ -95,7 +107,7 @@ export default function TopBar({
             onClick={() => setMenuOpen((o) => !o)}
             aria-expanded={menuOpen}
             aria-haspopup="true"
-            className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 hover:bg-slate-100"
+            className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-1 hover:bg-slate-100 sm:pr-2"
           >
             <Avatar
               src={getCompanyImgUrl(currentCompany?.logo) ?? null}
@@ -103,17 +115,17 @@ export default function TopBar({
               size="sm"
               icon="fa-building"
             />
-            <div className="text-left leading-tight">
-              <p className="text-sm font-medium text-slate-900 max-w-[140px] truncate">
+            <div className="text-left leading-tight max-[400px]:hidden">
+              <p className="max-w-[120px] truncate text-sm font-medium text-slate-900 sm:max-w-[140px]">
                 {currentCompany?.name || 'Company'}
               </p>
-              <p className="text-xs text-slate-400">{currentCompany?.industry || 'Admin'}</p>
+              <p className="truncate text-xs text-slate-400">{currentCompany?.industry || 'Admin'}</p>
             </div>
-            <ChevronDown size={16} className="text-slate-400" />
+            <ChevronDown size={16} className="hidden text-slate-400 sm:block" />
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-52 rounded-2xl border border-slate-200 bg-white py-2 shadow-xl z-50">
+            <div className="absolute right-0 top-full z-50 mt-2 w-52 rounded-2xl border border-slate-200 bg-white py-2 shadow-xl">
               {links.map((l) => (
                 <Link
                   key={l.href}

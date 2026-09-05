@@ -46,7 +46,7 @@ export default function PointsConfigurationScreen() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar title="Points Configuration" />
 
-        <main className="flex-1 space-y-6 overflow-y-auto p-8">
+        <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-semibold text-slate-900">Points & Rewards Engine</h2>
