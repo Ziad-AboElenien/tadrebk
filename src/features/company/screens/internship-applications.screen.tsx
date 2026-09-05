@@ -69,7 +69,7 @@ export default function InternshipApplicationsScreen() {
       setApplications(appData.applications);
     } catch {
       toastHelper.error('Failed to load applications');
-      router.push('/company/dashboard');
+      router.push('/company/admin');
     } finally {
       setLoading(false);
     }
@@ -223,7 +223,7 @@ export default function InternshipApplicationsScreen() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       {/* Back + title */}
       <div className="mb-8">
-        <Link href="/company/dashboard" className="text-sm text-primary hover:underline font-semibold flex items-center gap-1 mb-4">
+        <Link href="/company/admin" className="text-sm text-primary hover:underline font-semibold flex items-center gap-1 mb-4">
           <i className="fas fa-arrow-left text-xs" /> Back to dashboard
         </Link>
         <h1 className="text-2xl font-black text-dark">{internship?.title || 'Internship'}</h1>
@@ -402,7 +402,7 @@ export default function InternshipApplicationsScreen() {
                         {(studentUniversities[s?._id ?? ''] ?? []).length > 0 && (
                           <p className="text-sm text-gray-400 mt-0.5 flex items-center gap-1.5">
                             <i className="fas fa-graduation-cap text-xs text-primary/60" />
-                            {(studentUniversities[s?._id ?? ''] ?? []).join(' · ')}
+                            {(studentUniversities[s?._id ?? ''] ?? []).join(' Â· ')}
                           </p>
                         )}
                       </div>

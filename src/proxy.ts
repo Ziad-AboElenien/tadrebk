@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // Routes requiring authentication
 const STUDENT_ROUTES = ['/dashboard', '/profile', '/my-applications', '/activity', '/onboarding'];
 const COMPANY_ROUTES = [
-  '/company/dashboard',
+  '/company/admin',
   '/company/internships',
   '/company/settings',
   '/company/onboarding',
@@ -26,16 +26,16 @@ export function proxy(request: NextRequest) {
   const userRole = request.cookies.get('tadrebk_user_role')?.value;
   const isAuthenticated = !!accessToken;
 
-  // ── Redirect authenticated users away from auth pages ──────
+  // â”€â”€ Redirect authenticated users away from auth pages â”€â”€â”€â”€â”€â”€
   if (isAuthenticated && AUTH_ROUTES.some((r) => pathname.startsWith(r))) {
     const dest =
-      userRole === 'company' ? '/company/dashboard' :
+      userRole === 'company' ? '/company/admin' :
       userRole === 'admin' ? '/admin/dashboard' :
       '/dashboard';
     return NextResponse.redirect(new URL(dest, request.url));
   }
 
-  // ── Protect student routes ──────────────────────────────────
+  // â”€â”€ Protect student routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (STUDENT_ROUTES.some((r) => pathname.startsWith(r))) {
     if (!isAuthenticated) {
       return NextResponse.redirect(new URL('/login/student', request.url));
@@ -46,14 +46,14 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // ── Protect company routes ──────────────────────────────────
+  // â”€â”€ Protect company routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (COMPANY_ROUTES.some((r) => pathname.startsWith(r))) {
     if (!isAuthenticated) {
       return NextResponse.redirect(new URL('/login/company', request.url));
     }
   }
 
-  // ── Protect admin routes ──────────────────────────────────
+  // â”€â”€ Protect admin routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (ADMIN_ROUTES.some((r) => pathname.startsWith(r))) {
     if (!isAuthenticated) {
       return NextResponse.redirect(new URL('/login/student', request.url));

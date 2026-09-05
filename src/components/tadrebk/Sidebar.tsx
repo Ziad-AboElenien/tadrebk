@@ -12,7 +12,6 @@ import {
   MessageSquare,
   BarChart3,
   Settings,
-  GraduationCap,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -44,12 +43,13 @@ export default function Sidebar({ active, adminName, adminRole }: SidebarProps) 
   };
 
   return (
-    <aside className="sticky top-20 flex h-[calc(100vh-5rem)] w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white">
+    <aside className="sticky top-0 flex h-screen w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white">
       <div className="flex items-center gap-2 px-6 py-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 text-white">
-          <GraduationCap size={20} />
-        </div>
-        <span className="text-lg font-semibold text-slate-900">Tadrebk</span>
+        <Link href="/" className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 text-white">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/favicon2.png" alt="" className="h-6 w-6" />
+        </Link>
+        <Link href="/" className="text-lg font-semibold text-slate-900">Tadrebk</Link>
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3">

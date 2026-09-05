@@ -118,7 +118,7 @@ export default function LoginForm({ role }: LoginFormProps) {
       toastHelper.success(`Welcome back, ${user.firstName}!`);
 
       const next = searchParams.get('next');
-      // Only allow same-origin relative paths — reject "//evil.com" and "\evil.com"
+      // Only allow same-origin relative paths â€” reject "//evil.com" and "\evil.com"
       if (next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\')) {
         // Company-intent user without a company must complete onboarding first
         if (userRole !== 'company' && next.startsWith('/company/')) {
@@ -129,7 +129,7 @@ export default function LoginForm({ role }: LoginFormProps) {
       }
 
       if (userRole === 'company') {
-        router.push('/company/dashboard');
+        router.push('/company/admin');
       } else if (role === 'company') {
         localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
         router.push('/company/onboarding');

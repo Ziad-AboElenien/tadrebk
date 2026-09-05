@@ -43,7 +43,7 @@ const companyColumns: FooterColumn[] = [
   {
     title: 'Company',
     links: [
-      { label: 'Dashboard', href: '/company/dashboard' },
+      { label: 'Dashboard', href: '/company/admin' },
       { label: 'Post an Internship', href: '/company/post-internship' },
       { label: 'Company Profile', href: '/company/profile' },
       { label: 'Settings', href: '/company/settings' },
@@ -216,7 +216,7 @@ export default function Footer() {
         {/* Bottom */}
         <div className="pt-6 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-gray-500 text-xs">
-            © {year} Tadrebk. All rights reserved.
+            Â© {year} Tadrebk. All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-xs text-gray-500">
             <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>

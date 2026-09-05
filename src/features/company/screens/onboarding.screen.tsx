@@ -27,11 +27,11 @@ export default function CompanyOnboardingScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
   const [legalFile, setLegalFile] = useState<File | null>(null);
 
-  // Already have a company → go to dashboard
+  // Already have a company â†’ go to dashboard
   useEffect(() => {
     if (company?._id) {
       localStorage.removeItem(LS_PENDING_ONBOARDING);
-      router.replace('/company/dashboard');
+      router.replace('/company/admin');
     }
   }, [company?._id, router]);
 
@@ -83,7 +83,7 @@ export default function CompanyOnboardingScreen() {
       await refreshAuthTokens();
       localStorage.removeItem(LS_PENDING_ONBOARDING);
       toastHelper.success('Company profile created successfully!');
-      router.push('/company/dashboard');
+      router.push('/company/admin');
     } catch (err) {
       setFormError(getErrorMessage(err));
     }

@@ -137,18 +137,18 @@ export default function CompanyProfileScreen() {
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mt-1">Active Positions</p>
           </div>
           <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-            <p className="text-2xl font-black text-dark">{c.numberOfEmployees || '—'}</p>
+            <p className="text-2xl font-black text-dark">{c.numberOfEmployees || 'â€”'}</p>
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mt-1">Employees</p>
           </div>
           <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-            <p className="text-2xl font-black text-dark">{c.industry || '—'}</p>
+            <p className="text-2xl font-black text-dark">{c.industry || 'â€”'}</p>
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mt-1">Industry</p>
           </div>
         </div>
 
         {/* Quick links */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <Link href="/company/dashboard" className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all hover:border-primary/30">
+          <Link href="/company/admin" className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all hover:border-primary/30">
             <i className="fas fa-chart-simple text-primary text-xl mb-2 block" />
             <p className="font-semibold text-dark">Dashboard</p>
             <p className="text-xs text-gray-500 mt-0.5">View your stats</p>

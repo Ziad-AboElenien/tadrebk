@@ -36,11 +36,11 @@ export default function BillingScreen() {
     <div className="min-h-screen bg-gray-50">
       <main className="mx-auto max-w-4xl px-4 sm:px-8 py-8">
 
-        <Link href="/company/dashboard" className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+        <Link href="/company/admin" className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
           <i className="fas fa-arrow-left text-xs" /> Back to Dashboard
         </Link>
 
-        {/* ── Credits card ── */}
+        {/* â”€â”€ Credits card â”€â”€ */}
         <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
             <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
@@ -69,7 +69,7 @@ export default function BillingScreen() {
           )}
         </div>
 
-        {/* ── Plans quick overview ── */}
+        {/* â”€â”€ Plans quick overview â”€â”€ */}
         <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
             <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">

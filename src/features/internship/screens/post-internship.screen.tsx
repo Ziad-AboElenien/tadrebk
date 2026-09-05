@@ -121,7 +121,7 @@ export default function PostInternshipScreen() {
         <p className="text-gray-500 mb-8 max-w-md mx-auto">
           Your company account is still under review. You can post internships once it has been approved by the admin.
         </p>
-        <Link href="/company/dashboard">
+        <Link href="/company/admin">
           <Button>Back to Dashboard</Button>
         </Link>
       </div>
@@ -175,7 +175,7 @@ export default function PostInternshipScreen() {
       {/* Success modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => router.push('/company/dashboard')} />
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => router.push('/company/admin')} />
           <div className="relative bg-white rounded-[2rem] p-6 sm:p-10 sm:p-12 shadow-2xl max-w-md w-full text-center animate-fade-in-up">
             <div className="w-20 h-20 rounded-[1.25rem] bg-emerald-50 flex items-center justify-center mx-auto mb-6">
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
@@ -184,10 +184,10 @@ export default function PostInternshipScreen() {
                 </svg>
               </div>
             </div>
-            <h2 className="text-2xl font-black text-dark mb-3">Internship Posted! 🎉</h2>
+            <h2 className="text-2xl font-black text-dark mb-3">Internship Posted! ðŸŽ‰</h2>
             <p className="text-gray-500 mb-8">Your internship has been published successfully. Start reviewing applicants now.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button onClick={() => router.push('/company/dashboard')} className="!bg-gradient-to-r !from-emerald-500 !to-emerald-600 !shadow-lg !shadow-emerald-200 !font-bold !px-8 !py-3.5">
+              <Button onClick={() => router.push('/company/admin')} className="!bg-gradient-to-r !from-emerald-500 !to-emerald-600 !shadow-lg !shadow-emerald-200 !font-bold !px-8 !py-3.5">
                 <i className="fas fa-th-large mr-2" />
                 Go to Dashboard
               </Button>
@@ -282,7 +282,7 @@ export default function PostInternshipScreen() {
         <div>
           <label className="text-sm font-semibold text-gray-700 mb-2 block">
             Track <span className="text-red-500">*</span> <span className="text-gray-400 font-normal">(select 1 to {MAX_TRACKS_PER_POST})</span>
-            {selectedCategories.length > 0 && <span className="text-gray-400 font-normal"> — <span className="text-primary font-bold">{selectedCategories.length}</span>/{MAX_TRACKS_PER_POST} selected</span>}
+            {selectedCategories.length > 0 && <span className="text-gray-400 font-normal"> â€” <span className="text-primary font-bold">{selectedCategories.length}</span>/{MAX_TRACKS_PER_POST} selected</span>}
           </label>
 
           {/* Selected chips */}
@@ -502,7 +502,7 @@ export default function PostInternshipScreen() {
           <Button type="submit" loading={submitting}>
             Post internship
           </Button>
-          <Link href="/company/dashboard">
+          <Link href="/company/admin">
             <Button type="button" variant="outline">
               Cancel
             </Button>

@@ -58,7 +58,7 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const { unreadCount } = useAppSelector((s) => s.notifications);
   const role = useAppSelector((s) => s.auth.role);
-  const dashboardHref = role === 'company' ? '/company/dashboard' : '/dashboard';
+  const dashboardHref = role === 'company' ? '/company/admin' : '/dashboard';
 
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);

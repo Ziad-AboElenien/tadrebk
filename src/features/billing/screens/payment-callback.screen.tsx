@@ -109,7 +109,7 @@ function PaymentCallbackInner() {
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-black text-dark mb-3 animate-fade-in-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
-              Payment Successful! 🎉
+              Payment Successful! ðŸŽ‰
             </h1>
             <p className="text-gray-500 text-lg mb-2 animate-fade-in-up" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
               Your internship credits have been added.
@@ -137,7 +137,7 @@ function PaymentCallbackInner() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => router.push('/company/dashboard')}
+                onClick={() => router.push('/company/admin')}
                 className="!px-8 !py-3.5 !text-base !font-semibold !rounded-xl !border-2"
               >
                 <i className="fas fa-th-large mr-2" />
@@ -164,7 +164,7 @@ function PaymentCallbackInner() {
               <Button variant="outline" onClick={() => router.push('/company/billing/plans')}>
                 Try Again
               </Button>
-              <Button onClick={() => router.push('/company/dashboard')}>
+              <Button onClick={() => router.push('/company/admin')}>
                 Go to Dashboard
               </Button>
             </div>

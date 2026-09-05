@@ -172,11 +172,11 @@ export default function CompanySettingsScreen() {
       <main className="mx-auto max-w-4xl px-4 sm:px-8 py-8">
 
         {/* Back */}
-        <Link href="/company/dashboard" className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+        <Link href="/company/admin" className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
           <i className="fas fa-arrow-left text-xs" /> Back to Dashboard
         </Link>
 
-        {/* ── Cover Hero ── */}
+        {/* â”€â”€ Cover Hero â”€â”€ */}
         <div className="relative h-44 sm:h-52 rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-cyan-500/20">
           {coverBlank.showImage ? (
             <img src={coverUrl!} alt="Cover" className="w-full h-full object-cover" onLoad={coverBlank.onImgLoad} />
@@ -194,7 +194,7 @@ export default function CompanySettingsScreen() {
           </div>
         </div>
 
-        {/* ── Logo + Company Header ── */}
+        {/* â”€â”€ Logo + Company Header â”€â”€ */}
         <div className="relative px-4 sm:px-6 -mt-10 mb-8">
           <div className="flex items-end gap-4">
             <div className="relative group shrink-0">
@@ -231,7 +231,7 @@ export default function CompanySettingsScreen() {
           </div>
         </div>
 
-        {/* ── Company Details Form ── */}
+        {/* â”€â”€ Company Details Form â”€â”€ */}
         <form onSubmit={handleSubmit(onSubmit)} className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
             <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
@@ -326,7 +326,7 @@ export default function CompanySettingsScreen() {
           </div>
         </form>
 
-        {/* ── Account Section ── */}
+        {/* â”€â”€ Account Section â”€â”€ */}
         <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
             <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">

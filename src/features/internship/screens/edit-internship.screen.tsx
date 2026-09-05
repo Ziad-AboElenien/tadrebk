@@ -97,7 +97,7 @@ export default function EditInternshipScreen() {
       })
       .catch(() => {
         toastHelper.error('Failed to load internship');
-        router.push('/company/dashboard');
+        router.push('/company/admin');
       })
       .finally(() => setLoading(false));
   }, [internId, router, reset]);
@@ -177,7 +177,7 @@ export default function EditInternshipScreen() {
         requiredEducation: universities.map((institution) => ({ institution })),
       });
       toastHelper.success('Internship updated!');
-      router.push('/company/dashboard');
+      router.push('/company/admin');
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     } finally {
@@ -217,7 +217,7 @@ export default function EditInternshipScreen() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       <div className="mb-8">
-        <Link href="/company/dashboard" className="text-sm text-primary hover:underline font-semibold flex items-center gap-1">
+        <Link href="/company/admin" className="text-sm text-primary hover:underline font-semibold flex items-center gap-1">
           <i className="fas fa-arrow-left text-xs" /> Back to dashboard
         </Link>
       </div>
@@ -300,7 +300,7 @@ export default function EditInternshipScreen() {
         <div>
           <label className="text-sm font-semibold text-gray-700 mb-2 block">
             Track <span className="text-red-500">*</span> <span className="text-gray-400 font-normal">(select 1 to {MAX_TRACKS_PER_POST})</span>
-            {selectedCategories.length > 0 && <span className="text-gray-400 font-normal"> — <span className="text-primary font-bold">{selectedCategories.length}</span>/{MAX_TRACKS_PER_POST} selected</span>}
+            {selectedCategories.length > 0 && <span className="text-gray-400 font-normal"> â€” <span className="text-primary font-bold">{selectedCategories.length}</span>/{MAX_TRACKS_PER_POST} selected</span>}
           </label>
 
           {/* Selected chips */}
@@ -527,7 +527,7 @@ export default function EditInternshipScreen() {
 
         <div className="flex gap-4 pt-4">
           <Button type="submit" loading={submitting}>Save changes</Button>
-          <Link href="/company/dashboard"><Button type="button" variant="outline">Cancel</Button></Link>
+          <Link href="/company/admin"><Button type="button" variant="outline">Cancel</Button></Link>
         </div>
       </form>
     </div>

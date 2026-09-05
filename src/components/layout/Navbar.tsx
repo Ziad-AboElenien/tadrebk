@@ -45,7 +45,7 @@ export default function Navbar() {
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
-  // Company user stuck in onboarding → lock all navigation
+  // Company user stuck in onboarding â†’ lock all navigation
   const pendingOnboarding =
     mounted &&
     typeof window !== 'undefined' &&
@@ -91,7 +91,7 @@ export default function Navbar() {
     router.push('/');
   }
 
-  const dashboardHref = role === 'company' ? '/company/dashboard' : role === 'admin' ? '/admin/dashboard' : '/dashboard';
+  const dashboardHref = role === 'company' ? '/company/admin' : role === 'admin' ? '/admin/dashboard' : '/dashboard';
   const displayName = role === 'company'
     ? currentCompany?.name
     : `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim();

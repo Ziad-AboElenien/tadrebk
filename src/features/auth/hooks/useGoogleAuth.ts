@@ -106,7 +106,7 @@ export function useGoogleAuth() {
         toast.success(`Welcome, ${user.firstName}!`);
 
         const next = searchParams.get('next');
-        // Same-origin relative paths only — never "//evil.com" or "\evil.com"
+        // Same-origin relative paths only â€” never "//evil.com" or "\evil.com"
         if (next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\')) {
           if (role !== 'company' && next.startsWith('/company/')) {
             localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
@@ -116,7 +116,7 @@ export function useGoogleAuth() {
         }
 
         if (role === 'company') {
-          router.push('/company/dashboard');
+          router.push('/company/admin');
         } else if (!user.categories || user.categories.length === 0) {
           router.push('/onboarding');
         } else {

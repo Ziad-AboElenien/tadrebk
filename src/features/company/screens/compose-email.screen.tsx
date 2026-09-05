@@ -39,7 +39,7 @@ export default function ComposeEmailScreen() {
       setApplications(appData.applications);
     } catch {
       toastHelper.error('Failed to load data');
-      router.push('/company/dashboard');
+      router.push('/company/admin');
     } finally {
       setLoading(false);
     }
@@ -207,7 +207,7 @@ export default function ComposeEmailScreen() {
               {/* Template body */}
               <div className="bg-white px-8 py-8">
                 <h2 className="text-[#16a34a] text-xl font-extrabold mb-4">
-                  Congratulations, {studentName}! 🎉
+                  Congratulations, {studentName}! ðŸŽ‰
                 </h2>
 
                 <p className="text-gray-700 text-sm leading-relaxed mb-4">
@@ -236,7 +236,7 @@ export default function ComposeEmailScreen() {
                       <ul className="space-y-1">
                         {preKnowledge.map((item, i) => (
                           <li key={i} className="text-[#16a34a] text-sm leading-relaxed flex items-start gap-2">
-                            <span className="text-[#22c55e] font-bold mt-0.5">•</span>
+                            <span className="text-[#22c55e] font-bold mt-0.5">â€¢</span>
                             {item}
                           </li>
                         ))}
@@ -257,9 +257,9 @@ export default function ComposeEmailScreen() {
 
               {/* Template footer */}
               <div className="bg-gray-100 px-8 py-4 text-center">
-                <p className="text-gray-400 text-xs">© 2026 Tadreebak. All rights reserved.</p>
+                <p className="text-gray-400 text-xs">Â© 2026 Tadreebak. All rights reserved.</p>
                 <p className="text-gray-400 text-xs mt-1">
-                  <span className="text-[#22c55e]">Unsubscribe</span> · <span className="text-[#22c55e]">Privacy Policy</span>
+                  <span className="text-[#22c55e]">Unsubscribe</span> Â· <span className="text-[#22c55e]">Privacy Policy</span>
                 </p>
               </div>
             </div>
