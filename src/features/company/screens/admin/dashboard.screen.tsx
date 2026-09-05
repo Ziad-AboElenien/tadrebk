@@ -88,7 +88,7 @@ export default function AdminDashboardScreen() {
         <TopBar
           title="Dashboard Overview"
           actions={
-            <button className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600">
+            <button className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 sm:w-auto">
               <Plus size={16} /> New Internship
             </button>
           }
