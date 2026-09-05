@@ -1,0 +1,96 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  LayoutGrid,
+  Users,
+  CheckSquare,
+  FolderKanban,
+  ClipboardCheck,
+  Trophy,
+  MessageSquare,
+  BarChart3,
+  Settings,
+  GraduationCap,
+  type LucideIcon,
+} from 'lucide-react';
+
+const NAV_ITEMS: { label: string; icon: LucideIcon; href?: string }[] = [
+  { label: 'Dashboard', icon: LayoutGrid, href: '/company/admin' },
+  { label: 'Interns', icon: Users, href: '/company/admin/interns' },
+  { label: 'Tasks', icon: CheckSquare, href: '/company/admin/tasks' },
+  { label: 'Projects', icon: FolderKanban },
+  { label: 'Evaluations', icon: ClipboardCheck, href: '/company/admin/evaluations' },
+  { label: 'Leaderboard', icon: Trophy, href: '/company/admin/leaderboard' },
+  { label: 'Messages', icon: MessageSquare },
+  { label: 'Reports', icon: BarChart3, href: '/company/admin/reports' },
+  { label: 'Settings', icon: Settings, href: '/company/settings' },
+];
+
+type SidebarProps = {
+  active?: string;
+  adminName?: string;
+  adminRole?: string;
+};
+
+export default function Sidebar({ active, adminName, adminRole }: SidebarProps) {
+  const pathname = usePathname();
+
+  const isActive = (label: string, href?: string) => {
+    if (active) return label === active;
+    if (!href) return false;
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
+  return (
+    <aside className="sticky top-20 flex h-[calc(100vh-5rem)] w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white">
+      <div className="flex items-center gap-2 px-6 py-6">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 text-white">
+          <GraduationCap size={20} />
+        </div>
+        <span className="text-lg font-semibold text-slate-900">Tadrebk</span>
+      </div>
+
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3">
+        {NAV_ITEMS.map(({ label, icon: Icon, href }) => {
+          const selected = isActive(label, href);
+          const content = (
+            <>
+              <Icon size={18} />
+              {label}
+            </>
+          );
+          const cls = `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+            selected ? 'bg-emerald-50 font-medium text-emerald-600' : 'text-slate-600 hover:bg-slate-50'
+          }`;
+          return href ? (
+            <Link key={label} href={href} className={cls}>
+              {content}
+            </Link>
+          ) : (
+            <button key={label} type="button" className={`${cls} cursor-not-allowed opacity-70`}>
+              {content}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="border-t border-slate-100 px-4 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white">
+            {(adminName || 'Admin User')
+              .split(' ')
+              .map((w) => w[0])
+              .slice(0, 2)
+              .join('')}
+          </div>
+          <div className="leading-tight">
+            <p className="text-sm font-medium text-slate-900">{adminName || 'Admin User'}</p>
+            <p className="text-xs text-slate-400">{adminRole || 'Company Name'}</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
