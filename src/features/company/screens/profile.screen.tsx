@@ -137,11 +137,11 @@ export default function CompanyProfileScreen() {
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mt-1">Active Positions</p>
           </div>
           <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-            <p className="text-2xl font-black text-dark">{c.numberOfEmployees || 'â€”'}</p>
+            <p className="text-2xl font-black text-dark">{c.numberOfEmployees || '—'}</p>
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mt-1">Employees</p>
           </div>
           <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-            <p className="text-2xl font-black text-dark">{c.industry || 'â€”'}</p>
+            <p className="text-2xl font-black text-dark">{c.industry || '—'}</p>
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mt-1">Industry</p>
           </div>
         </div>

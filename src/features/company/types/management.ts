@@ -24,6 +24,7 @@ export interface Project {
   endDate?: string | null;
   color?: string;
   internIds: string[];
+  attachment?: TaskAttachment | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -53,6 +54,7 @@ export interface Intern {
 
 export type TaskStatus = 'todo' | 'in_progress' | 'in_review' | 'complete' | 'archived';
 export type TaskPriority = 'high' | 'medium' | 'low';
+export type TaskTarget = 'company' | 'program' | 'project' | 'intern';
 
 export interface TaskAttachment {
   public_id: string;
@@ -80,6 +82,7 @@ export interface Task {
   reviewedAt?: string | null;
   reviewerFeedback?: string | null;
   pointsAwarded?: number | null;
+  taskGroupId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -94,4 +97,39 @@ export interface Pagination {
 export interface ListResponse<T> {
   data: T[];
   pagination: Pagination;
+}
+
+export interface TaskBroadcastResult {
+  task?: Task;
+  tasks?: Task[];
+  count?: number;
+  groupId?: string;
+  target?: TaskTarget;
+  members?: number;
+}
+
+export type AttendanceStatus = 'attended' | 'missed' | 'late' | 'excused';
+
+export interface AttendanceRecord {
+  _id: string;
+  internId: string;
+  companyId: string;
+  date: string;
+  status: AttendanceStatus;
+  note?: string;
+  markedBy?: string;
+  pointsAwarded?: boolean;
+}
+
+export interface AttendanceDayRule {
+  day: 'saturday' | 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday';
+  startTime: string;
+  endTime: string | null;
+  workday: boolean;
+}
+
+export interface AttendanceScheduleEntry {
+  programId: string;
+  rules: AttendanceDayRule[];
+  timezone: string;
 }

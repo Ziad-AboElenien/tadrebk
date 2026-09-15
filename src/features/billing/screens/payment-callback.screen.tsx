@@ -109,7 +109,7 @@ function PaymentCallbackInner() {
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-black text-dark mb-3 animate-fade-in-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
-              Payment Successful! ðŸŽ‰
+              Payment Successful!
             </h1>
             <p className="text-gray-500 text-lg mb-2 animate-fade-in-up" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
               Your internship credits have been added.

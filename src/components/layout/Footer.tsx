@@ -216,7 +216,7 @@ export default function Footer() {
         {/* Bottom */}
         <div className="pt-6 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="text-gray-500 text-xs">
-            Â© {year} Tadrebk. All rights reserved.
+            © {year} Tadrebk. All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-xs text-gray-500">
             <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>

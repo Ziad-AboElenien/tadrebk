@@ -53,7 +53,7 @@ const REQUIREMENTS = [
 const TABS = ['Performance Overview', 'Task History', 'Feedback & Reviews'];
 
 function formatDate(dateStr?: string | null): string {
-  if (!dateStr) return 'â€”';
+  if (!dateStr) return '—';
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
@@ -232,7 +232,7 @@ export default function InternProfileScreen() {
                 <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-blue-700 text-2xl font-semibold text-white">
                   {initials || '?'}
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-slate-900">{name || 'â€”'}</h3>
+                <h3 className="mt-4 text-lg font-semibold text-slate-900">{name || '—'}</h3>
                 <p className="text-sm text-slate-400">{intern.headline || 'Intern'}</p>
                 <div className="mt-3 flex justify-center gap-2">
                   <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600">
@@ -255,12 +255,12 @@ export default function InternProfileScreen() {
                 <h3 className="font-semibold text-slate-900">Personal Information</h3>
                 <dl className="mt-4 space-y-4 text-sm">
                   {[
-                    { icon: GraduationCap, label: 'SKILLS', value: (intern.skills || []).join(', ') || 'â€”' },
+                    { icon: GraduationCap, label: 'SKILLS', value: (intern.skills || []).join(', ') || '—' },
                     { icon: Mail, label: 'EMAIL ADDRESS', value: email },
-                    { icon: Phone, label: 'PHONE NUMBER', value: phone || 'â€”' },
-                    { icon: MapPin, label: 'LOCATION', value: 'â€”' },
-                    { icon: Building2, label: 'HEADLINE', value: intern.headline || 'â€”' },
-                    { icon: CalendarRange, label: 'INTERNSHIP PERIOD', value: `${formatDate(intern.internshipStartDate)} â€” ${formatDate(intern.internshipEndDate)}` },
+                    { icon: Phone, label: 'PHONE NUMBER', value: phone || '—' },
+                    { icon: MapPin, label: 'LOCATION', value: '—' },
+                    { icon: Building2, label: 'HEADLINE', value: intern.headline || '—' },
+                    { icon: CalendarRange, label: 'INTERNSHIP PERIOD', value: `${formatDate(intern.internshipStartDate)} — ${formatDate(intern.internshipEndDate)}` },
                   ].map((f) => (
                     <div key={f.label} className="flex items-start gap-3">
                       <f.icon size={16} className="mt-0.5 text-slate-400" />

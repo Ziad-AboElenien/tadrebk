@@ -116,7 +116,7 @@ function CompanyFallbackCard() {
       </div>
       <h3 className="text-2xl font-black text-gray-900">For Companies</h3>
       <p className="mt-3 text-sm leading-relaxed text-gray-500">
-        Post internships, attract top talent, and manage your hiring pipeline â€” all in one platform.
+        Post internships, attract top talent, and manage your hiring pipeline — all in one platform.
       </p>
       <div className="mt-5 space-y-3">
         {companyFeatures.map((f) => (
@@ -172,7 +172,7 @@ export default function CompanyMiniDashboard() {
             Post, manage, and <span className="text-emerald-400">hire smarter</span>
           </h2>
           <p className="mt-4 text-base leading-relaxed text-gray-400">
-            Find the right interns for your team, manage applications seamlessly, and build your future workforce â€” all from one dashboard.
+            Find the right interns for your team, manage applications seamlessly, and build your future workforce — all from one dashboard.
           </p>
           <div className="mt-8 space-y-5">
             {companyFeatures.map((item) => (

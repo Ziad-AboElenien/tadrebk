@@ -1,17 +1,29 @@
 import type { LucideIcon } from 'lucide-react';
 
 type StatCardProps = {
+  /** small caption above the value */
   label: string;
+  /** the big headline value */
   value: string | number;
+  /** lucide icon component */
   icon?: LucideIcon;
+  /** tailwind bg color class for the icon chip */
   iconBg?: string;
+  /** tailwind text color class for the icon */
   iconColor?: string;
+  /** small trend string, e.g. "+2.1%" */
   delta?: string;
+  /** controls delta color/arrow */
   deltaDirection?: 'up' | 'down';
+  /** text after the delta, e.g. "vs last month" */
   deltaLabel?: string;
+  /** optional pill shown top-right instead of a delta (e.g. "This Month") */
   badge?: string;
 };
 
+/**
+ * StatCard
+ */
 export default function StatCard({
   label,
   value,

@@ -76,9 +76,15 @@ export default function OGImage() {
             color: '#64748b',
           }}
         >
-          <span>🎯 500+ Internships</span>
-          <span>🏢 100+ Companies</span>
-          <span>🇪🇬 Egypt</span>
+          <span>
+            <b>500+ Internships</b>
+          </span>
+          <span>
+            <b>100+ Companies</b>
+          </span>
+          <span>
+            <b>Egypt</b>
+          </span>
         </div>
       </div>
     ),

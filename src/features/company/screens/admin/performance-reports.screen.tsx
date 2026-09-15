@@ -13,6 +13,9 @@ import {
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import StatCard from '@/components/tadrebk/StatCard';
+import StackedBarChart from '@/features/company/components/StackedBarChart';
+import LineAreaChart from '@/features/company/components/LineAreaChart';
+import DonutGauge from '@/features/company/components/DonutGauge';
 
 const STATS = [
   { label: 'Avg. Attendance', value: '94.2%', icon: Users, delta: '+2.1%', deltaLabel: 'vs last month' },
@@ -21,12 +24,34 @@ const STATS = [
   { label: 'Time to Complete', value: '2.4 Days', icon: Clock, delta: '-12%', deltaDirection: 'down' as const, deltaLabel: 'per task unit' },
 ];
 
-const ATTENDANCE = [
-  { day: 'Mon', present: 92, remote: 6, absent: 2 },
-  { day: 'Tue', present: 96, remote: 3, absent: 1 },
-  { day: 'Wed', present: 88, remote: 8, absent: 4 },
-  { day: 'Thu', present: 94, remote: 4, absent: 2 },
-  { day: 'Fri', present: 90, remote: 5, absent: 5 },
+const ATTENDANCE: { label: string; values: Record<string, number> }[] = [
+  { label: 'Mon', values: { present: 92, remote: 6, absent: 2 } },
+  { label: 'Tue', values: { present: 96, remote: 3, absent: 1 } },
+  { label: 'Wed', values: { present: 88, remote: 8, absent: 4 } },
+  { label: 'Thu', values: { present: 94, remote: 4, absent: 2 } },
+  { label: 'Fri', values: { present: 90, remote: 5, absent: 5 } },
+];
+
+const ATTENDANCE_COLORS = { present: '#10b981', remote: '#a7f3d0', absent: '#fb7185' };
+
+const COMPLETION_TREND: { label: string; value: number }[] = [
+  { label: 'Jan', value: 20 },
+  { label: 'Feb', value: 40 },
+  { label: 'Mar', value: 55 },
+  { label: 'Apr', value: 45 },
+  { label: 'May', value: 70 },
+  { label: 'Jun', value: 80 },
+];
+
+const PERFORMANCE_TREND: { label: string; value: number }[] = [
+  { label: 'W1', value: 10 },
+  { label: 'W2', value: 30 },
+  { label: 'W3', value: 40 },
+  { label: 'W4', value: 25 },
+  { label: 'W5', value: 60 },
+  { label: 'W6', value: 55 },
+  { label: 'W7', value: 50 },
+  { label: 'W8', value: 90 },
 ];
 
 const SKILLS = [
@@ -83,17 +108,8 @@ export default function PerformanceReportsScreen() {
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
               <h3 className="font-semibold text-slate-900">Weekly Attendance Status</h3>
               <p className="text-sm text-slate-400">Daily breakdown of presence vs remote work.</p>
-              <div className="mt-6 flex h-56 items-end justify-between gap-4">
-                {ATTENDANCE.map((d) => (
-                  <div key={d.day} className="flex flex-1 flex-col items-center gap-1">
-                    <div className="flex h-44 w-full items-end justify-center gap-1">
-                      <div className="w-2.5 rounded-t bg-emerald-500" style={{ height: `${d.present}%` }} />
-                      <div className="w-2.5 rounded-t bg-emerald-200" style={{ height: `${d.remote}%` }} />
-                      <div className="w-2.5 rounded-t bg-rose-400" style={{ height: `${d.absent}%` }} />
-                    </div>
-                    <span className="text-xs text-slate-400">{d.day}</span>
-                  </div>
-                ))}
+              <div className="mt-6">
+                <StackedBarChart data={ATTENDANCE} colors={ATTENDANCE_COLORS} height={224} />
               </div>
               <div className="mt-2 flex gap-5 text-xs text-slate-500">
                 <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Present</span>
@@ -104,27 +120,9 @@ export default function PerformanceReportsScreen() {
 
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
               <h3 className="font-semibold text-slate-900">Task Completion Trends</h3>
-              <p className="text-sm text-slate-400">Monthly volume of closed tasks vs overdue items.</p>
-              <div className="mt-6 h-56">
-                <svg viewBox="0 0 300 120" className="h-full w-full" preserveAspectRatio="none">
-                  <polyline
-                    fill="url(#trendFill)"
-                    stroke="#10b981"
-                    strokeWidth="2"
-                    points="0,80 50,60 100,45 150,55 200,30 250,20 300,15 300,120 0,120"
-                  />
-                  <defs>
-                    <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-              <div className="flex justify-between text-xs text-slate-400">
-                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((m) => (
-                  <span key={m}>{m}</span>
-                ))}
+              <p className="text-sm text-slate-400">Monthly trend of completed task volume.</p>
+              <div className="mt-6">
+                <LineAreaChart data={COMPLETION_TREND} fill height={224} />
               </div>
             </div>
           </div>
@@ -132,21 +130,9 @@ export default function PerformanceReportsScreen() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
               <h3 className="font-semibold text-slate-900">Overall Performance Progress</h3>
-              <p className="text-sm text-slate-400">Weekly aggregated performance score across all active cohorts.</p>
-              <div className="mt-6 h-56">
-                <svg viewBox="0 0 300 120" className="h-full w-full" preserveAspectRatio="none">
-                  <polyline
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="2"
-                    points="0,100 40,70 80,60 120,75 160,40 200,45 240,50 280,10"
-                  />
-                </svg>
-              </div>
-              <div className="flex justify-between text-xs text-slate-400">
-                {['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8'].map((w) => (
-                  <span key={w}>{w}</span>
-                ))}
+              <p className="text-sm text-slate-400">Aggregated cohort performance score across the last 8 weeks.</p>
+              <div className="mt-6">
+                <LineAreaChart data={PERFORMANCE_TREND} height={224} />
               </div>
             </div>
 
@@ -208,16 +194,7 @@ export default function PerformanceReportsScreen() {
               <h3 className="font-semibold text-slate-900">Cohort Progress Overview</h3>
               <p className="text-sm text-slate-400">Current stage of the Summer 2024 Internship Program.</p>
               <div className="mt-6 flex justify-center">
-                <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-8 border-slate-100">
-                  <div
-                    className="absolute inset-0 rounded-full border-8 border-emerald-500"
-                    style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 65%)' }}
-                  />
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-slate-900">65%</p>
-                    <p className="text-xs text-slate-400">Program Complete</p>
-                  </div>
-                </div>
+                <DonutGauge value={65} />
               </div>
               <div className="mt-6 grid grid-cols-2 gap-4">
                 <div className="rounded-xl bg-slate-50 p-4">

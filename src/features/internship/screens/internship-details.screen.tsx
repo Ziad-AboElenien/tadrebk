@@ -597,7 +597,7 @@ export default function InternshipDetailsScreen() {
                 </svg>
               </div>
             </div>
-            <h2 className="text-2xl font-black text-dark mb-3">Application Submitted! 🎉</h2>
+            <h2 className="text-2xl font-black text-dark mb-3">Application Submitted!</h2>
             <p className="text-gray-500 mb-8">Your application has been sent successfully. The company will review it and get back to you.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button onClick={() => router.push('/my-applications')} className="!bg-gradient-to-r !from-emerald-500 !to-emerald-600 !shadow-lg !shadow-emerald-200 !font-bold !px-8 !py-3.5">

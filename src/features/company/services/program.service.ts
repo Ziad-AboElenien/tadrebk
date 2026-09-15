@@ -6,6 +6,7 @@ export interface CreateProgramPayload {
   startDate: string;
   description?: string;
   endDate?: string;
+  status?: 'upcoming' | 'active' | 'completed' | 'archived';
   maxInterns?: number;
   coverImage?: { public_id: string; secure_url: string };
 }
@@ -28,13 +29,20 @@ interface ProgramListEnvelope {
 }
 
 interface ProgramResponse {
-  data: Program;
-  msg: string;
+  data: Program | { program?: Program } | undefined;
+  program?: Program;
+  msg?: string;
+}
+
+function normalizeProgram(raw?: Program | { program?: Program }): Program {
+  if (!raw) throw new Error('Program not found');
+  return '_id' in raw ? (raw as Program) : ((raw as { program?: Program }).program ?? ({} as Program));
 }
 
 interface ProgramDetailEnvelope {
-  data: Program;
-  msg: string;
+  data: Program | { program?: Program } | undefined;
+  program?: Program;
+  msg?: string;
 }
 
 export const programService = {
@@ -67,12 +75,14 @@ export const programService = {
 
   async getProgram(companyId: string, programId: string): Promise<Program> {
     const { data } = await api.get<ProgramDetailEnvelope>(`/company/${companyId}/programs/${programId}`);
-    return data.data;
+
+    const unwrapped = (data?.data as Program | { program?: Program } | undefined) ?? data;
+    return normalizeProgram(unwrapped as Program | { program?: Program });
   },
 
   async createProgram(companyId: string, payload: CreateProgramPayload): Promise<Program> {
     const { data } = await api.post<ProgramResponse>(`/company/${companyId}/programs`, payload);
-    return data.data;
+    return normalizeProgram((data?.data as Program | { program?: Program } | undefined) ?? data);
   },
 
   async updateProgram(
@@ -81,12 +91,12 @@ export const programService = {
     payload: UpdateProgramPayload,
   ): Promise<Program> {
     const { data } = await api.patch<ProgramResponse>(`/company/${companyId}/programs/${programId}`, payload);
-    return data.data;
+    return normalizeProgram((data?.data as Program | { program?: Program } | undefined) ?? data);
   },
 
   async archiveProgram(companyId: string, programId: string): Promise<Program> {
     const { data } = await api.delete<ProgramResponse>(`/company/${companyId}/programs/${programId}`);
-    return data.data;
+    return normalizeProgram((data?.data as Program | { program?: Program } | undefined) ?? data);
   },
 
   async enrollInterns(companyId: string, programId: string, internIds: string[]): Promise<void> {

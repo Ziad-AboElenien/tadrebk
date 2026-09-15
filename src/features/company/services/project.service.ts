@@ -9,6 +9,7 @@ export interface CreateProjectPayload {
   startDate?: string;
   endDate?: string;
   color?: string;
+  file?: File;
 }
 
 export interface UpdateProjectPayload {
@@ -29,8 +30,14 @@ interface ProjectListEnvelope {
 }
 
 interface ProjectResponse {
-  data: Project;
-  msg: string;
+  data: Project | { project?: Project };
+  project?: Project;
+  msg?: string;
+}
+
+function normalizeProject(raw?: Project | { project?: Project }): Project {
+  if (!raw) throw new Error('Project not found');
+  return '_id' in raw ? (raw as Project) : ((raw as { project?: Project }).project ?? ({} as Project));
 }
 
 export const projectService = {
@@ -64,12 +71,23 @@ export const projectService = {
 
   async getProject(companyId: string, projectId: string): Promise<Project> {
     const { data } = await api.get<ProjectResponse>(`/company/${companyId}/projects/${projectId}`);
-    return data.data;
+    return normalizeProject((data?.data as Project | { project?: Project } | undefined) ?? data);
   },
 
   async createProject(companyId: string, payload: CreateProjectPayload): Promise<Project> {
-    const { data } = await api.post<ProjectResponse>(`/company/${companyId}/projects`, payload);
-    return data.data;
+    const form = new FormData();
+    form.append('name', payload.name);
+    if (payload.description) form.append('description', payload.description);
+    if (payload.programId) form.append('programId', payload.programId);
+    if (payload.startDate) form.append('startDate', payload.startDate);
+    if (payload.endDate) form.append('endDate', payload.endDate);
+    if (payload.color) form.append('color', payload.color);
+    if (payload.file) form.append('file', payload.file);
+    const { data } = await api.post<ProjectResponse>(`/company/${companyId}/projects`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    const raw = (data?.data ?? data) as Project | { project?: Project } | undefined;
+    return ((raw && 'project' in raw ? raw.project : raw) as Project) ?? ({} as Project);
   },
 
   async updateProject(
@@ -78,15 +96,30 @@ export const projectService = {
     payload: UpdateProjectPayload,
   ): Promise<Project> {
     const { data } = await api.patch<ProjectResponse>(`/company/${companyId}/projects/${projectId}`, payload);
-    return data.data;
+    return normalizeProject((data?.data as Project | { project?: Project } | undefined) ?? data);
   },
 
   async archiveProject(companyId: string, projectId: string): Promise<Project> {
     const { data } = await api.delete<ProjectResponse>(`/company/${companyId}/projects/${projectId}`);
-    return data.data;
+    return normalizeProject((data?.data as Project | { project?: Project } | undefined) ?? data);
   },
 
   async assignInterns(companyId: string, projectId: string, internIds: string[]): Promise<void> {
     await api.post(`/company/${companyId}/projects/${projectId}/interns`, { internIds });
+  },
+
+  async uploadAttachment(
+    companyId: string,
+    projectId: string,
+    file: File,
+  ): Promise<Project> {
+    const form = new FormData();
+    form.append('file', file);
+    const { data } = await api.put<ProjectResponse>(
+      `/company/${companyId}/projects/${projectId}/attachment`,
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    );
+    return normalizeProject((data?.data as Project | { project?: Project } | undefined) ?? data);
   },
 };

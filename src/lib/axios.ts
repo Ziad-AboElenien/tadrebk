@@ -16,7 +16,7 @@ const API_BASE_URL =
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  timeout: 0,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -105,6 +105,7 @@ export function refreshAuthTokens(): Promise<boolean> {
 // otherwise students browsing the public listing get force-logged-out.
 const COMPANY_GATED_PATTERNS = [
   /\/company\/[^/]+\/internships(\/|$|\?)/,
+  /\/company\/[^/]+\/interns(\/|$|\?)/,
   /\/company\/[^/]+\/billing(\/|$|\?)/,
 ];
 

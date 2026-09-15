@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import {
   Search,
@@ -44,15 +44,23 @@ function formatDue(dateStr: string): string {
 function TaskCard({ task }: { task: Task }) {
   const priority = task.priority ? task.priority.toUpperCase() : '';
   const points = task.pointsAwarded != null ? `${task.pointsAwarded} pts` : null;
+  const isBroadcast = Boolean(task.taskGroupId);
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <Link href={`/company/admin/tasks/${task._id}`} className="block rounded-xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-sm">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-400">{task._id.slice(-8).toUpperCase()}</span>
-        {priority && (
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${PRIORITY_STYLES[priority] || 'bg-slate-100 text-slate-500'}`}>
-            {priority}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {isBroadcast && (
+            <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
+              Group
+            </span>
+          )}
+          {priority && (
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${PRIORITY_STYLES[priority] || 'bg-slate-100 text-slate-500'}`}>
+              {priority}
+            </span>
+          )}
+        </div>
       </div>
       <p className="mt-2 text-sm font-semibold text-slate-900">{task.title}</p>
       {task.description && <p className="mt-1 text-xs text-slate-400 line-clamp-2">{task.description}</p>}
@@ -75,39 +83,23 @@ function TaskCard({ task }: { task: Task }) {
           <MoreVertical size={16} />
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
 export default function TaskBoardScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
-  const [columns, setColumns] = useState<Record<TaskStatus, Task[]>>({
-    todo: [],
-    in_progress: [],
-    in_review: [],
-    complete: [],
-    archived: [],
-  });
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   const fetchTasks = useCallback(async () => {
     if (!companyId) return;
     setLoading(true);
     try {
       const res = await taskService.listTasks(companyId, { limit: 100 });
-      const grouped: Record<TaskStatus, Task[]> = {
-        todo: [],
-        in_progress: [],
-        in_review: [],
-        complete: [],
-        archived: [],
-      };
-      res.tasks.forEach((t) => {
-        if (grouped[t.status]) grouped[t.status].push(t);
-        else grouped.todo.push({ ...t, status: 'todo' });
-      });
-      setColumns(grouped);
+      setAllTasks(res.tasks);
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     } finally {
@@ -119,6 +111,28 @@ export default function TaskBoardScreen() {
     const t = setTimeout(fetchTasks, 0);
     return () => clearTimeout(t);
   }, [fetchTasks]);
+
+  const columns = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const visible = !q
+      ? allTasks
+      : allTasks.filter((t) => {
+          const haystack = [t.title, t.description, (t.tags || []).join(' ')].join(' ').toLowerCase();
+          return haystack.includes(q);
+        });
+    const grouped: Record<TaskStatus, Task[]> = {
+      todo: [],
+      in_progress: [],
+      in_review: [],
+      complete: [],
+      archived: [],
+    };
+    visible.forEach((t) => {
+      if (grouped[t.status]) grouped[t.status].push(t);
+      else grouped.todo.push({ ...t, status: 'todo' });
+    });
+    return grouped;
+  }, [allTasks, search]);
 
   return (
     <div className="flex bg-slate-50">
@@ -138,6 +152,8 @@ export default function TaskBoardScreen() {
                 <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   placeholder="Filter tasks..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
                   className="rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                 />
               </div>

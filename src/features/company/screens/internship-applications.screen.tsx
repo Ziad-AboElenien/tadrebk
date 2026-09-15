@@ -402,7 +402,7 @@ export default function InternshipApplicationsScreen() {
                         {(studentUniversities[s?._id ?? ''] ?? []).length > 0 && (
                           <p className="text-sm text-gray-400 mt-0.5 flex items-center gap-1.5">
                             <i className="fas fa-graduation-cap text-xs text-primary/60" />
-                            {(studentUniversities[s?._id ?? ''] ?? []).join(' Â· ')}
+                            {(studentUniversities[s?._id ?? ''] ?? []).join(' · ')}
                           </p>
                         )}
                       </div>

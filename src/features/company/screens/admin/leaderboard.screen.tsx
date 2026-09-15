@@ -202,7 +202,7 @@ export default function LeaderboardScreen() {
                       <td className="py-3">
                         {r.trend === 'up' && <ArrowUpRight size={16} className="text-emerald-500" />}
                         {r.trend === 'down' && <ArrowDownRight size={16} className="text-rose-500" />}
-                        {r.trend === 'flat' && <span className="text-slate-300">â€”</span>}
+                        {r.trend === 'flat' && <span className="text-slate-300">—</span>}
                       </td>
                       <td className="py-3 text-right">
                         <MoreVertical size={16} className="text-slate-300" />

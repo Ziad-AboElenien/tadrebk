@@ -184,7 +184,7 @@ export default function PostInternshipScreen() {
                 </svg>
               </div>
             </div>
-            <h2 className="text-2xl font-black text-dark mb-3">Internship Posted! ðŸŽ‰</h2>
+            <h2 className="text-2xl font-black text-dark mb-3">Internship Posted!</h2>
             <p className="text-gray-500 mb-8">Your internship has been published successfully. Start reviewing applicants now.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button onClick={() => router.push('/company/admin')} className="!bg-gradient-to-r !from-emerald-500 !to-emerald-600 !shadow-lg !shadow-emerald-200 !font-bold !px-8 !py-3.5">
@@ -282,7 +282,7 @@ export default function PostInternshipScreen() {
         <div>
           <label className="text-sm font-semibold text-gray-700 mb-2 block">
             Track <span className="text-red-500">*</span> <span className="text-gray-400 font-normal">(select 1 to {MAX_TRACKS_PER_POST})</span>
-            {selectedCategories.length > 0 && <span className="text-gray-400 font-normal"> â€” <span className="text-primary font-bold">{selectedCategories.length}</span>/{MAX_TRACKS_PER_POST} selected</span>}
+            {selectedCategories.length > 0 && <span className="text-gray-400 font-normal"> — <span className="text-primary font-bold">{selectedCategories.length}</span>/{MAX_TRACKS_PER_POST} selected</span>}
           </label>
 
           {/* Selected chips */}

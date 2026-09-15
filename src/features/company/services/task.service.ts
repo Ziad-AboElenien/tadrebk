@@ -3,15 +3,30 @@ import {
   Task,
   TaskStatus,
   TaskPriority,
+  TaskTarget,
+  TaskBroadcastResult,
   Pagination,
 } from '@/features/company/types/management';
 
 export interface CreateTaskFields {
   title: string;
   description?: string;
-  internId: string;
-  projectId?: string;
+  target: TaskTarget;
+  internId?: string;
   programId?: string;
+  projectId?: string;
+  priority?: TaskPriority;
+  tags?: string[];
+  dueDate: string;
+}
+
+export interface CreateTaskPayload {
+  title: string;
+  description?: string;
+  target: TaskTarget;
+  internId?: string;
+  programId?: string;
+  projectId?: string;
   priority?: TaskPriority;
   tags?: string[];
   dueDate: string;
@@ -27,34 +42,43 @@ export interface UpdateTaskPayload {
   programId?: string;
 }
 
+export interface UpdateTaskGroupPayload {
+  title?: string;
+  description?: string;
+  priority?: TaskPriority;
+  tags?: string[];
+  dueDate?: string;
+}
+
 interface TaskListEnvelope {
   data?:
     | { tasks?: Task[]; pagination?: Pagination }
+    | { tasks?: Task[]; count?: number; groupId?: string; target?: TaskTarget; members?: number }
     | Task[];
   tasks?: Task[];
+  count?: number;
+  groupId?: string;
+  target?: TaskTarget;
+  members?: number;
   pagination?: Pagination;
   msg?: string;
 }
 
 interface TaskResponse {
-  data: Task;
+  data: Task | TaskBroadcastResult;
   msg: string;
 }
 
-function toForm(fields: CreateTaskFields): FormData {
-  const form = new FormData();
-  (Object.keys(fields) as (keyof CreateTaskFields)[]).forEach((key) => {
-    const value = fields[key];
-    if (value === undefined || value === null) return;
-    if (Array.isArray(value)) {
-      form.append(key, JSON.stringify(value));
-    } else if (typeof value === 'object') {
-      form.append(key, JSON.stringify(value));
-    } else {
-      form.append(key, String(value));
-    }
-  });
-  return form;
+function normalizeTaskBroadcast(raw?: Task | TaskBroadcastResult | null): TaskBroadcastResult {
+  if (!raw) return {};
+  if ('_id' in raw || 'status' in raw) return { task: raw as Task };
+  return raw as TaskBroadcastResult;
+}
+
+function normalizeTask(raw?: Task | TaskBroadcastResult | null): Task | undefined {
+  if (!raw) return undefined;
+  if ('_id' in raw) return raw as Task;
+  return (raw as TaskBroadcastResult).task;
 }
 
 export const taskService = {
@@ -64,6 +88,7 @@ export const taskService = {
       internId?: string;
       projectId?: string;
       programId?: string;
+      groupId?: string;
       status?: TaskStatus;
       priority?: TaskPriority;
       tag?: string;
@@ -93,30 +118,48 @@ export const taskService = {
 
   async getTask(companyId: string, taskId: string): Promise<Task> {
     const { data } = await api.get<TaskResponse>(`/company/${companyId}/tasks/${taskId}`);
-    return data.data;
+    return normalizeTask(data?.data) ?? ({} as Task);
   },
 
   async createTask(
     companyId: string,
     fields: CreateTaskFields,
     files: File[] = [],
-  ): Promise<Task> {
-    const form = toForm(fields);
+  ): Promise<TaskBroadcastResult> {
+    const payload: CreateTaskPayload = {
+      title: fields.title,
+      description: fields.description,
+      target: fields.target,
+      dueDate: fields.dueDate,
+      priority: fields.priority,
+      tags: fields.tags,
+    };
+    if (fields.internId) payload.internId = fields.internId;
+    if (fields.programId) payload.programId = fields.programId;
+    if (fields.projectId) payload.projectId = fields.projectId;
+
+    if (files.length === 0) {
+      const { data } = await api.post<TaskResponse>(`/company/${companyId}/tasks`, payload);
+      return normalizeTaskBroadcast(data?.data);
+    }
+
+    const form = new FormData();
+    form.append('body', JSON.stringify(payload));
     files.forEach((file) => form.append('files', file));
     const { data } = await api.post<TaskResponse>(`/company/${companyId}/tasks`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return data.data;
+    return normalizeTaskBroadcast(data?.data);
   },
 
   async updateTask(companyId: string, taskId: string, payload: UpdateTaskPayload): Promise<Task> {
     const { data } = await api.patch<TaskResponse>(`/company/${companyId}/tasks/${taskId}`, payload);
-    return data.data;
+    return normalizeTask(data?.data) ?? ({} as Task);
   },
 
   async archiveTask(companyId: string, taskId: string): Promise<Task> {
     const { data } = await api.delete<TaskResponse>(`/company/${companyId}/tasks/${taskId}`);
-    return data.data;
+    return normalizeTask(data?.data) ?? ({} as Task);
   },
 
   async transitionTask(
@@ -125,14 +168,14 @@ export const taskService = {
     payload: { to: TaskStatus; reviewerFeedback?: string; pointsAwarded?: number },
   ): Promise<Task> {
     const { data } = await api.post<TaskResponse>(`/company/${companyId}/tasks/${taskId}/transition`, payload);
-    return data.data;
+    return normalizeTask(data?.data) ?? ({} as Task);
   },
 
   async saveFeedback(companyId: string, taskId: string, reviewerFeedback: string): Promise<Task> {
     const { data } = await api.post<TaskResponse>(`/company/${companyId}/tasks/${taskId}/feedback`, {
       reviewerFeedback,
     });
-    return data.data;
+    return normalizeTask(data?.data) ?? ({} as Task);
   },
 
   async addAttachments(companyId: string, taskId: string, files: File[]): Promise<Task> {
@@ -143,7 +186,7 @@ export const taskService = {
       form,
       { headers: { 'Content-Type': 'multipart/form-data' } },
     );
-    return data.data;
+    return normalizeTask(data?.data) ?? ({} as Task);
   },
 
   async removeAttachment(
@@ -154,6 +197,27 @@ export const taskService = {
     const { data } = await api.delete<TaskResponse>(
       `/company/${companyId}/tasks/${taskId}/attachments/${attachmentId}`,
     );
-    return data.data;
+    return normalizeTask(data?.data) ?? ({} as Task);
+  },
+
+  async listByGroup(
+    companyId: string,
+    groupId: string,
+  ): Promise<{ tasks: Task[]; count?: number; groupId?: string; target?: TaskTarget; members?: number }> {
+    const { data } = await api.get<TaskListEnvelope>(`/company/${companyId}/tasks/group/${groupId}`);
+    const raw = (data?.data as { tasks?: Task[]; count?: number; groupId?: string; target?: TaskTarget; members?: number } | undefined);
+    return { tasks: raw?.tasks ?? data?.tasks ?? [], count: raw?.count ?? data?.count, groupId: raw?.groupId ?? data?.groupId, target: raw?.target ?? data?.target, members: raw?.members ?? data?.members };
+  },
+
+  async bulkUpdateByGroup(
+    companyId: string,
+    groupId: string,
+    payload: UpdateTaskGroupPayload,
+  ): Promise<{ groupId?: string; matched?: number; modified?: number }> {
+    const { data } = await api.patch<{ data: { groupId?: string; matched?: number; modified?: number }; msg?: string }>(
+      `/company/${companyId}/tasks/group/${groupId}`,
+      payload,
+    );
+    return data.data ?? {};
   },
 };

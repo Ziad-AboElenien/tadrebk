@@ -6,6 +6,7 @@ import { useAppSelector } from '@/store/store';
 import { applicationService, Application } from '@/features/student/services/application.service';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { Internship, getInternshipTracks, getCompanyIdFromInternship } from '@/features/internship/types';
+import { syncInternshipsClosedState } from '@/features/internship/utils/closedInternshipState';
 import { getCompanyImgUrl, CloudinaryResource } from '@/features/company/types';
 import { CATEGORY_LABELS } from '@/features/student/types';
 import MediaImage from '@/components/ui/MediaImage';
@@ -235,7 +236,7 @@ function CompanyActivity() {
     setLoading(true);
     try {
       const res = await internshipService.listInternships({ companyId: company._id, limit: 100 });
-      setInternships(res.internships);
+      setInternships(syncInternshipsClosedState(res.internships));
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     } finally {

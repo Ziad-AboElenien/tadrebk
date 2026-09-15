@@ -18,6 +18,17 @@ import {
 } from 'lucide-react';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
+import GroupedBarChart from '@/features/company/components/GroupedBarChart';
+
+const TRENDS: { label: string; values: Record<string, number> }[] = [
+  { label: 'Jan', values: { attendance: 90, skills: 82, teamwork: 88 } },
+  { label: 'Feb', values: { attendance: 75, skills: 68, teamwork: 80 } },
+  { label: 'Mar', values: { attendance: 95, skills: 78, teamwork: 87 } },
+  { label: 'Apr', values: { attendance: 92, skills: 85, teamwork: 90 } },
+  { label: 'May', values: { attendance: 88, skills: 90, teamwork: 93 } },
+];
+
+const TREND_COLORS = { attendance: '#10b981', skills: '#1e293b', teamwork: '#a7f3d0' };
 
 const STATS = [
   { label: 'Total Evaluations', value: '124', icon: ClipboardCheck, badge: '+12% this month', sub: '24 pending review' },
@@ -94,26 +105,8 @@ export default function EvaluationsDashboardScreen() {
                   <Download size={14} /> Export
                 </button>
               </div>
-              <div className="mt-6 flex h-56 items-end justify-between gap-6">
-                {['Jan', 'Feb', 'Mar', 'Apr', 'May'].map((m, i) => {
-                  const heights = [
-                    [90, 82, 88],
-                    [75, 68, 80],
-                    [95, 78, 87],
-                    [92, 85, 90],
-                    [88, 90, 93],
-                  ][i];
-                  return (
-                    <div key={m} className="flex flex-1 flex-col items-center gap-1">
-                      <div className="flex h-44 items-end gap-1">
-                        <div className="w-3 rounded-t bg-emerald-500" style={{ height: `${heights[0]}%` }} />
-                        <div className="w-3 rounded-t bg-slate-900" style={{ height: `${heights[1]}%` }} />
-                        <div className="w-3 rounded-t bg-emerald-200" style={{ height: `${heights[2]}%` }} />
-                      </div>
-                      <span className="text-xs text-slate-400">{m}</span>
-                    </div>
-                  );
-                })}
+              <div className="mt-6">
+                <GroupedBarChart data={TRENDS} colors={TREND_COLORS} height={224} />
               </div>
               <div className="mt-2 flex gap-5 text-xs text-slate-500">
                 <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Attendance</span>
@@ -258,7 +251,7 @@ export default function EvaluationsDashboardScreen() {
                 </p>
                 <p className="text-sm text-slate-400">4.6 avg. performance score</p>
               </div>
-              <button className="text-sm font-medium text-emerald-600">Details â†’</button>
+              <button className="text-sm font-medium text-emerald-600">Details →</button>
             </div>
           </div>
         </main>

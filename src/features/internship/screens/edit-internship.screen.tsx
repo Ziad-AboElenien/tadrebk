@@ -300,7 +300,7 @@ export default function EditInternshipScreen() {
         <div>
           <label className="text-sm font-semibold text-gray-700 mb-2 block">
             Track <span className="text-red-500">*</span> <span className="text-gray-400 font-normal">(select 1 to {MAX_TRACKS_PER_POST})</span>
-            {selectedCategories.length > 0 && <span className="text-gray-400 font-normal"> â€” <span className="text-primary font-bold">{selectedCategories.length}</span>/{MAX_TRACKS_PER_POST} selected</span>}
+            {selectedCategories.length > 0 && <span className="text-gray-400 font-normal"> — <span className="text-primary font-bold">{selectedCategories.length}</span>/{MAX_TRACKS_PER_POST} selected</span>}
           </label>
 
           {/* Selected chips */}
