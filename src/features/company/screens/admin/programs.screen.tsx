@@ -17,6 +17,7 @@ import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import GlassFilter from '@/components/ui/GlassFilter';
 import { programService } from '@/features/company/services/program.service';
 import { Program } from '@/features/company/types/management';
 import { getErrorMessage } from '@/lib/axios';
@@ -112,10 +113,10 @@ export default function ProgramsScreen() {
   const upcomingCount = programs.filter((p) => p.status === 'upcoming').length;
 
   return (
-    <div className="flex bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Programs" />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Programs" />
 
         <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
@@ -150,19 +151,12 @@ export default function ProgramsScreen() {
           <div className="rounded-2xl border border-slate-200 bg-white p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-wrap gap-2">
-                {FILTERS.map((f) => (
-                  <button
-                    key={f.key}
-                    onClick={() => setFilter(f.key)}
-                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                      filter === f.key
-                        ? 'bg-slate-900 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {f.label}
-                  </button>
-                ))}
+                <GlassFilter
+                  options={FILTERS}
+                  value={filter}
+                  onChange={(key) => setFilter(key)}
+                  ariaLabel="Filter programs by status"
+                />
               </div>
               <div className="relative">
                 <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />

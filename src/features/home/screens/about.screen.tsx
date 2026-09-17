@@ -94,11 +94,11 @@ function TeamCard({ member, index }: { member: (typeof team)[number]; index: num
   return (
     <div
       ref={cardRef}
-      className="group relative bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 opacity-0 translate-y-8"
+      className="group relative bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 opacity-0 translate-y-8"
       style={{ transitionDelay: `${index * 150}ms` }}
     >
       {/* Image full-height with info overlay at bottom */}
-      <div className="relative h-[540px] rounded-3xl overflow-hidden bg-gray-100">
+      <div className="relative h-[540px] rounded-3xl overflow-hidden bg-slate-100">
         <Image
           src={member.image}
           alt={member.name}
@@ -125,7 +125,7 @@ function TeamCard({ member, index }: { member: (typeof team)[number]; index: num
               href={member.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-gray-800 hover:bg-white hover:scale-110 transition-all shadow-md"
+              className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-slate-800 hover:bg-white hover:scale-110 transition-all shadow-md"
             >
               <i className="fab fa-github text-sm" />
             </a>
@@ -138,9 +138,9 @@ function TeamCard({ member, index }: { member: (typeof team)[number]; index: num
             {member.name}
           </h3>
           <p className="text-sm font-medium text-emerald-300 mt-0.5">{member.title}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{member.role}</p>
+          <p className="text-xs text-slate-400 mt-0.5">{member.role}</p>
 
-          <div className="mt-3 space-y-1.5 text-xs text-gray-300">
+          <div className="mt-3 space-y-1.5 text-xs text-slate-300">
             {member.email !== '#' && (
               <a href={`mailto:${member.email}`} className="flex items-center gap-2 hover:text-white transition-colors overflow-hidden">
                 <i className="fas fa-envelope w-3.5 text-center shrink-0" />
@@ -196,7 +196,7 @@ export default function AboutScreen() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-600 py-20 sm:py-28">
         <div className="absolute inset-0 opacity-10">
@@ -206,7 +206,7 @@ export default function AboutScreen() {
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <h1
             ref={titleRef}
-            className="text-3xl sm:text-5xl lg:text-6xl font-black text-white opacity-0 translate-y-6 transition-all duration-700"
+            className="text-3xl sm:text-5xl lg:text-6xl font-bold text-white opacity-0 translate-y-6 transition-all duration-700"
           >
             About Us
           </h1>
@@ -222,8 +222,8 @@ export default function AboutScreen() {
       {/* Team Grid */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="text-center mb-14">
-          <h2 className="text-2xl sm:text-3xl font-black text-dark">Meet the Team</h2>
-          <p className="text-gray-400 mt-2 text-sm">The people who made Tadrebk happen</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-dark">Meet the Team</h2>
+          <p className="text-slate-400 mt-2 text-sm">The people who made Tadrebk happen</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">

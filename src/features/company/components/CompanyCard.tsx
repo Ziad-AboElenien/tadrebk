@@ -26,7 +26,7 @@ function CompanyCardInner({
               alt={company.name}
               boxClassName="w-12 h-12 rounded-lg overflow-hidden shrink-0"
               imgClassName="w-full h-full object-cover"
-              iconClassName="fas fa-building text-xl text-gray-300"
+              iconClassName="fas fa-building text-xl text-slate-300"
             />
             <div className="flex-1">
               <h3 className="font-bold text-slate-900 line-clamp-1">

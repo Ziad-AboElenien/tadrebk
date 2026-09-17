@@ -21,6 +21,7 @@ import {
 import { internService } from '@/features/company/services/intern.service';
 import { programService } from '@/features/company/services/program.service';
 import Select from '@/components/ui/Select';
+import InternAvatar from '@/components/ui/InternAvatar';
 import {
   AttendanceStatus,
   AttendanceDayRule,
@@ -235,10 +236,10 @@ export default function AttendanceScreen() {
   };
 
   return (
-    <div className="flex bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Reports" />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Attendance" />
 
         <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
@@ -350,10 +351,8 @@ export default function AttendanceScreen() {
                                       onChange={() => toggleRow(i._id)}
                                       className="h-4 w-4 rounded border-slate-300 accent-emerald-500"
                                     />
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
-                                      {`${i.firstName} ${i.lastName}`.trim().split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase() || '?'}
-                                    </div>
-                                    <div className="min-w-0">
+<InternAvatar src={i.profilePicture?.secure_url} firstName={i.firstName} lastName={i.lastName} email={i.email} />
+<div className="min-w-0">
                                       <p className="truncate font-medium text-slate-900">
                                         {`${i.firstName} ${i.lastName}`.trim() || i.email}
                                       </p>

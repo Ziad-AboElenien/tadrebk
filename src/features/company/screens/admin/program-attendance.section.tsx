@@ -1,9 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { CalendarDays, Check, ChevronDown, Loader2, Save, PenLine, Users2, X } from 'lucide-react';
 import { attendanceService } from '@/features/company/services/attendance.service';
 import Select from '@/components/ui/Select';
+import InternAvatar from '@/components/ui/InternAvatar';
 import {
   AttendanceStatus,
   AttendanceDayRule,
@@ -493,9 +495,14 @@ export default function ProgramAttendanceSection({
                       aria-label={`Select ${intern.firstName}`}
                     />
                   )}
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
-                    {`${intern.firstName?.[0] ?? ''}${intern.lastName?.[0] ?? ''}`.toUpperCase()}
-                  </div>
+<Link href={`/company/admin/interns/${intern._id}`} title="View profile">
+                    <InternAvatar
+                      src={intern.profilePicture?.secure_url}
+                      firstName={intern.firstName}
+                      lastName={intern.lastName}
+                      email={intern.email}
+                    />
+                  </Link>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-slate-800">
                       {`${intern.firstName} ${intern.lastName}`.trim()}

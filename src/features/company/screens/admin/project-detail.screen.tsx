@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   FileText,
@@ -16,20 +16,25 @@ import {
   Palette,
   Paperclip,
   UploadCloud,
-  PenLine,
-  MoreHorizontal,
+PenLine,
+MoreHorizontal,
+ListTodo,
+Loader2,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import InternAvatar from '@/components/ui/InternAvatar';
 import Select from '@/components/ui/Select';
 import { projectService } from '@/features/company/services/project.service';
 import { programService } from '@/features/company/services/program.service';
 import { internService } from '@/features/company/services/intern.service';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { applicationService } from '@/features/student/services/application.service';
-import { Project, Program, Intern } from '@/features/company/types/management';
+import { Project, Program, Intern, Task } from '@/features/company/types/management';
+import { taskService, BroadcastCard } from '@/features/company/services/task.service';
+import { priorityTheme } from '@/features/company/utils/taskPriorityTheme';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
@@ -65,6 +70,7 @@ function initials(name: string): string {
 
 export default function ProjectDetailScreen() {
   const params = useParams();
+  const router = useRouter();
   const projectId = params.projectId as string;
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
@@ -108,6 +114,53 @@ export default function ProjectDetailScreen() {
 
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
+
+  const [projectTasks, setProjectTasks] = useState<Task[]>([]);
+  const [projectBroadcasts, setProjectBroadcasts] = useState<BroadcastCard[]>([]);
+  const [loadingProjectTasks, setLoadingProjectTasks] = useState(true);
+  const [openingGroup, setOpeningGroup] = useState('');
+
+  const fetchProjectTasks = useCallback(async () => {
+    if (!companyId || !projectId) return;
+    setLoadingProjectTasks(true);
+    try {
+      const [taskRes, bcRes] = await Promise.all([
+        taskService.listTasks(companyId, { limit: 100 }),
+        taskService.listBroadcasts(companyId, { projectId, limit: 100 }),
+      ]);
+      setProjectTasks(taskRes.tasks.filter((t) => t.projectId === projectId && !t.taskGroupId));
+      setProjectBroadcasts(bcRes.broadcasts);
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setLoadingProjectTasks(false);
+    }
+  }, [companyId, projectId]);
+
+  useEffect(() => {
+    const t = setTimeout(fetchProjectTasks, 0);
+    return () => clearTimeout(t);
+  }, [fetchProjectTasks]);
+
+  const openBroadcast = async (groupId: string) => {
+    if (!companyId) return;
+    setOpeningGroup(groupId);
+    try {
+      const res = await taskService.listByGroup(companyId, groupId);
+      const rows = res.tasks;
+      if (rows.length === 0) {
+        toastHelper.error('No tasks in this group yet');
+        return;
+      }
+      const first = rows[0];
+      const iid = typeof first.internId === 'string' ? first.internId : ((first.internId as unknown as { _id?: string })?._id || '');
+      router.push(`/company/admin/tasks/${first._id}?groupId=${groupId}&internId=${iid}`);
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setOpeningGroup('');
+    }
+  };
 
   const fetchProject = useCallback(async () => {
     if (!companyId || !projectId) return;
@@ -173,21 +226,23 @@ export default function ProjectDetailScreen() {
 
   if (loading) {
     return (
-      <div className="flex bg-slate-50">
+      <div className="flex min-h-screen bg-slate-50">
         <Sidebar active="Projects" />
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar title="Project Details" />
-          <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8 animate-pulse">
-            <div className="h-9 w-64 rounded-lg bg-slate-200" />
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <div className="space-y-6 lg:col-span-2">
-                <div className="h-72 rounded-2xl border border-slate-200 bg-white" />
-              </div>
-              <div className="space-y-6">
-                <div className="h-72 rounded-2xl border border-slate-200 bg-white" />
-              </div>
+        <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8 animate-pulse">
+          <div className="h-36 rounded-2xl bg-slate-200 sm:h-44" />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="space-y-6 lg:col-span-2">
+              <div className="h-64 rounded-2xl border border-slate-200 bg-white" />
+              <div className="h-48 rounded-2xl border border-slate-200 bg-white" />
             </div>
-          </main>
+            <div className="space-y-6">
+              <div className="h-56 rounded-2xl border border-slate-200 bg-white" />
+              <div className="h-40 rounded-2xl border border-slate-200 bg-white" />
+            </div>
+          </div>
+        </main>
         </div>
       </div>
     );
@@ -195,9 +250,9 @@ export default function ProjectDetailScreen() {
 
   if (!project) {
     return (
-      <div className="flex bg-slate-50">
+      <div className="flex min-h-screen bg-slate-50">
         <Sidebar active="Projects" />
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar title="Project Details" />
           <div className="py-20 text-center text-sm text-slate-400">Project not found.</div>
         </div>
@@ -325,25 +380,45 @@ export default function ProjectDetailScreen() {
   };
 
   return (
-    <div className="flex bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Projects" />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Project Details" />
 
         <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div
-            className="relative flex min-h-36 items-end overflow-hidden rounded-2xl p-6 shadow-lg shadow-slate-200/60"
-            style={{ background: `linear-gradient(135deg, ${project.color ?? '#10B981'} 0%, ${project.color ?? '#10B981'}cc 100%)` }}
+            className="relative overflow-hidden rounded-2xl p-6 shadow-lg shadow-slate-200/60 sm:p-8"
+            style={{ background: `linear-gradient(120deg, ${project.color ?? '#10B981'} 0%, ${project.color ?? '#10B981'}b3 55%, ${project.color ?? '#10B981'}80 100%)` }}
           >
-            <div className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-white/20 blur-2xl" />
-            <div className="pointer-events-none absolute right-24 top-4 h-20 w-20 rounded-full border border-white/30" />
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/25 text-white backdrop-blur-sm">
-              <FolderKanban size={26} />
-            </span>
-            <div className="ml-4 min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wide text-white/80">Project</p>
-              <h2 className="truncate text-2xl font-semibold text-white">{project.name}</h2>
+            <div className="pointer-events-none absolute -right-12 -top-20 h-56 w-56 rounded-full bg-white/20 blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-24 right-32 h-48 w-48 rounded-full bg-white/15 blur-2xl" />
+            <div className="pointer-events-none absolute -left-8 bottom-0 h-28 w-28 rounded-full border-[10px] border-white/15" />
+            <div className="pointer-events-none absolute right-16 top-1/2 hidden h-24 w-24 -translate-y-1/2 rotate-12 rounded-2xl border-[6px] border-white/15 sm:block" />
+            <div
+              className="pointer-events-none absolute inset-0 opacity-[0.15]"
+              style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)', backgroundSize: '18px 18px' }}
+            />
+            <div className="relative flex flex-wrap items-end justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-4">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/25 text-white shadow-lg backdrop-blur-sm">
+                  <FolderKanban size={26} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-white/80">
+                    Project{program ? ` · ${program.name}` : ''}
+                  </p>
+                  <h2 className="truncate text-2xl font-bold text-white sm:text-3xl">{project.name}</h2>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold capitalize text-white backdrop-blur">
+                  {project.status}
+                </span>
+                <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+                  {assignedInterns.length} intern(s)
+                </span>
+              </div>
             </div>
           </div>
 
@@ -409,13 +484,13 @@ export default function ProjectDetailScreen() {
                 {mode === 'view' ? (
                   <div className="mt-4 space-y-5">
                     <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Project Name</p>
-                      <p className="mt-1 text-sm font-medium text-slate-900">{project.name}</p>
+<p className="text-xs font-medium uppercase tracking-wide text-slate-400">Project Name</p>
+<p className="mt-1 break-words text-sm font-medium text-slate-900">{project.name}</p>
                     </div>
                     {project.description && (
                       <div>
                         <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Description</p>
-                        <p className="mt-1 whitespace-pre-line text-sm text-slate-600">{project.description}</p>
+                        <p className="mt-1 whitespace-pre-line break-words text-sm text-slate-600">{project.description}</p>
                       </div>
                     )}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -556,6 +631,90 @@ export default function ProjectDetailScreen() {
                 </>
                 )}
               </section>
+
+              <section className="rounded-2xl border border-slate-200 bg-white p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+                    <ListTodo size={18} className="text-emerald-500" /> Project Tasks
+                    <span className="text-sm font-normal text-slate-400">
+                      ({projectBroadcasts.length + projectTasks.length})
+                    </span>
+                  </h3>
+                  <Link
+                    href="/company/admin/tasks/new"
+                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                  >
+                    <Plus size={13} /> New Task
+                  </Link>
+                </div>
+                {loadingProjectTasks ? (
+                  <div className="mt-4 space-y-2">
+                    {[0, 1].map((i) => (
+                      <div key={i} className="h-14 animate-pulse rounded-xl bg-slate-100" />
+                    ))}
+                  </div>
+                ) : projectBroadcasts.length === 0 && projectTasks.length === 0 ? (
+                  <p className="mt-4 rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-400">
+                    No tasks in this project yet.
+                  </p>
+                ) : (
+                  <div className="mt-4 space-y-1.5">
+                    {projectBroadcasts.map((b) => {
+                      const theme = priorityTheme(b.priority);
+                      const done = b.members.filter((m) => m.status === 'complete').length;
+                      return (
+                        <button
+                          key={b.taskGroupId}
+                          onClick={() => openBroadcast(b.taskGroupId)}
+                          disabled={openingGroup === b.taskGroupId}
+                          className={`block w-full overflow-hidden rounded-xl border border-slate-100 ${theme.cardBg} text-left transition-shadow hover:shadow-sm disabled:opacity-60`}
+                        >
+                          <div className="h-1 w-full" style={{ backgroundColor: theme.banner }} />
+                          <div className="flex items-center justify-between gap-2 px-4 py-3 text-sm">
+                            <span className="min-w-0">
+                              <span className="block truncate font-medium text-slate-800">
+                                {b.title}
+                                <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${theme.chip}`}>
+                                  Group · {b.members.length}
+                                </span>
+                              </span>
+                              {b.description && (
+                                <span className="block truncate text-xs text-slate-400">{b.description}</span>
+                              )}
+                            </span>
+                            <span className="flex shrink-0 items-center gap-2 text-xs text-slate-400">
+                              {done}/{b.members.length} done
+                              {openingGroup === b.taskGroupId && <Loader2 size={13} className="animate-spin" />}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                    {projectTasks.map((t) => {
+                      const theme = priorityTheme(t.priority);
+                      const iid = typeof t.internId === 'string' ? t.internId : ((t.internId as unknown as { _id?: string })?._id || '');
+                      return (
+                        <Link
+                          key={t._id}
+                          href={`/company/admin/tasks/${t._id}?internId=${iid}`}
+                          style={{ borderLeftColor: theme.banner }}
+                          className={`flex items-center justify-between gap-2 rounded-xl border border-slate-100 border-l-4 ${theme.cardBg} px-4 py-3 text-sm hover:shadow-sm`}
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate font-medium text-slate-800">{t.title}</span>
+                            {t.description && (
+                              <span className="block truncate text-xs text-slate-400">{t.description}</span>
+                            )}
+                          </span>
+                          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium capitalize ${theme.chip}`}>
+                            {t.status.replace('_', ' ')}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
             </div>
 
             <div className="space-y-6">
@@ -591,17 +750,17 @@ export default function ProjectDetailScreen() {
                   {assignedInterns.length === 0 ? (
                     <p className="text-sm text-slate-400">No interns assigned yet.</p>
                   ) : (
-                    assignedInterns.map((i) => (
-                      <div key={i._id} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
-                          {initials(`${i.firstName} ${i.lastName}`.trim()) || '?'}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-slate-900">
-                            {`${i.firstName} ${i.lastName}`.trim() || i.email}
-                          </p>
-                          <p className="truncate text-xs text-slate-400">{i.email}</p>
-                        </div>
+assignedInterns.map((i) => (
+<div key={i._id} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3">
+<Link href={`/company/admin/interns/${i._id}`} className="flex min-w-0 flex-1 items-center gap-3" title="View profile">
+<InternAvatar src={i.profilePicture?.secure_url} firstName={i.firstName} lastName={i.lastName} email={i.email} />
+<div className="min-w-0 flex-1">
+<p className="truncate text-sm font-medium text-slate-900 hover:text-emerald-600 hover:underline">
+{`${i.firstName} ${i.lastName}`.trim() || i.email}
+</p>
+<p className="truncate text-xs text-slate-400">{i.email}</p>
+</div>
+</Link>
                         <button
                           onClick={() => handleRemove(i._id)}
                           disabled={removingId === i._id}
@@ -656,12 +815,10 @@ export default function ProjectDetailScreen() {
                                 checked ? 'border-emerald-300 bg-emerald-50' : 'border-slate-100 hover:border-slate-200'
                               }`}
                             >
-                              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
-                                {initials(`${i.firstName} ${i.lastName}`.trim()) || '?'}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-medium text-slate-900">
-                                  {`${i.firstName} ${i.lastName}`.trim() || i.email}
+<InternAvatar src={i.profilePicture?.secure_url} firstName={i.firstName} lastName={i.lastName} email={i.email} />
+<div className="min-w-0 flex-1">
+<p className="truncate text-sm font-medium text-slate-900">
+{`${i.firstName} ${i.lastName}`.trim() || i.email}
                                 </p>
                                 <p className="truncate text-xs text-slate-400">{i.email}</p>
                               </div>

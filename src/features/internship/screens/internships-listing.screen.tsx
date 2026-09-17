@@ -83,24 +83,24 @@ export default function InternshipsListingScreen() {
 function ListingSkeleton() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-pulse space-y-6">
-      <div className="h-8 w-56 rounded bg-gray-200" />
+      <div className="h-8 w-56 rounded bg-slate-200" />
       <div className="flex gap-3">
-        <div className="h-10 w-72 rounded-xl bg-gray-200" />
-        <div className="h-10 w-32 rounded-xl bg-gray-200" />
-        <div className="h-10 w-32 rounded-xl bg-gray-200" />
+        <div className="h-10 w-72 rounded-xl bg-slate-200" />
+        <div className="h-10 w-32 rounded-xl bg-slate-200" />
+        <div className="h-10 w-32 rounded-xl bg-slate-200" />
       </div>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-            <div className="h-36 bg-gray-200" />
+          <div key={i} className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+            <div className="h-36 bg-slate-200" />
             <div className="p-4 space-y-3">
-              <div className="h-5 w-3/4 rounded bg-gray-200" />
-              <div className="h-4 w-1/2 rounded bg-gray-200" />
+              <div className="h-5 w-3/4 rounded bg-slate-200" />
+              <div className="h-4 w-1/2 rounded bg-slate-200" />
               <div className="flex gap-2">
-                <div className="h-6 w-16 rounded-full bg-gray-200" />
-                <div className="h-6 w-16 rounded-full bg-gray-200" />
+                <div className="h-6 w-16 rounded-full bg-slate-200" />
+                <div className="h-6 w-16 rounded-full bg-slate-200" />
               </div>
-              <div className="h-8 w-24 rounded-lg bg-gray-200" />
+              <div className="h-8 w-24 rounded-lg bg-slate-200" />
             </div>
           </div>
         ))}
@@ -356,17 +356,17 @@ function InternshipsContent() {
   }
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-slate-50">
       {/* ── Search bar ─────────────────────────────────────── */}
-      <div className="border-b border-gray-100 bg-gray-100 px-4 py-5 sm:px-6 lg:px-8">
+      <div className="border-b border-slate-100 bg-slate-100 px-4 py-5 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row">
           <div className="flex flex-1 items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm">
-            <i className="fas fa-search h-4 w-4 flex-shrink-0 text-gray-400" />
+            <i className="fas fa-search h-4 w-4 flex-shrink-0 text-slate-400" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by role, company, or skill..."
-              className="w-full bg-transparent text-sm text-gray-700 outline-none placeholder:text-gray-400"
+              className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
               style={{ outline: 'none', boxShadow: 'none' }}
             />
           </div>
@@ -376,7 +376,7 @@ function InternshipsContent() {
               value={locationInput}
               onChange={(e) => setLocationInput(e.target.value)}
               placeholder="Search by city (e.g. Cairo)"
-              className="w-full bg-transparent text-sm text-gray-700 outline-none"
+              className="w-full bg-transparent text-sm text-slate-700 outline-none"
               style={{ outline: 'none', boxShadow: 'none' }}
             />
           </div>
@@ -393,16 +393,16 @@ function InternshipsContent() {
         {/* ── Results header ─────────────────────────────── */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-extrabold text-gray-900">All Internships</h1>
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-500">
+            <h1 className="text-2xl font-bold text-slate-900">All Internships</h1>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-500">
               {total} results
             </span>
           </div>
-          <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+          <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
             <button
               onClick={() => setViewMode('grid')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                viewMode === 'grid' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               <i className="fas fa-grid-2 text-xs" />
@@ -411,7 +411,7 @@ function InternshipsContent() {
             <button
               onClick={() => setViewMode('list')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                viewMode === 'list' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
               <i className="fas fa-list text-xs" />
@@ -437,7 +437,7 @@ function InternshipsContent() {
                 className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 ${
                   active
                     ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
-                    : 'bg-white text-gray-600 border border-gray-200 hover:border-emerald-300 hover:text-emerald-600'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
                 }`}
               >
                 <i className={`fas ${chip.icon} text-xs`} />
@@ -447,7 +447,7 @@ function InternshipsContent() {
             );
           })}
           {hasActiveFilters && (
-            <button onClick={clearAll} className="text-sm font-semibold text-gray-400 hover:text-red-500 transition-colors ml-1">
+            <button onClick={clearAll} className="text-sm font-semibold text-slate-400 hover:text-red-500 transition-colors ml-1">
               Clear all
             </button>
           )}
@@ -458,16 +458,16 @@ function InternshipsContent() {
           {loading ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 animate-pulse">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-                  <div className="h-36 bg-gray-200" />
+                <div key={i} className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+                  <div className="h-36 bg-slate-200" />
                   <div className="p-4 space-y-3">
-                    <div className="h-5 w-3/4 rounded bg-gray-200" />
-                    <div className="h-4 w-1/2 rounded bg-gray-200" />
+                    <div className="h-5 w-3/4 rounded bg-slate-200" />
+                    <div className="h-4 w-1/2 rounded bg-slate-200" />
                     <div className="flex gap-2">
-                      <div className="h-6 w-16 rounded-full bg-gray-200" />
-                      <div className="h-6 w-16 rounded-full bg-gray-200" />
+                      <div className="h-6 w-16 rounded-full bg-slate-200" />
+                      <div className="h-6 w-16 rounded-full bg-slate-200" />
                     </div>
-                    <div className="h-8 w-24 rounded-lg bg-gray-200" />
+                    <div className="h-8 w-24 rounded-lg bg-slate-200" />
                   </div>
                 </div>
               ))}
@@ -475,8 +475,8 @@ function InternshipsContent() {
           ) : internships.length === 0 ? (
             <div className="text-center py-12">
               <i className="fas fa-search text-4xl text-gray-200 mb-4" />
-              <p className="text-gray-600 text-lg font-semibold">No internships found</p>
-              <p className="text-gray-400 text-sm mt-1">Try adjusting your filters or search terms</p>
+              <p className="text-slate-600 text-lg font-semibold">No internships found</p>
+              <p className="text-slate-400 text-sm mt-1">Try adjusting your filters or search terms</p>
               {hasActiveFilters && (
                 <button onClick={clearAll} className="mt-4 rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 transition">
                   Clear Filters
@@ -501,7 +501,7 @@ function InternshipsContent() {
                   return (
                     <div
                       key={internship._id}
-                      className="group flex flex-col rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+                      className="group flex flex-col rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
                     >
                       <Link href={`/internships/${internship._id}`} className="flex flex-col flex-1">
                         <div className="p-5 pb-0 flex-1">
@@ -511,7 +511,7 @@ function InternshipsContent() {
                               alt=""
                               boxClassName="h-12 w-12 flex-shrink-0 rounded-xl overflow-hidden ring-2 ring-gray-50 group-hover:ring-emerald-200 transition-all"
                               imgClassName="w-full h-full object-cover"
-                              iconClassName="fas fa-building text-lg text-gray-300"
+                              iconClassName="fas fa-building text-lg text-slate-300"
                             />
                             <div className="flex flex-col items-end gap-1.5">
                               {internship.location && (
@@ -528,7 +528,7 @@ function InternshipsContent() {
                                 </span>
                               )}
                               {internship.workingTime && (
-                                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-gray-100 text-gray-600">
+                                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-slate-100 text-slate-600">
                                   <i className="fas fa-clock text-[9px]" />
                                   {internship.workingTime === 'full-time' ? 'Full-time' : 'Part-time'}
                                 </span>
@@ -547,11 +547,11 @@ function InternshipsContent() {
                             )}
                           </div>
 
-                          <h3 className="text-base font-bold leading-snug text-gray-900 line-clamp-2 group-hover:text-emerald-600 transition-colors">
+                          <h3 className="text-base font-bold leading-snug text-slate-900 line-clamp-2 group-hover:text-emerald-600 transition-colors">
                             {internship.title}
                           </h3>
 
-                          <div className="mt-3 space-y-2 text-sm text-gray-500">
+                          <div className="mt-3 space-y-2 text-sm text-slate-500">
                             <p className="flex items-center gap-2">
                               <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 shrink-0">
                                 <i className="fas fa-map-marker-alt text-[10px]" />
@@ -595,7 +595,7 @@ function InternshipsContent() {
                               </span>
                             ))}
                             {rest > 0 && (
-                              <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-500">
+                              <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-500">
                                 +{rest}
                               </span>
                             )}
@@ -603,13 +603,13 @@ function InternshipsContent() {
                         );
                       })()}
 
-                      <div className="flex items-center gap-2 px-5 pt-5 pb-4 border-t border-gray-100 mt-auto">
+                      <div className="flex items-center gap-2 px-5 pt-5 pb-4 border-t border-slate-100 mt-auto">
                         <Link
                           href={canApply ? `/internships/${internship._id}` : '#'}
                           className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-center transition-all ${
                             canApply
                               ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:shadow-md hover:from-emerald-600 hover:to-emerald-700 active:scale-[0.98]'
-                              : 'bg-gray-200 text-gray-400 cursor-default'
+                              : 'bg-slate-200 text-slate-400 cursor-default'
                           }`}
                         >
                           Apply Now
@@ -620,7 +620,7 @@ function InternshipsContent() {
                           className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border-2 transition-all ${
                             saved
                               ? 'border-emerald-200 bg-emerald-50 text-emerald-500'
-                              : 'border-gray-100 text-gray-400 hover:border-emerald-200 hover:text-emerald-500 hover:bg-emerald-50'
+                              : 'border-slate-100 text-slate-400 hover:border-emerald-200 hover:text-emerald-500 hover:bg-emerald-50'
                           }`}
                         >
                           <i className="fas fa-bookmark" />
@@ -642,7 +642,7 @@ function InternshipsContent() {
                     return (
                       <div
                         key={internship._id}
-                        className="group flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-5 sm:px-6 sm:py-5 w-full max-w-full"
+                        className="group flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 p-5 sm:px-6 sm:py-5 w-full max-w-full"
                       >
                         <Link href={`/internships/${internship._id}`} className="shrink-0">
                           <MediaImage
@@ -650,7 +650,7 @@ function InternshipsContent() {
                             alt=""
                             boxClassName="h-14 w-14 rounded-xl overflow-hidden ring-2 ring-gray-50"
                             imgClassName="w-full h-full object-cover"
-                            iconClassName="fas fa-building text-lg text-gray-300"
+                            iconClassName="fas fa-building text-lg text-slate-300"
                           />
                         </Link>
 
@@ -661,10 +661,10 @@ function InternshipsContent() {
                               <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">Closed</span>
                             )}
                           </div>
-                          <h3 className="text-base font-bold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">
+                          <h3 className="text-base font-bold text-slate-900 truncate group-hover:text-emerald-600 transition-colors">
                             {internship.title}
                           </h3>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 flex-wrap">
+                          <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 flex-wrap">
                             <span className="flex items-center gap-1">
                               <i className="fas fa-map-marker-alt text-emerald-400 text-[10px]" />
                               {company?.address || locationLabels[internship.location] || internship.location}
@@ -703,7 +703,7 @@ function InternshipsContent() {
                                   </span>
                                 ))}
                                 {rest > 0 && (
-                                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-500">
+                                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-500">
                                     +{rest}
                                   </span>
                                 )}
@@ -718,7 +718,7 @@ function InternshipsContent() {
                             className={`rounded-xl px-5 py-2.5 text-sm font-bold text-center transition-all ${
                               canApply
                                 ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm hover:shadow-md hover:from-emerald-600 hover:to-emerald-700 active:scale-[0.98]'
-                                : 'bg-gray-200 text-gray-400 cursor-default'
+                                : 'bg-slate-200 text-slate-400 cursor-default'
                             }`}
                           >
                             Apply Now
@@ -729,7 +729,7 @@ function InternshipsContent() {
                             className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border-2 transition-all ${
                               saved
                                 ? 'border-emerald-200 bg-emerald-50 text-emerald-500'
-                                : 'border-gray-100 text-gray-400 hover:border-emerald-200 hover:text-emerald-500 hover:bg-emerald-50'
+                                : 'border-slate-100 text-slate-400 hover:border-emerald-200 hover:text-emerald-500 hover:bg-emerald-50'
                             }`}
                           >
                             <i className="fas fa-bookmark" />
@@ -748,7 +748,7 @@ function InternshipsContent() {
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <i className="fas fa-chevron-left text-xs" />
                     </button>
@@ -766,12 +766,12 @@ function InternshipsContent() {
                       }, [])
                       .map((item, i) =>
                         item === '...' ? (
-                          <span key={`e${i}`} className="w-10 h-10 flex items-center justify-center text-gray-400 text-sm">...</span>
+                          <span key={`e${i}`} className="w-10 h-10 flex items-center justify-center text-slate-400 text-sm">...</span>
                         ) : (
                           <button
                             key={item}
                             onClick={() => setPage(item)}
-                            className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all ${item === page ? 'bg-emerald-500 text-white shadow-md' : 'border border-gray-200 text-gray-600 hover:border-emerald-500 hover:text-emerald-500'}`}
+                            className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all ${item === page ? 'bg-emerald-500 text-white shadow-md' : 'border border-slate-200 text-slate-600 hover:border-emerald-500 hover:text-emerald-500'}`}
                           >
                             {item}
                           </button>
@@ -780,12 +780,12 @@ function InternshipsContent() {
                     <button
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={page === totalPages}
-                      className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <i className="fas fa-chevron-right text-xs" />
                     </button>
                   </div>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-slate-400">
                     Page {page} of {totalPages}
                   </p>
                 </div>
@@ -796,7 +796,7 @@ function InternshipsContent() {
 
         {/* ── Popular categories ──────────────────────────── */}
         <section className="mt-14">
-          <h2 className="mb-5 text-xl font-extrabold text-gray-900">Popular Categories</h2>
+          <h2 className="mb-5 text-xl font-bold text-slate-900">Popular Categories</h2>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {[
               { label: 'Software', icon: 'fa-briefcase' },
@@ -809,8 +809,8 @@ function InternshipsContent() {
               <button key={cat.label} onClick={() => { setFilters((prev) => ({ ...prev, title: cat.label })); setPage(1); setQuery(cat.label); }}>
                 <div className="flex flex-col items-center gap-2 rounded-2xl bg-white p-5 text-center shadow-sm transition hover:shadow-md cursor-pointer">
                   <span className="text-emerald-500"><i className={`fas ${cat.icon} text-2xl`} /></span>
-                  <span className="text-sm font-bold text-gray-900">{cat.label}</span>
-                  <span className="text-xs text-gray-400">{categoryCounts[cat.label] ?? '-'} Roles</span>
+                  <span className="text-sm font-bold text-slate-900">{cat.label}</span>
+                  <span className="text-xs text-slate-400">{categoryCounts[cat.label] ?? '-'} Roles</span>
                 </div>
               </button>
             ))}

@@ -40,13 +40,13 @@ export default function NotificationPoller() {
             </div>
             <div className="max-w-[250px]">
               <p className="text-sm font-semibold text-dark">New Notification{diff > 1 ? 's' : ''}</p>
-              <p className="text-xs text-gray-500">You have {diff} unread notification{diff > 1 ? 's' : ''}</p>
+              <p className="text-xs text-slate-500">You have {diff} unread notification{diff > 1 ? 's' : ''}</p>
             </div>
           </div>,
           {
             icon: false,
             toastId: 'notification-poller',
-            className: '!bg-white !border !border-gray-100 !rounded-2xl !shadow-xl !overflow-hidden',
+            className: '!bg-white !border !border-slate-100 !rounded-2xl !shadow-xl !overflow-hidden',
             autoClose: 5000,
           }
         );

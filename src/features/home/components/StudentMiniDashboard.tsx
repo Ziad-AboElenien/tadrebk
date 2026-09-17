@@ -29,10 +29,10 @@ function DashboardCard({ currentUser, stats, recentApps, recommended }: {
 }) {
   return (
     <div className="overflow-hidden rounded-2xl bg-white shadow-2xl">
-      <div className="flex items-center justify-between bg-gray-50 px-5 py-4">
+      <div className="flex items-center justify-between bg-slate-50 px-5 py-4">
         <div>
-          <p className="text-sm font-bold text-gray-900">Good morning, {currentUser.firstName} <i className="fas fa-hand-wave text-amber-400 text-sm" /></p>
-          <p className="text-xs text-gray-400">You have {stats.total} pending update{stats.total !== 1 ? 's' : ''} today.</p>
+          <p className="text-sm font-bold text-slate-900">Good morning, {currentUser.firstName} <i className="fas fa-hand-wave text-amber-400 text-sm" /></p>
+          <p className="text-xs text-slate-400">You have {stats.total} pending update{stats.total !== 1 ? 's' : ''} today.</p>
         </div>
         {getUserImgUrl(currentUser.profilePicture) ? (
           <img src={getUserImgUrl(currentUser.profilePicture) || ''} alt="" className="h-9 w-9 rounded-full object-cover" />
@@ -42,17 +42,17 @@ function DashboardCard({ currentUser, stats, recentApps, recommended }: {
           </div>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-3 border-b border-gray-100 px-5 py-4">
+      <div className="grid grid-cols-2 gap-3 border-b border-slate-100 px-5 py-4">
         {[{ label: 'Applications Sent', value: String(stats.total).padStart(2, '0') }, { label: 'Active Interviews', value: String(stats.interviews).padStart(2, '0') }].map((s) => (
-          <div key={s.label} className="rounded-xl bg-gray-50 p-3 text-center">
-            <p className="text-2xl font-extrabold text-gray-900">{s.value}</p>
-            <p className="text-xs text-gray-400">{s.label}</p>
+          <div key={s.label} className="rounded-xl bg-slate-50 p-3 text-center">
+            <p className="text-2xl font-bold text-slate-900">{s.value}</p>
+            <p className="text-xs text-slate-400">{s.label}</p>
           </div>
         ))}
       </div>
       <div className="px-5 py-4">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-xs font-bold text-gray-700">Recent Applications</p>
+          <p className="text-xs font-bold text-slate-700">Recent Applications</p>
           <Link href="/my-applications" className="text-xs text-emerald-500 hover:underline">View All</Link>
         </div>
         {recentApps.length > 0 ? (
@@ -60,14 +60,14 @@ function DashboardCard({ currentUser, stats, recentApps, recommended }: {
             {recentApps.map((a) => {
               const title = typeof a.internshipId === 'object' && a.internshipId?.title ? a.internshipId.title : 'Internship';
               const company = typeof a.companyId === 'object' ? a.companyId?.name || 'Company' : 'Company';
-              const statusColor = a.status === 'accepted' ? 'text-emerald-600 bg-emerald-50' : a.status === 'rejected' ? 'text-red-600 bg-red-50' : 'text-gray-600 bg-gray-100';
+              const statusColor = a.status === 'accepted' ? 'text-emerald-600 bg-emerald-50' : a.status === 'rejected' ? 'text-red-600 bg-red-50' : 'text-slate-600 bg-slate-100';
               return (
                 <div key={a._id} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-pink-100 to-sky-100" />
                     <div>
-                      <p className="text-xs font-semibold text-gray-900">{title}</p>
-                      <p className="text-[10px] text-gray-400">{company}</p>
+                      <p className="text-xs font-semibold text-slate-900">{title}</p>
+                      <p className="text-[10px] text-slate-400">{company}</p>
                     </div>
                   </div>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusColor}`}>{a.status.charAt(0).toUpperCase() + a.status.slice(1)}</span>
@@ -76,13 +76,13 @@ function DashboardCard({ currentUser, stats, recentApps, recommended }: {
             })}
           </div>
         ) : (
-          <p className="text-xs text-gray-400 text-center py-3">No applications yet. Start exploring!</p>
+          <p className="text-xs text-slate-400 text-center py-3">No applications yet. Start exploring!</p>
         )}
       </div>
       {recommended.length > 0 && (
-        <div className="border-t border-gray-100 px-5 py-4">
+        <div className="border-t border-slate-100 px-5 py-4">
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-xs font-bold text-gray-700">Recommended for you</p>
+            <p className="text-xs font-bold text-slate-700">Recommended for you</p>
             <Link href="/internships" className="text-xs text-emerald-500 hover:underline">Browse All</Link>
           </div>
           <div className="flex gap-2">
@@ -93,14 +93,14 @@ function DashboardCard({ currentUser, stats, recentApps, recommended }: {
                 'from-amber-400 to-orange-400',
               ];
               return (
-                <Link key={intern._id} href={`/internships/${intern._id}`} className="group flex-1 overflow-hidden rounded-xl border border-gray-100 hover:border-emerald-200 hover:shadow-md transition-all duration-300">
+                <Link key={intern._id} href={`/internships/${intern._id}`} className="group flex-1 overflow-hidden rounded-xl border border-slate-100 hover:border-emerald-200 hover:shadow-md transition-all duration-300">
                   <div className={`h-9 bg-gradient-to-br ${gradients[idx % 3]} flex items-center justify-center relative overflow-hidden`}>
                     <i className="fas fa-briefcase text-white/80 text-xs" />
                     <div className="absolute -bottom-3 -right-3 w-8 h-8 bg-white/10 rounded-full blur-xl" />
                   </div>
                   <div className="p-2">
-                    <p className="text-[10px] font-bold text-gray-900 leading-snug truncate group-hover:text-emerald-600 transition-colors">{intern.title}</p>
-                    <p className="text-[8px] text-gray-400 mt-0.5 flex items-center gap-0.5">
+                    <p className="text-[10px] font-bold text-slate-900 leading-snug truncate group-hover:text-emerald-600 transition-colors">{intern.title}</p>
+                    <p className="text-[8px] text-slate-400 mt-0.5 flex items-center gap-0.5">
                       <i className="fas fa-location-dot text-[7px]" /> {intern.location || 'Remote'}
                     </p>
                   </div>
@@ -130,7 +130,7 @@ function FallbackCard() {
             <span className="text-[11px] font-semibold text-[#9AA69E] bg-white px-2 py-0.5 rounded-full"><i className="fas fa-lock text-[9px] mr-1" />Locked</span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#16A667] animate-pulse" />
           </div>
-          <div className="text-[26px] font-extrabold text-[#C6CFC9] tracking-wide mt-2">—</div>
+          <div className="text-[26px] font-bold text-[#C6CFC9] tracking-wide mt-2">—</div>
           <div className="text-[13px] text-[#8B978F] mt-0.5">Applications sent</div>
         </div>
         <div className="relative rounded-2xl bg-[#F5F7F6] p-5 overflow-hidden" style={{ backgroundImage: 'repeating-linear-gradient(0deg, #CBD6D1, #CBD6D1 6px, transparent 6px, transparent 12px), repeating-linear-gradient(90deg, #CBD6D1, #CBD6D1 6px, transparent 6px, transparent 12px), repeating-linear-gradient(180deg, #CBD6D1, #CBD6D1 6px, transparent 6px, transparent 12px), repeating-linear-gradient(270deg, #CBD6D1, #CBD6D1 6px, transparent 6px, transparent 12px)', backgroundSize: '2px 100%, 100% 2px, 2px 100%, 100% 2px', backgroundPosition: '0 0, 0 0, 100% 0, 0 100%', backgroundRepeat: 'no-repeat' }}>
@@ -138,7 +138,7 @@ function FallbackCard() {
             <span className="text-[11px] font-semibold text-[#9AA69E] bg-white px-2 py-0.5 rounded-full"><i className="fas fa-lock text-[9px] mr-1" />Locked</span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#16A667] animate-pulse" />
           </div>
-          <div className="text-[26px] font-extrabold text-[#C6CFC9] tracking-wide mt-2">—</div>
+          <div className="text-[26px] font-bold text-[#C6CFC9] tracking-wide mt-2">—</div>
           <div className="text-[13px] text-[#8B978F] mt-0.5">Active interviews</div>
         </div>
       </div>
@@ -242,10 +242,10 @@ export default function StudentMiniDashboard() {
     <section className="bg-gray-900 px-6 sm:px-10 py-16 relative">
       <div className="mx-auto max-w-6xl lg:grid lg:grid-cols-2 lg:gap-16 lg:items-center relative z-10">
         <div>
-          <h2 className="text-3xl sm:text-4xl font-black leading-tight text-white">
+          <h2 className="text-3xl sm:text-4xl font-bold leading-tight text-white">
             Manage your <span className="text-emerald-400">internship journey</span> in one place
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-gray-400">
+          <p className="mt-4 text-base leading-relaxed text-slate-400">
             Discover opportunities, track applications and never miss an important update. Join thousands of students launching their careers today.
           </p>
           <div className="mt-8 space-y-5">
@@ -256,7 +256,7 @@ export default function StudentMiniDashboard() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">{item.title}</p>
-                  <p className="text-sm text-gray-400">{item.desc}</p>
+                  <p className="text-sm text-slate-400">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -265,7 +265,7 @@ export default function StudentMiniDashboard() {
             <Link href="/get-started" className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-sm shadow-emerald-500/25 hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300">
               Start Your Journey <i className="fas fa-arrow-right text-xs" />
             </Link>
-            <Link href="/how-it-works" className="inline-flex items-center gap-2 rounded-xl border border-gray-700 px-6 py-3 text-sm font-semibold text-gray-300 transition-all duration-300 hover:border-emerald-500/50 hover:text-emerald-300 hover:bg-white/5">
+            <Link href="/how-it-works" className="inline-flex items-center gap-2 rounded-xl border border-gray-700 px-6 py-3 text-sm font-semibold text-slate-300 transition-all duration-300 hover:border-emerald-500/50 hover:text-emerald-300 hover:bg-white/5">
               Learn More
             </Link>
           </div>

@@ -19,7 +19,7 @@ export default function CtaBannerSection() {
         <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
         <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between relative z-10">
           <div>
-            <motion.h2 variants={fadeUp} custom={0} className="text-3xl sm:text-4xl font-black leading-tight text-white">
+            <motion.h2 variants={fadeUp} custom={0} className="text-3xl sm:text-4xl font-bold leading-tight text-white">
               Ready to accelerate your career?
             </motion.h2>
             <motion.p variants={fadeUp} custom={1} className="mt-3 max-w-md text-base text-emerald-100">

@@ -28,7 +28,7 @@ const TYPE_OPTIONS = [
 
 export default function Step2Preferences({ preferences, onChange, onNext, onBack }: Props) {
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-8 h-full flex flex-col">
+    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 h-full flex flex-col">
       <div className="mb-6">
         <motion.div
           initial={{ scale: 0 }}
@@ -38,10 +38,10 @@ export default function Step2Preferences({ preferences, onChange, onNext, onBack
         >
           <i className="fas fa-sliders text-lg" />
         </motion.div>
-        <h2 className="text-xl sm:text-2xl font-black text-gray-900">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
           Any preferences?
         </h2>
-        <p className="mt-2 text-sm text-gray-400 leading-relaxed">
+        <p className="mt-2 text-sm text-slate-400 leading-relaxed">
           Help us narrow down the best internships for you.
         </p>
       </div>
@@ -49,7 +49,7 @@ export default function Step2Preferences({ preferences, onChange, onNext, onBack
       <div className="flex-1 space-y-6 overflow-y-auto scrollbar-none">
         {/* Location */}
         <div>
-          <p className="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">
+          <p className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wide">
             Work Location
           </p>
           <div className="grid grid-cols-3 gap-2.5">
@@ -70,20 +70,20 @@ export default function Step2Preferences({ preferences, onChange, onNext, onBack
                   className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition-all duration-300 ${
                     isSelected
                       ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100'
-                      : 'border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-white'
+                      : 'border-slate-100 bg-slate-50 hover:border-slate-200 hover:bg-white'
                   }`}
                 >
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-xl ${
                       isSelected
                         ? 'bg-emerald-500 text-white'
-                        : 'bg-gray-200 text-gray-500'
+                        : 'bg-slate-200 text-slate-500'
                     } transition-colors duration-300`}
                   >
                     <i className={`fas ${opt.icon} text-sm`} />
                   </div>
-                  <span className="text-xs font-bold text-gray-700">{opt.label}</span>
-                  <span className="text-[10px] text-gray-400">{opt.desc}</span>
+                  <span className="text-xs font-bold text-slate-700">{opt.label}</span>
+                  <span className="text-[10px] text-slate-400">{opt.desc}</span>
                 </motion.button>
               );
             })}
@@ -92,7 +92,7 @@ export default function Step2Preferences({ preferences, onChange, onNext, onBack
 
         {/* Type */}
         <div>
-          <p className="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">
+          <p className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wide">
             Internship Type
           </p>
           <div className="grid grid-cols-2 gap-2.5">
@@ -113,20 +113,20 @@ export default function Step2Preferences({ preferences, onChange, onNext, onBack
                   className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition-all duration-300 ${
                     isSelected
                       ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100'
-                      : 'border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-white'
+                      : 'border-slate-100 bg-slate-50 hover:border-slate-200 hover:bg-white'
                   }`}
                 >
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-xl ${
                       isSelected
                         ? 'bg-emerald-500 text-white'
-                        : 'bg-gray-200 text-gray-500'
+                        : 'bg-slate-200 text-slate-500'
                     } transition-colors duration-300`}
                   >
                     <i className={`fas ${opt.icon} text-sm`} />
                   </div>
-                  <span className="text-xs font-bold text-gray-700">{opt.label}</span>
-                  <span className="text-[10px] text-gray-400">{opt.desc}</span>
+                  <span className="text-xs font-bold text-slate-700">{opt.label}</span>
+                  <span className="text-[10px] text-slate-400">{opt.desc}</span>
                 </motion.button>
               );
             })}
@@ -134,7 +134,7 @@ export default function Step2Preferences({ preferences, onChange, onNext, onBack
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-gray-100 flex gap-3">
+      <div className="mt-4 pt-4 border-t border-slate-100 flex gap-3">
         <Button variant="secondary" onClick={onBack} className="flex-1">
           <i className="fas fa-arrow-left text-xs mr-2" />
           Back

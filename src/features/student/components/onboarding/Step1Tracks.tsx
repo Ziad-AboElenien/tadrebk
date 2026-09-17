@@ -55,7 +55,7 @@ interface Props {
 
 export default function Step1Tracks({ selected, onToggle, onNext }: Props) {
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-8 h-full flex flex-col">
+    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 h-full flex flex-col">
       <div className="mb-6">
         <motion.div
           initial={{ scale: 0 }}
@@ -65,10 +65,10 @@ export default function Step1Tracks({ selected, onToggle, onNext }: Props) {
         >
           <i className="fas fa-layer-group text-lg" />
         </motion.div>
-        <h2 className="text-xl sm:text-2xl font-black text-gray-900">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
           What are you interested in?
         </h2>
-        <p className="mt-2 text-sm text-gray-400 leading-relaxed">
+        <p className="mt-2 text-sm text-slate-400 leading-relaxed">
           Pick the tracks that excite you. We&apos;ll recommend internships that match.
         </p>
       </div>
@@ -87,7 +87,7 @@ export default function Step1Tracks({ selected, onToggle, onNext }: Props) {
                 className={`relative flex flex-col items-center gap-2 rounded-2xl border-2 p-3.5 text-center transition-all duration-300 ${
                   isSelected
                     ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100'
-                    : 'border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-white'
+                    : 'border-slate-100 bg-slate-50 hover:border-slate-200 hover:bg-white'
                 }`}
               >
                 {isSelected && (
@@ -108,7 +108,7 @@ export default function Step1Tracks({ selected, onToggle, onNext }: Props) {
                 >
                   <i className={`fas ${TRACK_ICONS[cat]}`} />
                 </div>
-                <span className="text-[11px] font-bold text-gray-700 leading-tight">
+                <span className="text-[11px] font-bold text-slate-700 leading-tight">
                   {CATEGORY_LABELS[cat]}
                 </span>
               </motion.button>
@@ -117,7 +117,7 @@ export default function Step1Tracks({ selected, onToggle, onNext }: Props) {
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-gray-100">
+      <div className="mt-4 pt-4 border-t border-slate-100">
         <Button
           onClick={onNext}
           disabled={selected.length === 0}

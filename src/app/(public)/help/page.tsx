@@ -74,10 +74,10 @@ export default function HelpCenterPage() {
           <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-6">
             Help Center
           </span>
-          <h1 className="text-5xl md:text-6xl font-black text-[#1a2e35] tracking-tight mb-6">
+          <h1 className="text-5xl md:text-6xl font-bold text-[#1a2e35] tracking-tight mb-6">
             How can we help you?
           </h1>
-          <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-8">
+          <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-8">
             Everything you need to make the most of Tadrebk — from your first account to your first internship.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -95,10 +95,10 @@ export default function HelpCenterPage() {
       <section className="py-20 md:py-28">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-14">
-            <h2 className="text-4xl md:text-5xl font-black text-[#1a2e35] tracking-tight mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold text-[#1a2e35] tracking-tight mb-4">
               Popular Topics
             </h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
               Pick a topic to find the answer you&apos;re looking for.
             </p>
           </div>
@@ -112,11 +112,11 @@ export default function HelpCenterPage() {
                 <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center text-white mb-6">
                   <i className={`fas ${cat.icon} text-xl`} />
                 </div>
-                <h3 className="text-xl font-black text-[#1a2e35] mb-2">{cat.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed mb-5">{cat.desc}</p>
+                <h3 className="text-xl font-bold text-[#1a2e35] mb-2">{cat.title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed mb-5">{cat.desc}</p>
                 <ul className="space-y-2.5">
                   {cat.articles.map((a) => (
-                    <li key={a} className="flex items-start gap-2.5 text-sm text-gray-600">
+                    <li key={a} className="flex items-start gap-2.5 text-sm text-slate-600">
                       <i className="fas fa-circle-check text-emerald-500 mt-0.5 text-xs" />
                       <span>{a}</span>
                     </li>
@@ -127,7 +127,7 @@ export default function HelpCenterPage() {
 
             {/* Still need help card */}
             <div className="p-8 rounded-3xl bg-gradient-to-br from-emerald-900 via-teal-900 to-emerald-900 text-white flex flex-col justify-center shadow-lg">
-              <h3 className="text-xl font-black mb-2">Still need help?</h3>
+              <h3 className="text-xl font-bold mb-2">Still need help?</h3>
               <p className="text-emerald-200/80 text-sm leading-relaxed mb-6">
                 Our support team is happy to assist you with any questions you have.
               </p>

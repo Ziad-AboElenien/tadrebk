@@ -22,11 +22,14 @@ import {
   GraduationCap,
   Eye,
   FileText,
+  Building2,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
+import Select from '@/components/ui/Select';
+import GlassFilter from '@/components/ui/GlassFilter';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { applicationService, Application } from '@/features/student/services/application.service';
 import { Internship } from '@/features/internship/types';
@@ -67,6 +70,25 @@ function getStudentLabel(app: Application): { name: string; email: string; dept:
     uni: edu?.institution || '—',
     initials: initials || '?',
   };
+}
+
+function StudentAvatar({ initials, src, alt }: { initials: string; src?: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  if (src && !failed) {
+    return (
+      <img
+        src={src}
+        alt={alt}
+        onError={() => setFailed(true)}
+        className="h-9 w-9 shrink-0 rounded-full object-cover"
+      />
+    );
+  }
+  return (
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
+      {initials}
+    </div>
+  );
 }
 
 export default function InternshipManagementScreen() {
@@ -136,6 +158,16 @@ export default function InternshipManagementScreen() {
     });
     return Array.from(set).sort();
   }, [applications]);
+
+  const activeFilterCount = useMemo(() => {
+    let n = 0;
+    if (filter !== 'all') n += 1;
+    if (deptFilter !== 'all') n += 1;
+    if (uniFilter !== 'all') n += 1;
+    return n;
+  }, [filter, deptFilter, uniFilter]);
+
+  const hasActiveFilters = activeFilterCount > 0;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -248,37 +280,31 @@ export default function InternshipManagementScreen() {
   const filterOuterOpen = filterOpen;
 
   return (
-    <div className="flex bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Interns" />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title={internship?.title || 'Internship Management'} />
 
         <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div className="flex items-start justify-between">
-            <div>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
               <Link
                 href="/company/admin/interns"
                 className="mb-3 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
               >
                 <ArrowLeft size={15} /> Back to Interns
               </Link>
-              <h2 className="text-2xl font-semibold text-slate-900">Program Overview</h2>
+              <h2 className="break-words text-2xl font-semibold text-slate-900">Internship Overview</h2>
               <p className="text-sm text-slate-500">Snapshot of your current internship talent pool.</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={exportRoster}
                 className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
               >
                 <Download size={15} /> Export Roster
               </button>
-              <Link
-                href={`/company/internships/${internshipId}/applications`}
-                className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600"
-              >
-                <Plus size={16} /> Add New Intern
-              </Link>
             </div>
           </div>
 
@@ -306,8 +332,8 @@ export default function InternshipManagementScreen() {
                 <h3 className="font-semibold text-slate-900">Applications</h3>
                 <p className="text-sm text-slate-400">Review and manage all internship applications.</p>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="relative">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative min-w-0 flex-1 sm:flex-none">
                   <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     value={search}
@@ -316,90 +342,125 @@ export default function InternshipManagementScreen() {
                       setPage(1);
                     }}
                     placeholder="Filter by name, uni, or email..."
-                    className="w-64 rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                    className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 sm:w-64"
                   />
                 </div>
-                <button
-                  onClick={() => setFilterOpen((v) => !v)}
-                  aria-label="Filter applications by status"
-                  className={`relative flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm transition-colors ${
-                    filter !== 'all'
-                      ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
-                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  <Filter size={14} /> {FILTERS.find((f) => f.key === filter)?.label}
-                </button>
-                <select
-                  value={deptFilter}
-                  onChange={(e) => {
-                    setDeptFilter(e.target.value);
-                    setPage(1);
-                  }}
-                  aria-label="Filter by department"
-                  className={`max-w-[180px] cursor-pointer rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-emerald-400 ${
-                    deptFilter !== 'all' ? 'border-emerald-300 text-emerald-600' : 'border-slate-200 text-slate-600'
-                  }`}
-                >
-                  <option value="all">All Departments</option>
-                  {departments.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-                <select
-                  value={uniFilter}
-                  onChange={(e) => {
-                    setUniFilter(e.target.value);
-                    setPage(1);
-                  }}
-                  aria-label="Filter by university"
-                  className={`max-w-[180px] cursor-pointer rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-emerald-400 ${
-                    uniFilter !== 'all' ? 'border-emerald-300 text-emerald-600' : 'border-slate-200 text-slate-600'
-                  }`}
-                >
-                  <option value="all">All Universities</option>
-                  {universities.map((u) => (
-                    <option key={u} value={u}>{u}</option>
-                  ))}
-                </select>
-                {(deptFilter !== 'all' || uniFilter !== 'all' || filter !== 'all' || search.trim()) && (
+                <div className="relative">
                   <button
-                    onClick={() => {
-                      setDeptFilter('all');
-                      setUniFilter('all');
-                      setFilter('all');
-                      setSearch('');
-                      setPage(1);
-                    }}
-                    className="rounded-lg px-2 py-2 text-xs font-medium text-slate-400 hover:text-slate-600"
+                    onClick={() => setFilterOpen((v) => !v)}
+                    aria-label="Filter applications"
+                    aria-expanded={filterOpen}
+                    className={`relative flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                      hasActiveFilters
+                        ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    }`}
                   >
-                    Clear
+                    <Filter size={14} /> Filter
+                    {activeFilterCount > 0 && (
+                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-semibold text-white">
+                        {activeFilterCount}
+                      </span>
+                    )}
                   </button>
-                )}
 
-                {filterOuterOpen && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setFilterOpen(false)} />
-                    <div className="absolute right-0 top-11 z-20 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
-                      {FILTERS.map((f) => (
-                        <button
-                          key={f.key}
-                          onClick={() => {
-                            setFilter(f.key);
-                            setPage(1);
-                            setFilterOpen(false);
-                          }}
-                          className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                            filter === f.key ? 'bg-emerald-50 font-medium text-emerald-600' : 'text-slate-600 hover:bg-slate-50'
-                          }`}
-                        >
-                          {f.label}
-                          {filter === f.key && <CheckCircle2 size={14} />}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
+                  {filterOuterOpen && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setFilterOpen(false)} />
+                      <div className="absolute right-0 top-full z-40 mt-2 w-80 max-w-[88vw] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/60">
+                        <div className="flex items-center justify-between bg-slate-50/80 px-4 py-3">
+                          <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                            <Filter size={14} className="text-emerald-500" /> Filters
+                          </p>
+                          {activeFilterCount > 0 && (
+                            <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+                              {activeFilterCount} active
+                            </span>
+                          )}
+                        </div>
+                        <div className="max-h-[60vh] space-y-4 overflow-y-auto p-4">
+                          <div>
+                            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                              <CheckCircle2 size={12} /> Status
+                            </p>
+                            <div className="mt-2">
+                              <GlassFilter
+                                options={FILTERS}
+                                value={filter}
+                                onChange={(key) => {
+                                  setFilter(key as AppStatus);
+                                  setPage(1);
+                                }}
+                                ariaLabel="Filter applications by status"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label htmlFor="dept-filter" className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                              <GraduationCap size={12} /> Department
+                            </label>
+                            <Select
+                              id="dept-filter"
+                              value={deptFilter}
+                              onChange={(e) => {
+                                setDeptFilter(e.target.value);
+                                setPage(1);
+                              }}
+                              placeholder="All Departments"
+                              className="mt-2"
+                            >
+                              <option value="all">All Departments</option>
+                              {departments.map((d) => (
+                                <option key={d} value={d}>{d}</option>
+                              ))}
+                            </Select>
+                          </div>
+                          <div>
+                            <label htmlFor="uni-filter" className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                              <Building2 size={12} /> University
+                            </label>
+                            <Select
+                              id="uni-filter"
+                              value={uniFilter}
+                              onChange={(e) => {
+                                setUniFilter(e.target.value);
+                                setPage(1);
+                              }}
+                              placeholder="All Universities"
+                              className="mt-2"
+                            >
+                              <option value="all">All Universities</option>
+                              {universities.map((u) => (
+                                <option key={u} value={u}>{u}</option>
+                              ))}
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-4 py-3">
+                          <button
+                            onClick={() => {
+                              setDeptFilter('all');
+                              setUniFilter('all');
+                              setFilter('all');
+                              setSearch('');
+                              setPage(1);
+                            }}
+                            disabled={activeFilterCount === 0 && !search.trim()}
+                            className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-rose-500 disabled:opacity-40"
+                          >
+                            Clear all
+                          </button>
+                          <button
+                            onClick={() => setFilterOpen(false)}
+                            className="rounded-lg bg-emerald-500 px-5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-emerald-600"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -438,8 +499,8 @@ export default function InternshipManagementScreen() {
                       <th className="py-3 pr-4 font-medium">Intern Profile</th>
                       <th className="py-3 pr-4 font-medium">Department &amp; University</th>
                       <th className="py-3 pr-4 font-medium">Enrollment Status</th>
-                      <th className="py-3 pr-4 font-medium">Start Date</th>
-                      <th className="py-3 pr-4 font-medium">Application</th>
+                      <th className="py-3 pr-4 font-medium">Date</th>
+                      <th className="py-3 pr-4 font-medium">View Application</th>
                       <th className="py-3 text-right font-medium">Actions</th>
                     </tr>
                   </thead>
@@ -460,16 +521,14 @@ export default function InternshipManagementScreen() {
                           <tr key={app._id} className="transition-colors hover:bg-slate-50/50">
                             <td className="py-3.5 pr-4">
                               <Link
-                                href={studentId ? `/company/applicants/${studentId}` : '#'}
+                                href={studentId ? `/company/admin/interns/${studentId}` : '#'}
                                 className="flex items-center gap-3"
                               >
-                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
-                                  {initials}
-                                </div>
-                                <div>
-                                  <p className="font-medium text-slate-900">{name}</p>
-                                  <p className="text-xs text-slate-400">{email}</p>
-                                </div>
+<StudentAvatar initials={initials} src={app.studentId?.profilePicture?.secure_url} alt={name} />
+<div className="min-w-0">
+<p className="truncate font-medium text-slate-900">{name}</p>
+<p className="truncate text-xs text-slate-400">{email}</p>
+</div>
                               </Link>
                             </td>
                             <td className="py-3.5 pr-4">
@@ -482,16 +541,18 @@ export default function InternshipManagementScreen() {
                               </span>
                             </td>
                             <td className="py-3.5 pr-4">
-                              <span className="flex items-center gap-1.5 text-slate-600">
-                                <Calendar size={13} className="text-slate-400" /> {formatDate(app.createdAt)}
+                              <span className="flex items-center gap-1.5 text-xs text-slate-500">
+                                <Calendar size={12} className="shrink-0 text-slate-400" /> {formatDate(app.createdAt)}
                               </span>
                             </td>
                             <td className="py-3.5 pr-4">
                               <button
                                 onClick={() => setDetailApp(app)}
-                                className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                                aria-label="View application"
+                                title="View application"
+                                className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                               >
-                                <Eye size={13} /> View Application
+                                <Eye size={16} />
                               </button>
                             </td>
                             <td className="relative py-3.5 text-right">
@@ -582,7 +643,7 @@ export default function InternshipManagementScreen() {
                                     )}
 
                                     <Link
-                                      href={studentId ? `/company/applicants/${studentId}` : '#'}
+                                      href={studentId ? `/company/admin/interns/${studentId}` : '#'}
                                       onClick={() => { setMenuOpenId(null); setMenuRect(null); }}
                                       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                                     >
@@ -601,7 +662,7 @@ export default function InternshipManagementScreen() {
               )}
             </div>
 
-            <div className="mt-4 flex items-center justify-between text-sm text-slate-400">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
               <span>Showing {filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} results</span>
               {totalPages > 1 && (
                 <div className="flex items-center gap-1">
@@ -703,16 +764,14 @@ export default function InternshipManagementScreen() {
                           <tr key={app._id} className="transition-colors hover:bg-slate-50/50">
                             <td className="py-3.5 pr-4">
                               <Link
-                                href={studentId ? `/company/applicants/${studentId}` : '#'}
+                                href={studentId ? `/company/admin/interns/${studentId}` : '#'}
                                 className="flex items-center gap-3"
                               >
-                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
-                                  {initials}
-                                </div>
-                                <div>
-                                  <p className="font-medium text-slate-900">{name}</p>
-                                  <p className="text-xs text-slate-400">{email}</p>
-                                </div>
+<StudentAvatar initials={initials} src={app.studentId?.profilePicture?.secure_url} alt={name} />
+<div className="min-w-0">
+<p className="truncate font-medium text-slate-900">{name}</p>
+<p className="truncate text-xs text-slate-400">{email}</p>
+</div>
                               </Link>
                             </td>
                             <td className="py-3.5 pr-4">
@@ -726,7 +785,7 @@ export default function InternshipManagementScreen() {
                             </td>
                             <td className="relative py-3.5 text-right">
                               <Link
-                                href={studentId ? `/company/applicants/${studentId}` : '#'}
+                                href={studentId ? `/company/admin/interns/${studentId}` : '#'}
                                 className="inline-flex items-center rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                                 aria-label={`View ${name}`}
                               >

@@ -10,8 +10,137 @@ import { clearUser } from '@/store/userSlice';
 import { clearCompany } from '@/store/companySlice';
 import * as authService from '@/features/auth/server/auth.service';
 import Avatar from '@/components/ui/Avatar';
+import InternAvatar from '@/components/ui/InternAvatar';
 import { getCompanyImgUrl } from '@/features/company/types';
 import { useAdminShell } from '@/components/tadrebk/admin-shell';
+import { notificationService } from '@/features/notifications/server/notification.service';
+import type { Notification } from '@/features/notifications/types';
+import { internService } from '@/features/company/services/intern.service';
+import { taskService } from '@/features/company/services/task.service';
+import { programService } from '@/features/company/services/program.service';
+import type { Intern, Task, Program } from '@/features/company/types/management';
+import { toastHelper } from '@/lib/toast';
+import { getErrorMessage } from '@/lib/axios';
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function SearchResults({
+  query,
+  loading,
+  failed,
+  interns,
+  tasks,
+  programs,
+  onNavigate,
+}: {
+  query: string;
+  loading: boolean;
+  failed: boolean;
+  interns: Intern[];
+  tasks: Task[];
+  programs: Program[];
+  onNavigate: () => void;
+}) {
+  const q = query.trim().toLowerCase();
+  const matchedInterns = q
+    ? interns
+        .filter((i) => `${i.firstName} ${i.lastName} ${i.email}`.toLowerCase().includes(q))
+        .slice(0, 4)
+    : [];
+  const matchedTasks = q
+    ? tasks.filter((t) => `${t.title} ${t.description || ''}`.toLowerCase().includes(q)).slice(0, 4)
+    : [];
+  const matchedPrograms = q
+    ? programs.filter((p) => `${p.name} ${p.description || ''}`.toLowerCase().includes(q)).slice(0, 3)
+    : [];
+  const empty = matchedInterns.length + matchedTasks.length + matchedPrograms.length === 0;
+
+  return (
+    <div className="absolute right-0 top-full z-50 mt-2 max-h-80 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-xl">
+      <div className="max-h-72 overflow-y-auto overscroll-contain [scrollbar-width:thin] [scrollbar-color:#cbd5e1_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-track]:bg-transparent">
+      {loading ? (
+        <div className="space-y-2 px-4 py-2">
+          {[0, 1].map((i) => (
+            <div key={i} className="h-10 animate-pulse rounded-xl bg-slate-100" />
+          ))}
+        </div>
+      ) : failed ? (
+        <p className="px-4 py-5 text-center text-sm text-rose-500">Couldn’t load search data. Close and try again.</p>
+      ) : empty ? (
+        <p className="px-4 py-5 text-center text-sm text-slate-400">No matches for “{query.trim()}”.</p>
+      ) : (
+        <>
+          {matchedInterns.length > 0 && (
+            <div>
+              <p className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Interns</p>
+              {matchedInterns.map((i) => (
+                <Link
+                  key={i._id}
+                  href={`/company/admin/interns/${i._id}`}
+                  onClick={onNavigate}
+                  className="flex items-center gap-2.5 px-4 py-2 text-sm hover:bg-slate-50"
+                >
+<InternAvatar
+                    src={i.profilePicture?.secure_url}
+                    firstName={i.firstName}
+                    lastName={i.lastName}
+                    email={i.email}
+                    className="h-7 w-7 text-[10px]"
+                  />
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium text-slate-800">{`${i.firstName} ${i.lastName}`.trim() || i.email}</span>
+                    <span className="block truncate text-xs text-slate-400">{i.email}</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+          {matchedTasks.length > 0 && (
+            <div>
+              <p className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Tasks</p>
+              {matchedTasks.map((t) => (
+                <Link
+                  key={t._id}
+                  href={`/company/admin/tasks/${t._id}`}
+                  onClick={onNavigate}
+                  className="block truncate px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  {t.title}
+                </Link>
+              ))}
+            </div>
+          )}
+                {matchedPrograms.length > 0 && (
+                  <div>
+                    <p className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Programs</p>
+                    {matchedPrograms.map((p) => (
+                      <Link
+                        key={p._id}
+                        href={`/company/admin/programs/${p._id}`}
+                        onClick={onNavigate}
+                        className="block truncate px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      >
+                        {p.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+      </div>
+    </div>
+  );
+}
 
 type TopBarProps = {
   title: string;
@@ -28,15 +157,39 @@ export default function TopBar({
   const currentCompany = useAppSelector((s) => s.company.currentCompany);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unread, setUnread] = useState(0);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [query, setQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchLoaded, setSearchLoaded] = useState(false);
+  const [searchFailed, setSearchFailed] = useState(false);
+  const [allInterns, setAllInterns] = useState<Intern[]>([]);
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [allPrograms, setAllPrograms] = useState<Program[]>([]);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
       }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
     }
     function keyHandler(e: KeyboardEvent) {
-      if (e.key === 'Escape') setMenuOpen(false);
+      if (e.key === 'Escape') {
+        setMenuOpen(false);
+        setNotifOpen(false);
+        setSearchOpen(false);
+      }
     }
     document.addEventListener('mousedown', handler);
     document.addEventListener('keydown', keyHandler);
@@ -45,6 +198,89 @@ export default function TopBar({
       document.removeEventListener('keydown', keyHandler);
     };
   }, []);
+
+  useEffect(() => {
+    notificationService.getUnreadCount().then(setUnread).catch(() => {});
+  }, []);
+
+  const openNotifications = async () => {
+    const next = !notifOpen;
+    setNotifOpen(next);
+    if (!next) return;
+    setNotifLoading(true);
+    try {
+      const [list, count] = await Promise.all([
+        notificationService.list({ limit: 20 }),
+        notificationService.getUnreadCount(),
+      ]);
+      setNotifications(list.notifications);
+      setUnread(count);
+    } catch {
+      // silent — dropdown will show empty state
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
+  const handleReadOne = async (id: string) => {
+    setNotifications((prev) => prev.map((n) => (n._id === id ? { ...n, read: true } : n)));
+    setUnread((u) => Math.max(0, u - 1));
+    try {
+      await notificationService.markAsRead(id);
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    }
+  };
+
+  const handleReadAll = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnread(0);
+    try {
+      await notificationService.markAllAsRead();
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    }
+  };
+
+  const ensureSearchData = async () => {
+    if (searchLoaded || searchLoading) return;
+    const cid = currentCompany?._id;
+    if (!cid) return;
+    setSearchLoading(true);
+    setSearchFailed(false);
+    try {
+      const results = await Promise.allSettled([
+        internService.listAllInterns(cid),
+        (async () => {
+          try {
+            return (await taskService.listTasks(cid, { limit: 100 })).tasks;
+          } catch {
+            return [] as Task[];
+          }
+        })(),
+        (async () => {
+          try {
+            return (await programService.listPrograms(cid, { limit: 100 })).data;
+          } catch {
+            return [] as Program[];
+          }
+        })(),
+      ]);
+      const interns = results[0].status === 'fulfilled' ? results[0].value : ([] as Intern[]);
+      const tasks = results[1].status === 'fulfilled' ? results[1].value : ([] as Task[]);
+      const progs = results[2].status === 'fulfilled' ? results[2].value : ([] as Program[]);
+      if (results.some((r) => r.status === 'rejected')) {
+        setSearchFailed(true);
+        return;
+      }
+      setAllInterns(interns);
+      setAllTasks(tasks);
+      setAllPrograms(progs);
+      setSearchLoaded(true);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
 
   async function handleLogout() {
     await authService.logout();
@@ -82,7 +318,7 @@ export default function TopBar({
           {/* Actions inline on tablet+ */}
           {actions && <div className="hidden sm:block">{actions}</div>}
 
-          <div className="relative hidden md:block">
+          <div className="relative hidden md:block" ref={searchRef}>
             <Search
               size={16}
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -90,18 +326,87 @@ export default function TopBar({
             <input
               type="text"
               placeholder="Search interns, tasks..."
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setSearchOpen(true);
+              }}
+              onFocus={() => {
+                ensureSearchData();
+                if (query.trim()) setSearchOpen(true);
+              }}
               className="w-48 rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-600 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 lg:w-64"
             />
+            {searchOpen && query.trim() && (
+              <SearchResults
+                query={query}
+                loading={searchLoading}
+                failed={searchFailed && !searchLoaded}
+                interns={allInterns}
+                tasks={allTasks}
+                programs={allPrograms}
+                onNavigate={() => {
+                  setSearchOpen(false);
+                  setQuery('');
+                }}
+              />
+            )}
           </div>
 
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100"
-          >
-            <Bell size={18} />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-slate-50" />
-          </button>
+          <div className="relative" ref={notifRef}>
+            <button
+              type="button"
+              aria-label="Notifications"
+              onClick={openNotifications}
+              className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100"
+            >
+              <Bell size={18} />
+              {unread > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white ring-2 ring-slate-50">
+                  {unread > 9 ? '9+' : unread}
+                </span>
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[85vw] overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-xl">
+                <div className="flex items-center justify-between px-4 py-2">
+                  <p className="text-sm font-semibold text-slate-900">Notifications</p>
+                  {unread > 0 && (
+                    <button onClick={handleReadAll} className="text-xs font-medium text-emerald-600 hover:underline">
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-80 overflow-y-auto overscroll-contain [scrollbar-width:thin] [scrollbar-color:#cbd5e1_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-track]:bg-transparent">
+                {notifLoading ? (
+                  <div className="space-y-2 px-4 py-2">
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="h-12 animate-pulse rounded-xl bg-slate-100" />
+                    ))}
+                  </div>
+                ) : notifications.length === 0 ? (
+                  <p className="px-4 py-6 text-center text-sm text-slate-400">No notifications yet.</p>
+                ) : (
+                  notifications.map((n) => (
+                    <button
+                      key={n._id}
+                      onClick={() => handleReadOne(n._id)}
+                      className={`flex w-full gap-3 px-4 py-2.5 text-left transition-colors hover:bg-slate-50 ${n.read ? 'opacity-60' : ''}`}
+                    >
+                      <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.read ? 'bg-slate-200' : 'bg-emerald-500'}`} />
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium text-slate-900">{n.title}</span>
+                        <span className="block truncate text-xs text-slate-500">{n.message}</span>
+                        <span className="mt-0.5 block text-[11px] text-slate-400">{timeAgo(n.createdAt)}</span>
+                      </span>
+                    </button>
+                  ))
+                )}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="relative" ref={menuRef}>
             <button

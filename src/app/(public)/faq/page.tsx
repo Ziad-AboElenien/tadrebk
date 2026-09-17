@@ -70,10 +70,10 @@ export default function FaqPage() {
           <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-6">
             FAQ
           </span>
-          <h1 className="text-5xl md:text-6xl font-black text-[#1a2e35] tracking-tight mb-6">
+          <h1 className="text-5xl md:text-6xl font-bold text-[#1a2e35] tracking-tight mb-6">
             Frequently Asked Questions
           </h1>
-          <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
             Quick answers to the questions we hear the most.
           </p>
         </div>
@@ -88,7 +88,7 @@ export default function FaqPage() {
                 <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white">
                   <i className={`fas ${group.icon} text-base`} />
                 </div>
-                <h2 className="text-2xl md:text-3xl font-black text-[#1a2e35] tracking-tight">
+                <h2 className="text-2xl md:text-3xl font-bold text-[#1a2e35] tracking-tight">
                   {group.title}
                 </h2>
               </div>
@@ -98,9 +98,9 @@ export default function FaqPage() {
                   <details key={item.q} className="group bg-white rounded-2xl border border-gray-50 shadow-sm open:shadow-md transition-all">
                     <summary className="flex items-center justify-between px-6 py-5 cursor-pointer list-none text-[#1a2e35] font-bold text-sm">
                       {item.q}
-                      <i className="fas fa-chevron-down text-gray-300 group-open:rotate-180 transition-transform" />
+                      <i className="fas fa-chevron-down text-slate-300 group-open:rotate-180 transition-transform" />
                     </summary>
-                    <div className="px-6 pb-5 pt-0 text-gray-500 text-sm leading-relaxed border-t border-gray-50 mt-0">
+                    <div className="px-6 pb-5 pt-0 text-slate-500 text-sm leading-relaxed border-t border-gray-50 mt-0">
                       {item.a}
                     </div>
                   </details>
@@ -111,8 +111,8 @@ export default function FaqPage() {
 
           {/* CTA */}
           <div className="text-center bg-white rounded-[32px] border border-gray-50 shadow-sm p-6 sm:p-10">
-            <h3 className="text-2xl font-black text-[#1a2e35] mb-2">Still have questions?</h3>
-            <p className="text-gray-400 text-sm mb-6">
+            <h3 className="text-2xl font-bold text-[#1a2e35] mb-2">Still have questions?</h3>
+            <p className="text-slate-400 text-sm mb-6">
               Our support team is happy to help with anything not covered here.
             </p>
             <Link href="/contact" className="inline-block">

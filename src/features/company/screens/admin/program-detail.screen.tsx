@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   FileText,
@@ -14,6 +14,7 @@ import {
   Plus,
   Check,
   PenLine,
+  Loader2,
   MoreHorizontal,
   ClipboardCheck,
   FolderKanban,
@@ -23,6 +24,7 @@ import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import InternAvatar from '@/components/ui/InternAvatar';
 import Select from '@/components/ui/Select';
 import { programService } from '@/features/company/services/program.service';
 import { projectService } from '@/features/company/services/project.service';
@@ -33,6 +35,8 @@ import { applicationService } from '@/features/student/services/application.serv
 import { Internship } from '@/features/internship/types';
 import { Program, Intern, Project, Task, TaskStatus } from '@/features/company/types/management';
 import ProgramAttendanceSection from './program-attendance.section';
+import { priorityTheme } from '@/features/company/utils/taskPriorityTheme';
+import { BroadcastCard } from '@/features/company/services/task.service';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
@@ -61,6 +65,7 @@ function initials(name: string): string {
 
 export default function ProgramDetailScreen() {
   const params = useParams();
+  const router = useRouter();
   const programId = params.programId as string;
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
@@ -100,18 +105,22 @@ export default function ProgramDetailScreen() {
 
   const [programProjects, setProgramProjects] = useState<Project[]>([]);
   const [programTasks, setProgramTasks] = useState<Task[]>([]);
+  const [programBroadcasts, setProgramBroadcasts] = useState<BroadcastCard[]>([]);
   const [loadingExtras, setLoadingExtras] = useState(true);
+  const [openingGroup, setOpeningGroup] = useState('');
 
   const fetchProgramExtras = useCallback(async () => {
     if (!companyId || !programId) return;
     setLoadingExtras(true);
     try {
-      const [projRes, taskRes] = await Promise.all([
+      const [projRes, taskRes, bcRes] = await Promise.all([
         projectService.listProjects(companyId, { programId, limit: 100 }),
         taskService.listTasks(companyId, { limit: 100 }),
+        taskService.listBroadcasts(companyId, { programId, limit: 100 }),
       ]);
       setProgramProjects(projRes.data);
       setProgramTasks(taskRes.tasks);
+      setProgramBroadcasts(bcRes.broadcasts);
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     } finally {
@@ -127,16 +136,50 @@ export default function ProgramDetailScreen() {
   const tasksByProject = useMemo(() => {
     const map: Record<string, Task[]> = {};
     programTasks.forEach((t) => {
-      if (!t.projectId) return;
+      if (!t.projectId || t.taskGroupId) return;
       (map[t.projectId] = map[t.projectId] || []).push(t);
     });
     return map;
   }, [programTasks]);
 
+  const broadcastsByProject = useMemo(() => {
+    const map: Record<string, BroadcastCard[]> = {};
+    programBroadcasts.forEach((b) => {
+      if (!b.projectId) return;
+      (map[b.projectId] = map[b.projectId] || []).push(b);
+    });
+    return map;
+  }, [programBroadcasts]);
+
   const programDirectTasks = useMemo(
-    () => programTasks.filter((t) => t.programId === programId && !t.projectId),
+    () => programTasks.filter((t) => t.programId === programId && !t.projectId && !t.taskGroupId),
     [programTasks, programId],
   );
+
+  const programLevelBroadcasts = useMemo(
+    () => programBroadcasts.filter((b) => !b.projectId),
+    [programBroadcasts],
+  );
+
+  const openBroadcast = async (groupId: string) => {
+    if (!companyId) return;
+    setOpeningGroup(groupId);
+    try {
+      const res = await taskService.listByGroup(companyId, groupId);
+      const rows = res.tasks;
+      if (rows.length === 0) {
+        toastHelper.error('No tasks in this group yet');
+        return;
+      }
+      const first = rows[0];
+      const iid = typeof first.internId === 'string' ? first.internId : ((first.internId as unknown as { _id?: string })?._id || '');
+      router.push(`/company/admin/tasks/${first._id}?groupId=${groupId}&internId=${iid}`);
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setOpeningGroup('');
+    }
+  };
 
   const fetchProgram = useCallback(async () => {
     if (!companyId || !programId) return;
@@ -264,21 +307,23 @@ export default function ProgramDetailScreen() {
 
   if (loading) {
     return (
-      <div className="flex bg-slate-50">
+      <div className="flex min-h-screen bg-slate-50">
         <Sidebar active="Programs" />
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar title="Program Details" />
-          <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8 animate-pulse">
-            <div className="h-9 w-64 rounded-lg bg-slate-200" />
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <div className="space-y-6 lg:col-span-2">
-                <div className="h-72 rounded-2xl border border-slate-200 bg-white" />
-              </div>
-              <div className="space-y-6">
-                <div className="h-72 rounded-2xl border border-slate-200 bg-white" />
-              </div>
+        <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8 animate-pulse">
+          <div className="h-36 rounded-2xl bg-slate-200 sm:h-40" />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="space-y-6 lg:col-span-2">
+              <div className="h-64 rounded-2xl border border-slate-200 bg-white" />
+              <div className="h-48 rounded-2xl border border-slate-200 bg-white" />
             </div>
-          </main>
+            <div className="space-y-6">
+              <div className="h-64 rounded-2xl border border-slate-200 bg-white" />
+              <div className="h-40 rounded-2xl border border-slate-200 bg-white" />
+            </div>
+          </div>
+        </main>
         </div>
       </div>
     );
@@ -286,9 +331,9 @@ export default function ProgramDetailScreen() {
 
   if (!program) {
     return (
-      <div className="flex bg-slate-50">
+      <div className="flex min-h-screen bg-slate-50">
         <Sidebar active="Programs" />
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar title="Program Details" />
           <div className="py-20 text-center text-sm text-slate-400">Program not found.</div>
         </div>
@@ -380,13 +425,46 @@ export default function ProgramDetailScreen() {
   };
 
   return (
-    <div className="flex bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Programs" />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Program Details" />
 
         <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div className="relative overflow-hidden rounded-2xl bg-slate-900 p-6 shadow-lg shadow-slate-200/60 sm:p-8">
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{ background: 'linear-gradient(115deg, #064e3b 0%, #065f46 40%, #047857 70%, #10b981 100%)' }}
+            />
+            <div className="pointer-events-none absolute -left-16 top-0 h-full w-56 -skew-x-12 bg-white/10" />
+            <div className="pointer-events-none absolute left-24 top-0 h-full w-16 -skew-x-12 bg-white/10" />
+            <div className="pointer-events-none absolute -bottom-14 -right-6 h-44 w-44 rounded-full border-[14px] border-white/15" />
+            <div
+              className="pointer-events-none absolute inset-0 opacity-20"
+              style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.85) 1px, transparent 1px)', backgroundSize: '16px 16px' }}
+            />
+            <div className="relative flex flex-wrap items-end justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-widest text-emerald-200">
+                  Program · {program.status}
+                </p>
+                <h2 className="mt-1 break-words text-xl font-bold text-white sm:text-3xl">{program.name}</h2>
+                {program.description && (
+                  <p className="mt-1 line-clamp-2 max-w-2xl break-words text-sm text-emerald-100/80">{program.description}</p>
+                )}
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+                  {enrolledInterns.length} intern(s)
+                </span>
+                <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+                  {programProjects.length} project(s)
+                </span>
+              </div>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-3">
               <Link href="/company/admin/programs" className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
@@ -455,13 +533,13 @@ export default function ProgramDetailScreen() {
                 {mode === 'view' ? (
                   <div className="mt-4 space-y-4">
                     <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Program Name</p>
-                      <p className="mt-1 text-sm font-medium text-slate-900">{program.name}</p>
+<p className="text-xs font-medium uppercase tracking-wide text-slate-400">Program Name</p>
+<p className="mt-1 break-words text-sm font-medium text-slate-900">{program.name}</p>
                     </div>
                     {program.description && (
                       <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Description</p>
-                        <p className="mt-1 text-sm text-slate-600">{program.description}</p>
+<p className="text-xs font-medium uppercase tracking-wide text-slate-400">Description</p>
+<p className="mt-1 break-words text-sm text-slate-600">{program.description}</p>
                       </div>
                     )}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -614,8 +692,14 @@ export default function ProgramDetailScreen() {
                   <div className="mt-4 space-y-4">
                     {programProjects.map((p) => {
                       const tasks = tasksByProject[p._id] || [];
+                      const groups = broadcastsByProject[p._id] || [];
+                      const totalCount = tasks.length + groups.length;
                       return (
-                        <div key={p._id} className="overflow-hidden rounded-xl border border-slate-200">
+                        <div
+                          key={p._id}
+                          className="overflow-hidden rounded-xl border border-slate-200"
+                          style={{ background: `linear-gradient(to bottom, ${p.color || '#10b981'}14, #ffffff 55%)` }}
+                        >
                           <div className="h-2 w-full" style={{ backgroundColor: p.color || '#10b981' }} />
                           <div className="p-4">
                             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -633,29 +717,72 @@ export default function ProgramDetailScreen() {
                             </div>
                             <div className="mt-3 border-t border-slate-100 pt-3">
                               <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
-                                <ListTodo size={13} /> Tasks ({tasks.length})
+                                <ListTodo size={13} /> Tasks ({totalCount})
                               </p>
-                              {tasks.length === 0 ? (
+                              {totalCount === 0 ? (
                                 <p className="mt-2 text-xs text-slate-400">No tasks in this project yet.</p>
                               ) : (
                                 <div className="mt-2 space-y-1.5">
-                                  {tasks.map((t) => (
-                                    <Link
-                                      key={t._id}
-                                      href={`/company/admin/tasks/${t._id}?internId=${t.internId}`}
-                                      className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs hover:bg-slate-100"
-                                    >
-                                      <span className="truncate font-medium text-slate-700">{t.title}</span>
-                                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
-                                        t.status === 'complete' ? 'bg-emerald-100 text-emerald-700'
-                                        : t.status === 'in_review' ? 'bg-blue-100 text-blue-700'
-                                        : t.status === 'in_progress' ? 'bg-amber-100 text-amber-700'
-                                        : 'bg-slate-200 text-slate-500'
-                                      }`}>
-                                        {t.status.replace('_', ' ')}
-                                      </span>
-                                    </Link>
-                                  ))}
+                                  {groups.map((b) => {
+                                    const theme = priorityTheme(b.priority);
+                                    const done = b.members.filter((m) => m.status === 'complete').length;
+                                    return (
+                                      <button
+                                        key={b.taskGroupId}
+                                        onClick={() => openBroadcast(b.taskGroupId)}
+                                        disabled={openingGroup === b.taskGroupId}
+                                        className={`block w-full overflow-hidden rounded-lg border border-slate-200 ${theme.cardBg} text-left transition-shadow hover:shadow-sm disabled:opacity-60`}
+                                      >
+                                        <div className="h-1 w-full" style={{ backgroundColor: theme.banner }} />
+                                        <div className="flex items-center justify-between gap-2 px-3 py-2 text-xs">
+                                          <span className="flex min-w-0 items-center gap-2">
+                                            <span className="truncate font-medium text-slate-700">{b.title}</span>
+                                            <span className="shrink-0 text-[10px] text-slate-400">
+                                              {done}/{b.members.length} done
+                                            </span>
+                                          </span>
+                                          <span className="flex shrink-0 items-center gap-1.5">
+                                            <span className="flex -space-x-1">
+                                              {b.members.slice(0, 3).map((m) => (
+                                                <InternAvatar
+                                                  key={m.internId}
+                                                  src={m.intern?.profilePicture}
+                                                  firstName={m.intern?.firstName}
+                                                  lastName={m.intern?.lastName}
+                                                  email={m.intern?.email}
+                                                  className="h-4 w-4 border border-white text-[6px]"
+                                                />
+                                              ))}
+                                            </span>
+                                            {openingGroup === b.taskGroupId ? (
+                                              <Loader2 size={12} className="animate-spin text-slate-400" />
+                                            ) : (
+                                              <span className={`rounded-full px-1.5 py-px text-[10px] font-medium ${theme.chip}`}>
+                                                Group
+                                              </span>
+                                            )}
+                                          </span>
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                  {tasks.map((t) => {
+                                    const theme = priorityTheme(t.priority);
+                                    const iid = typeof t.internId === 'string' ? t.internId : ((t.internId as unknown as { _id?: string })?._id || '');
+                                    return (
+                                      <Link
+                                        key={t._id}
+                                        href={`/company/admin/tasks/${t._id}?internId=${iid}`}
+                                        style={{ borderLeftColor: theme.banner }}
+                                        className={`flex items-center justify-between gap-2 rounded-lg border border-slate-100 border-l-4 ${theme.cardBg} px-3 py-2 text-xs hover:shadow-sm`}
+                                      >
+                                        <span className="truncate font-medium text-slate-700">{t.title}</span>
+                                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${theme.chip}`}>
+                                          {t.status.replace('_', ' ')}
+                                        </span>
+                                      </Link>
+                                    );
+                                  })}
                                 </div>
                               )}
                             </div>
@@ -671,7 +798,7 @@ export default function ProgramDetailScreen() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h3 className="flex items-center gap-2 font-semibold text-slate-900">
                     <ListTodo size={18} className="text-emerald-500" /> Program Tasks
-                    <span className="text-sm font-normal text-slate-400">({programDirectTasks.length})</span>
+                    <span className="text-sm font-normal text-slate-400">({programDirectTasks.length + programLevelBroadcasts.length})</span>
                   </h3>
                   <Link
                     href={`/company/admin/tasks/new?programId=${programId}&target=program`}
@@ -686,34 +813,71 @@ export default function ProgramDetailScreen() {
                       <div key={i} className="h-12 animate-pulse rounded-xl bg-slate-100" />
                     ))}
                   </div>
-                ) : programDirectTasks.length === 0 ? (
+                ) : programDirectTasks.length === 0 && programLevelBroadcasts.length === 0 ? (
                   <p className="mt-4 rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-400">
                     No tasks assigned directly to this program yet.
                   </p>
                 ) : (
                   <div className="mt-4 space-y-1.5">
-                    {programDirectTasks.map((t) => (
-                      <Link
-                        key={t._id}
-                        href={`/company/admin/tasks/${t._id}?internId=${t.internId}`}
-                        className="flex items-center justify-between gap-2 rounded-xl border border-slate-100 px-4 py-3 text-sm hover:bg-slate-50"
-                      >
-                        <span className="min-w-0">
-                          <span className="block truncate font-medium text-slate-800">{t.title}</span>
-                          {t.description && (
-                            <span className="block truncate text-xs text-slate-400">{t.description}</span>
-                          )}
-                        </span>
-                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium capitalize ${
-                          t.status === 'complete' ? 'bg-emerald-100 text-emerald-700'
-                          : t.status === 'in_review' ? 'bg-blue-100 text-blue-700'
-                          : t.status === 'in_progress' ? 'bg-amber-100 text-amber-700'
-                          : 'bg-slate-200 text-slate-500'
-                        }`}>
-                          {t.status.replace('_', ' ')}
-                        </span>
-                      </Link>
-                    ))}
+                    {programLevelBroadcasts.map((b) => {
+                      const theme = priorityTheme(b.priority);
+                      const done = b.members.filter((m) => m.status === 'complete').length;
+                      return (
+                        <button
+                          key={b.taskGroupId}
+                          onClick={() => openBroadcast(b.taskGroupId)}
+                          disabled={openingGroup === b.taskGroupId}
+                          className={`block w-full overflow-hidden rounded-xl border border-slate-100 ${theme.cardBg} text-left transition-shadow hover:shadow-sm disabled:opacity-60`}
+                        >
+                          <div className="h-1 w-full" style={{ backgroundColor: theme.banner }} />
+                          <div className="flex items-center justify-between gap-2 px-4 py-3 text-sm">
+                            <span className="min-w-0">
+                              <span className="block truncate font-medium text-slate-800">
+                                {b.title}
+                                <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${theme.chip}`}>
+                                  Group · {b.members.length}
+                                </span>
+                              </span>
+                              {b.description && (
+                                <span className="block truncate text-xs text-slate-400">{b.description}</span>
+                              )}
+                            </span>
+                            <span className="flex shrink-0 items-center gap-2 text-xs text-slate-400">
+                              {done}/{b.members.length} done
+                              {openingGroup === b.taskGroupId ? (
+                                <Loader2 size={13} className="animate-spin" />
+                              ) : (
+                                <span className="text-[10px] font-medium text-slate-300">
+                                  {formatDate(b.dueDate)}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                    {programDirectTasks.map((t) => {
+                      const theme = priorityTheme(t.priority);
+                      const iid = typeof t.internId === 'string' ? t.internId : ((t.internId as unknown as { _id?: string })?._id || '');
+                      return (
+                        <Link
+                          key={t._id}
+                          href={`/company/admin/tasks/${t._id}?internId=${iid}`}
+                          style={{ borderLeftColor: theme.banner }}
+                          className={`flex items-center justify-between gap-2 rounded-xl border border-slate-100 border-l-4 ${theme.cardBg} px-4 py-3 text-sm hover:shadow-sm`}
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate font-medium text-slate-800">{t.title}</span>
+                            {t.description && (
+                              <span className="block truncate text-xs text-slate-400">{t.description}</span>
+                            )}
+                          </span>
+                          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium capitalize ${theme.chip}`}>
+                            {t.status.replace('_', ' ')}
+                          </span>
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </section>
@@ -810,12 +974,10 @@ export default function ProgramDetailScreen() {
                                       : `cursor-pointer ${checked ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-100 hover:bg-slate-50'}`
                                   }`}
                                 >
-                                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
-                                    {initials(`${i.firstName} ${i.lastName}`.trim()) || '?'}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-medium text-slate-900">
-                                      {`${i.firstName} ${i.lastName}`.trim() || i.email}
+<InternAvatar src={i.profilePicture?.secure_url} firstName={i.firstName} lastName={i.lastName} email={i.email} />
+<div className="min-w-0 flex-1">
+<p className="truncate text-sm font-medium text-slate-900">
+{`${i.firstName} ${i.lastName}`.trim() || i.email}
                                     </p>
                                     <p className="truncate text-xs text-slate-400">
                                       {i.email}{alreadyAssigned ? ' · Already assigned' : ''}
@@ -858,17 +1020,17 @@ export default function ProgramDetailScreen() {
                   {enrolledInterns.length === 0 ? (
                     <p className="text-sm text-slate-400">No interns enrolled yet.</p>
                   ) : (
-                    enrolledInterns.map((i) => (
-                      <div key={i._id} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
-                          {initials(`${i.firstName} ${i.lastName}`.trim()) || '?'}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-slate-900">
-                            {`${i.firstName} ${i.lastName}`.trim() || i.email}
-                          </p>
-                          <p className="truncate text-xs text-slate-400">{i.email}</p>
-                        </div>
+enrolledInterns.map((i) => (
+<div key={i._id} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3">
+<Link href={`/company/admin/interns/${i._id}`} className="flex min-w-0 flex-1 items-center gap-3" title="View profile">
+<InternAvatar src={i.profilePicture?.secure_url} firstName={i.firstName} lastName={i.lastName} email={i.email} />
+<div className="min-w-0 flex-1">
+<p className="truncate text-sm font-medium text-slate-900 hover:text-emerald-600 hover:underline">
+{`${i.firstName} ${i.lastName}`.trim() || i.email}
+</p>
+<p className="truncate text-xs text-slate-400">{i.email}</p>
+</div>
+</Link>
                         <button
                           onClick={() => handleUnenroll(i._id)}
                           disabled={unenrollingId === i._id}

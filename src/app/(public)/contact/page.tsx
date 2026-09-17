@@ -25,10 +25,10 @@ export default function ContactPage() {
           <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-6">
             Contact Us
           </span>
-          <h1 className="text-5xl md:text-6xl font-black text-[#1a2e35] tracking-tight mb-6">
+          <h1 className="text-5xl md:text-6xl font-bold text-[#1a2e35] tracking-tight mb-6">
             We&apos;d Love to Hear From You
           </h1>
-          <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
             Questions about internships, companies, or your account? Send us a message and our team will get back to you.
           </p>
         </div>
@@ -44,8 +44,8 @@ export default function ContactPage() {
                 <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white mb-4">
                   <i className={`fas ${c.icon} text-lg`} />
                 </div>
-                <h3 className="text-base font-black text-[#1a2e35]">{c.title}</h3>
-                <p className="text-sm text-gray-500 mt-1">{c.value}</p>
+                <h3 className="text-base font-bold text-[#1a2e35]">{c.title}</h3>
+                <p className="text-sm text-slate-500 mt-1">{c.value}</p>
               </div>
             ))}
           </div>

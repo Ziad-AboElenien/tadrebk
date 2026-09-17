@@ -223,11 +223,11 @@ export default function InternshipApplicationsScreen() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       {/* Back + title */}
       <div className="mb-8">
-        <Link href="/company/admin" className="text-sm text-primary hover:underline font-semibold flex items-center gap-1 mb-4">
+        <Link href="/company/admin" className="text-sm text-emerald-600 hover:underline font-semibold flex items-center gap-1 mb-4">
           <i className="fas fa-arrow-left text-xs" /> Back to dashboard
         </Link>
-        <h1 className="text-2xl font-black text-dark">{internship?.title || 'Internship'}</h1>
-        <p className="text-gray-500 text-sm mt-1">Manage applications for this internship</p>
+        <h1 className="text-2xl font-bold text-slate-900">{internship?.title || 'Internship'}</h1>
+        <p className="text-slate-500 text-sm mt-1">Manage applications for this internship</p>
         {internship?.preKnowledge && internship.preKnowledge.length > 0 && (
           <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
             <h3 className="text-sm font-bold text-amber-900 mb-1">Pre-knowledge to Start</h3>
@@ -247,15 +247,15 @@ export default function InternshipApplicationsScreen() {
             key={key}
             onClick={() => setFilter(key)}
             className={`bg-white border rounded-2xl p-5 shadow-sm text-left transition-all ${
-              filter === key ? 'border-primary ring-2 ring-primary/20' : 'border-gray-100 hover:border-gray-200'
+              filter === key ? 'border-emerald-500 ring-2 ring-primary/20' : 'border-slate-100 hover:border-slate-200'
             }`}
           >
-            <p className={`text-2xl font-black ${
-              key === 'pending' ? 'text-amber-600' : key === 'accepted' ? 'text-emerald-600' : key === 'rejected' ? 'text-red-500' : 'text-dark'
+            <p className={`text-2xl font-bold ${
+              key === 'pending' ? 'text-amber-600' : key === 'accepted' ? 'text-emerald-600' : key === 'rejected' ? 'text-red-500' : 'text-slate-900'
             }`}>
               {statusCounts[key]}
             </p>
-            <p className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-wide">{key}</p>
+            <p className="text-xs text-slate-500 mt-1 font-medium uppercase tracking-wide">{key}</p>
           </button>
         ))}
       </div>
@@ -263,30 +263,30 @@ export default function InternshipApplicationsScreen() {
       {/* University filter */}
       <div className="mb-6">
         <div className="flex flex-wrap items-center gap-3">
-          <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-            <i className="fas fa-graduation-cap text-primary" /> University:
+          <label className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+            <i className="fas fa-graduation-cap text-emerald-600" /> University:
           </label>
           <div ref={universityRef} className="relative">
             <button
               type="button"
               onClick={() => setUniversityOpen((o) => !o)}
-              className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-gray-300 border-gray-200 min-w-[210px]"
+              className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-emerald-500 hover:border-gray-300 border-slate-200 min-w-[210px]"
             >
-              <span className={selectedUniversity ? 'text-gray-800 font-medium' : 'text-gray-400'}>
+              <span className={selectedUniversity ? 'text-slate-800 font-medium' : 'text-slate-400'}>
                 {selectedUniversity || 'All universities'}
               </span>
               {loadingUniversities && (
-                <span className="ml-auto w-4 h-4 rounded-full border-2 border-gray-200 border-t-primary animate-spin" />
+                <span className="ml-auto w-4 h-4 rounded-full border-2 border-slate-200 border-t-primary animate-spin" />
               )}
-              <i className={`fas fa-chevron-down text-xs text-gray-400 ml-auto transition-transform ${universityOpen ? 'rotate-180' : ''}`} />
+              <i className={`fas fa-chevron-down text-xs text-slate-400 ml-auto transition-transform ${universityOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {universityOpen && (
-              <div className="absolute z-50 mt-1 w-full min-w-[240px] bg-white border border-gray-100 rounded-xl shadow-xl shadow-gray-200/50 py-1 max-h-60 overflow-y-auto">
+              <div className="absolute z-50 mt-1 w-full min-w-[240px] bg-white border border-slate-100 rounded-xl shadow-xl shadow-gray-200/50 py-1 max-h-60 overflow-y-auto">
                 <button
                   type="button"
                   onClick={() => pickUniversity('')}
-                  className="w-full text-left px-4 py-2.5 text-sm flex items-center justify-between text-gray-600 hover:bg-gray-50"
+                  className="w-full text-left px-4 py-2.5 text-sm flex items-center justify-between text-slate-600 hover:bg-slate-50"
                 >
                   All universities
                   {selectedUniversity === '' && !showOtherUniversity && <i className="fas fa-check text-emerald-500 text-xs" />}
@@ -296,19 +296,19 @@ export default function InternshipApplicationsScreen() {
                     key={u}
                     type="button"
                     onClick={() => pickUniversity(u)}
-                    className="w-full text-left px-4 py-2.5 text-sm flex items-center justify-between text-gray-600 hover:bg-gray-50"
+                    className="w-full text-left px-4 py-2.5 text-sm flex items-center justify-between text-slate-600 hover:bg-slate-50"
                   >
                     {u}
                     {selectedUniversity === u && <i className="fas fa-check text-emerald-500 text-xs" />}
                   </button>
                 ))}
                 {universities.length === 0 && !loadingUniversities && (
-                  <div className="px-4 py-3 text-sm text-gray-400">No universities found</div>
+                  <div className="px-4 py-3 text-sm text-slate-400">No universities found</div>
                 )}
                 <button
                   type="button"
                   onClick={() => pickUniversity(OTHER_VALUE)}
-                  className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 text-primary hover:bg-emerald-50 border-t border-gray-50"
+                  className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 text-emerald-600 hover:bg-emerald-50 border-t border-gray-50"
                 >
                   <i className="fas fa-plus text-xs" /> Other
                 </button>
@@ -320,7 +320,7 @@ export default function InternshipApplicationsScreen() {
             <button
               type="button"
               onClick={() => { setSelectedUniversity(''); setShowOtherUniversity(false); }}
-              className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1"
+              className="text-xs font-semibold text-slate-400 hover:text-red-500 transition-colors flex items-center gap-1"
             >
               <i className="fas fa-times" /> Clear
             </button>
@@ -335,7 +335,7 @@ export default function InternshipApplicationsScreen() {
               value={selectedUniversity}
               onChange={(e) => setSelectedUniversity(e.target.value)}
               placeholder="Type a university name..."
-              className="w-full border border-gray-200 rounded-xl bg-white px-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+              className="w-full border border-slate-200 rounded-xl bg-white px-4 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-emerald-500"
             />
           </div>
         )}
@@ -354,9 +354,9 @@ export default function InternshipApplicationsScreen() {
       )}
 
       {/* Applications list */}
-      <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 text-slate-400">
             <i className="fas fa-user-plus text-3xl mb-3 block" />
             <p className="font-semibold">No applications</p>
             <p className="text-sm mt-1">
@@ -368,7 +368,7 @@ export default function InternshipApplicationsScreen() {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-slate-100">
             {filtered.map((app) => {
               const s = app.studentId;
               const profilePic = getUserImgUrl(s?.profilePicture);
@@ -383,9 +383,9 @@ export default function InternshipApplicationsScreen() {
                     <MediaImage
                       src={profilePic}
                       alt={`${s.firstName} ${s.lastName}`}
-                      boxClassName="w-14 h-14 rounded-full border-2 border-gray-100 overflow-hidden"
+                      boxClassName="w-14 h-14 rounded-full border-2 border-slate-100 overflow-hidden"
                       imgClassName="w-full h-full object-cover"
-                      iconClassName="fas fa-user text-xl text-gray-400"
+                      iconClassName="fas fa-user text-xl text-slate-400"
                     />
                   </Link>
 
@@ -394,14 +394,14 @@ export default function InternshipApplicationsScreen() {
                       <div className="min-w-0">
                         <Link
                           href={`/company/applicants/${studentId || '#'}`}
-                          className="font-semibold text-dark hover:text-primary transition-colors truncate block text-lg"
+                          className="font-semibold text-slate-900 hover:text-emerald-600 transition-colors truncate block text-lg"
                         >
                           {s ? `${s.firstName} ${s.lastName}` : 'Unknown User'}
                         </Link>
-                        <p className="text-sm text-gray-500">{s?.email || ''}</p>
+                        <p className="text-sm text-slate-500">{s?.email || ''}</p>
                         {(studentUniversities[s?._id ?? ''] ?? []).length > 0 && (
-                          <p className="text-sm text-gray-400 mt-0.5 flex items-center gap-1.5">
-                            <i className="fas fa-graduation-cap text-xs text-primary/60" />
+                          <p className="text-sm text-slate-400 mt-0.5 flex items-center gap-1.5">
+                            <i className="fas fa-graduation-cap text-xs text-emerald-600/60" />
                             {(studentUniversities[s?._id ?? ''] ?? []).join(' · ')}
                           </p>
                         )}
@@ -499,7 +499,7 @@ export default function InternshipApplicationsScreen() {
                           className="inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 hover:bg-red-100 transition-colors w-full"
                         >
                           <i className="fas fa-file-pdf text-red-500" />
-                          <span className="text-sm font-semibold text-gray-900">Application CV</span>
+                          <span className="text-sm font-semibold text-slate-900">Application CV</span>
                           <i className="fas fa-external-link-alt text-xs text-red-400 ml-auto" />
                         </button>
                       </div>
@@ -507,11 +507,11 @@ export default function InternshipApplicationsScreen() {
 
                     {app.answers && app.answers.length > 0 && (
                       <div className="mt-3 space-y-2">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Answers</p>
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Answers</p>
                         {app.answers.map((a, ai) => (
-                          <div key={ai} className="bg-gray-50 rounded-xl p-3">
-                            <p className="text-xs text-gray-500 font-medium mb-1">Q{ai + 1}</p>
-                            <p className="text-sm text-gray-700">
+                          <div key={ai} className="bg-slate-50 rounded-xl p-3">
+                            <p className="text-xs text-slate-500 font-medium mb-1">Q{ai + 1}</p>
+                            <p className="text-sm text-slate-700">
                               {a.type === 'mcq' ? a.selectedOption : a.text}
                             </p>
                           </div>
@@ -520,16 +520,16 @@ export default function InternshipApplicationsScreen() {
                     )}
 
                     {app.coverLetter && (
-                      <div className="mt-3 bg-gray-50 rounded-xl p-4 overflow-hidden">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cover Letter</p>
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto">
+                      <div className="mt-3 bg-slate-50 rounded-xl p-4 overflow-hidden">
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Cover Letter</p>
+                        <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto">
                           {app.coverLetter}
                         </p>
                       </div>
                     )}
 
                     {app.createdAt && (
-                      <p className="text-xs text-gray-400 mt-3">
+                      <p className="text-xs text-slate-400 mt-3">
                         Applied {new Date(app.createdAt).toLocaleDateString('en-US', {
                           year: 'numeric', month: 'long', day: 'numeric',
                         })}
@@ -550,8 +550,8 @@ export default function InternshipApplicationsScreen() {
           <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm" onClick={() => setRatingModal(null)} />
           <div className="fixed inset-0 z-[101] flex items-center justify-center overflow-y-auto p-4">
             <div className="bg-white rounded-3xl shadow-2xl p-5 sm:p-8 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-bold text-dark mb-1">Rate {ratingModal.studentName}</h3>
-              <p className="text-sm text-gray-400 mb-5">How was this student's performance?</p>
+              <h3 className="text-lg font-bold text-slate-900 mb-1">Rate {ratingModal.studentName}</h3>
+              <p className="text-sm text-slate-400 mb-5">How was this student's performance?</p>
 
               <div className="flex items-center gap-2 mb-4">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -564,7 +564,7 @@ export default function InternshipApplicationsScreen() {
                     <i className={`fas fa-star ${star <= ratingScore ? 'text-amber-400' : 'text-gray-200'}`} />
                   </button>
                 ))}
-                <span className="text-sm text-gray-500 ml-2">{ratingScore}/5</span>
+                <span className="text-sm text-slate-500 ml-2">{ratingScore}/5</span>
               </div>
 
               <textarea
@@ -572,7 +572,7 @@ export default function InternshipApplicationsScreen() {
                 onChange={(e) => setRatingComment(e.target.value)}
                 rows={3}
                 placeholder="Leave a comment (optional)..."
-                className="w-full border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary resize-none mb-5"
+                className="w-full border border-slate-200 rounded-xl bg-white text-slate-800 placeholder:text-slate-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-emerald-500 resize-none mb-5"
               />
 
               <div className="flex gap-3">
@@ -585,7 +585,7 @@ export default function InternshipApplicationsScreen() {
                 </button>
                 <button
                   onClick={() => setRatingModal(null)}
-                  className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
+                  className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
                 >
                   Cancel
                 </button>

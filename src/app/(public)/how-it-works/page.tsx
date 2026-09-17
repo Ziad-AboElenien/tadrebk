@@ -198,21 +198,21 @@ export default function HowItWorksPage() {
           <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-6">
             Guide
           </span>
-          <h1 className="text-5xl md:text-6xl font-black text-[#1a2e35] tracking-tight mb-5">
+          <h1 className="text-5xl md:text-6xl font-bold text-[#1a2e35] tracking-tight mb-5">
             How Tadrebk Works
           </h1>
-          <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-10">
+          <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-10">
             Choose your side — students and companies follow different paths. Pick yours and we&apos;ll walk you through every step.
           </p>
 
           {/* Role toggle */}
-          <div className="inline-flex items-center bg-white/80 backdrop-blur border border-gray-100 rounded-full p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
+          <div className="inline-flex items-center bg-white/80 backdrop-blur border border-slate-100 rounded-full p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
             <button
               onClick={() => setRole('student')}
               className={`flex items-center gap-2 px-6 sm:px-9 py-3 rounded-full text-sm font-bold transition-all ${
                 isStudent
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25'
-                  : 'text-gray-500 hover:text-gray-800'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
             >
               <i className="fas fa-graduation-cap" />
@@ -223,7 +223,7 @@ export default function HowItWorksPage() {
               className={`flex items-center gap-2 px-6 sm:px-9 py-3 rounded-full text-sm font-bold transition-all ${
                 !isStudent
                   ? 'bg-gradient-to-r from-[#1a2e35] to-slate-700 text-white shadow-lg shadow-slate-500/25'
-                  : 'text-gray-500 hover:text-gray-800'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
             >
               <i className="fas fa-building" />
@@ -250,7 +250,7 @@ export default function HowItWorksPage() {
                   >
                     <i className={`fas ${g.icon} text-lg`} />
                   </div>
-                  <span className="text-xs font-black text-[#1a2e35] uppercase tracking-wider">{g.label}</span>
+                  <span className="text-xs font-bold text-[#1a2e35] uppercase tracking-wider">{g.label}</span>
                   <span className="text-[10px] font-bold text-emerald-600/70 mt-0.5">Step {i + 1}</span>
                 </div>
               ))}
@@ -263,10 +263,10 @@ export default function HowItWorksPage() {
       <section className="py-14 md:py-20">
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-14">
-            <h2 className="text-4xl md:text-5xl font-black text-[#1a2e35] tracking-tight mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold text-[#1a2e35] tracking-tight mb-4">
               {isStudent ? 'Your Journey, Step by Step' : 'From Registration to Hiring'}
             </h2>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
               {isStudent
                 ? 'Everything that happens from your first sign-up to your first day on the job.'
                 : 'Everything that happens from verifying your company to signing great talent.'}
@@ -280,7 +280,7 @@ export default function HowItWorksPage() {
                 <div key={item.step} className="relative md:grid md:grid-cols-[1fr_auto_1fr] md:items-center gap-6 md:gap-14">
                   {/* Number bubble on the line */}
                   <div className="absolute left-6 md:left-8 -translate-x-1/2 top-8 md:top-1/2 md:-translate-y-1/2 z-10">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-xl ring-4 ring-white ${
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-sm shadow-xl ring-4 ring-white ${
                       isStudent
                         ? 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-emerald-300/50'
                         : 'bg-gradient-to-br from-[#1a2e35] to-slate-700 shadow-slate-300/50'
@@ -291,7 +291,7 @@ export default function HowItWorksPage() {
 
                   {/* Icon card (opposite side on desktop) */}
                   <div className={`hidden md:flex items-center justify-center ${i % 2 === 0 ? 'md:order-1' : 'md:order-3'}`}>
-                    <div className="w-24 h-24 rounded-3xl bg-white border border-gray-100 shadow-sm flex items-center justify-center">
+                    <div className="w-24 h-24 rounded-3xl bg-white border border-slate-100 shadow-sm flex items-center justify-center">
                       <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white ${
                         isStudent
                           ? 'bg-gradient-to-br from-emerald-400 to-teal-500'
@@ -313,13 +313,13 @@ export default function HowItWorksPage() {
                         }`}>
                           <i className={`fas ${item.icon} text-sm`} />
                         </div>
-                        <span className="text-xs font-black text-emerald-600/70 uppercase tracking-wider">Step {item.step}</span>
+                        <span className="text-xs font-bold text-emerald-600/70 uppercase tracking-wider">Step {item.step}</span>
                       </div>
-                      <h3 className="text-2xl font-black text-[#1a2e35] mb-2">{item.title}</h3>
-                      <p className="text-gray-400 mb-4 leading-relaxed">{item.desc}</p>
+                      <h3 className="text-2xl font-bold text-[#1a2e35] mb-2">{item.title}</h3>
+                      <p className="text-slate-400 mb-4 leading-relaxed">{item.desc}</p>
                       <ul className="space-y-2.5">
                         {item.details.map((d) => (
-                          <li key={d} className="flex items-start gap-3 text-gray-600 text-sm">
+                          <li key={d} className="flex items-start gap-3 text-slate-600 text-sm">
                             <i className={`fas fa-circle-check mt-0.5 text-sm ${isStudent ? 'text-emerald-500' : 'text-teal-600'}`} />
                             <span>{d}</span>
                           </li>
@@ -335,13 +335,13 @@ export default function HowItWorksPage() {
       </section>
 
       {/* ─── PRO TIPS ─────────────────────────────────── */}
-      <section className="py-14 md:py-20 bg-gray-50/60">
+      <section className="py-14 md:py-20 bg-slate-50/60">
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-12">
             <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-4">
               Pro Tips
             </span>
-            <h2 className="text-3xl md:text-4xl font-black text-[#1a2e35] tracking-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#1a2e35] tracking-tight">
               {isStudent ? 'Make the Most of Tadrebk' : 'Hire Better, Faster'}
             </h2>
           </div>
@@ -356,7 +356,7 @@ export default function HowItWorksPage() {
                   <i className={`fas ${t.icon} text-sm`} />
                 </div>
                 <h3 className="font-bold text-[#1a2e35] mb-2 text-sm">{t.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{t.text}</p>
+                <p className="text-slate-500 text-sm leading-relaxed">{t.text}</p>
               </div>
             ))}
           </div>
@@ -370,7 +370,7 @@ export default function HowItWorksPage() {
             <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-4">
               FAQ
             </span>
-            <h2 className="text-4xl md:text-5xl font-black text-[#1a2e35] tracking-tight">
+            <h2 className="text-4xl md:text-5xl font-bold text-[#1a2e35] tracking-tight">
               {isStudent ? 'Students Ask Us' : 'Companies Ask Us'}
             </h2>
           </div>
@@ -384,9 +384,9 @@ export default function HowItWorksPage() {
               >
                 <summary className="flex items-center justify-between px-6 py-5 cursor-pointer list-none text-[#1a2e35] font-bold text-sm">
                   {item.q}
-                  <i className={`fas fa-chevron-down text-gray-300 group-open:rotate-180 transition-transform ${isStudent ? 'group-open:text-emerald-500' : 'group-open:text-teal-600'}`} />
+                  <i className={`fas fa-chevron-down text-slate-300 group-open:rotate-180 transition-transform ${isStudent ? 'group-open:text-emerald-500' : 'group-open:text-teal-600'}`} />
                 </summary>
-                <div className="px-6 pb-5 pt-0 text-gray-500 text-sm leading-relaxed border-t border-gray-50">
+                <div className="px-6 pb-5 pt-0 text-slate-500 text-sm leading-relaxed border-t border-gray-50">
                   {item.a}
                 </div>
               </details>
@@ -398,7 +398,7 @@ export default function HowItWorksPage() {
       {/* ─── CTA ──────────────────────────────────────── */}
       <section className={`py-16 ${isStudent ? 'bg-gradient-to-r from-emerald-900 via-teal-900 to-emerald-900' : 'bg-gradient-to-r from-slate-900 via-[#1a2e35] to-slate-900'}`}>
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-white text-3xl md:text-4xl font-black mb-4 tracking-tight">
+          <h2 className="text-white text-3xl md:text-4xl font-bold mb-4 tracking-tight">
             {isStudent ? 'Ready to Land Your Internship?' : 'Ready to Build Your Team?'}
           </h2>
           <p className="text-emerald-200/80 mb-8 max-w-xl mx-auto">

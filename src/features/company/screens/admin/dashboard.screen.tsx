@@ -10,7 +10,9 @@ import {
   ClipboardList,
   MoreHorizontal,
   Trophy,
+  Loader2,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
@@ -18,65 +20,96 @@ import StatCard from '@/components/tadrebk/StatCard';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { syncInternshipsClosedState } from '@/features/internship/utils/closedInternshipState';
 import PerformanceChart from '@/features/company/components/PerformanceChart';
-import { taskService } from '@/features/company/services/task.service';
+import InternAvatar from '@/components/ui/InternAvatar';
+import { taskService, BroadcastCard } from '@/features/company/services/task.service';
+import { internService } from '@/features/company/services/intern.service';
+import { evaluationService, Evaluation } from '@/features/company/services/evaluation.service';
+import { Intern, Task } from '@/features/company/types/management';
 import { programService } from '@/features/company/services/program.service';
 import { Program } from '@/features/company/types/management';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
-const PERFORMANCE_WEEKLY = [
-  { label: 'Mon', value: 42 },
-  { label: 'Tue', value: 55 },
-  { label: 'Wed', value: 38 },
-  { label: 'Thu', value: 61 },
-  { label: 'Fri', value: 48 },
-  { label: 'Sat', value: 70 },
-];
 
-const PERFORMANCE_MONTHLY = [
-  { label: 'Jan', value: 60 },
-  { label: 'Feb', value: 75 },
-  { label: 'Mar', value: 82 },
-  { label: 'Apr', value: 70 },
-  { label: 'May', value: 90 },
-  { label: 'Jun', value: 100 },
-];
 
-const DEADLINES = [
-  { date: '24 OCT', title: 'Mid-Term Evaluation', tag: 'EVALUATION', chip: 'bg-rose-50 text-rose-500' },
-  { date: '28 OCT', title: 'Q3 Project Submission', tag: 'TASK', chip: 'bg-amber-50 text-amber-600' },
-  { date: '01 NOV', title: 'Monthly Attendance Report', tag: 'ADMIN', chip: 'bg-blue-50 text-blue-600' },
-];
-
-const ACTIVITY = [
-  { title: 'Task Completed', time: '2M AGO', detail: 'Ahmed Hassan completed "Refactor Login"' },
-  { title: 'Evaluation Submitted', time: '15M AGO', detail: 'Laila Mahmoud received a 4.8/5 score' },
-  { title: 'Attendance Alert', time: '1H AGO', detail: 'Youssef Zaki clocked in 15 mins late today' },
-  { title: 'New Internship', time: '3H AGO', detail: 'Backend track started with 12 new recruits' },
-];
+function timeAgo(dateStr?: string | null): string {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
 
 export default function AdminDashboardScreen() {
+  const router = useRouter();
   const company = useAppSelector((s) => s.company.currentCompany);
   const [internsCount, setInternsCount] = useState(0);
   const [inProgressCount, setInProgressCount] = useState(0);
   const [completedCount, setCompletedCount] = useState(0);
+  const [pendingEvals, setPendingEvals] = useState(0);
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [interns, setInterns] = useState<Intern[]>([]);
+  const [recentTasks, setRecentTasks] = useState<Task[]>([]);
+  const [recentEvals, setRecentEvals] = useState<Evaluation[]>([]);
+  const [monthlyDone, setMonthlyDone] = useState<{ label: string; value: number }[]>([]);
+  const [upcoming, setUpcoming] = useState<BroadcastCard[]>([]);
+  const [openingId, setOpeningId] = useState('');
   const [loading, setLoading] = useState(true);
-  const [perfRange, setPerfRange] = useState<'weekly' | 'monthly'>('monthly');
 
   useEffect(() => {
     if (!company?._id) return;
     (async () => {
       try {
-        const [postingsRes, tasksRes, progRes] = await Promise.all([
+        const [postingsRes, internList, tasksRes, progRes, evalRes, bcRes] = await Promise.all([
           internshipService.listInternships({ companyId: company._id, limit: 50 }),
+          internService.listAllInterns(company._id),
           taskService.listTasks(company._id, { limit: 100 }),
           programService.listPrograms(company._id, { limit: 100 }),
+          evaluationService.listEvaluations(company._id, { page: 1, limit: 100 }).catch(() => ({ evaluations: [] })),
+          taskService.listBroadcasts(company._id, { limit: 100 }).catch(() => ({ broadcasts: [] })),
         ]);
+        const tasks = tasksRes.tasks.filter((t) => t.status !== 'archived');
         setInternsCount(syncInternshipsClosedState(postingsRes.internships).filter((i) => !i.closed).length);
-        setInProgressCount(tasksRes.tasks.filter((t) => t.status === 'in_progress').length);
-        setCompletedCount(tasksRes.tasks.filter((t) => t.status === 'complete').length);
+        setInterns(internList);
+        setInProgressCount(tasks.filter((t) => t.status === 'in_progress').length);
+        setCompletedCount(tasks.filter((t) => t.status === 'complete').length);
+        setPendingEvals(evalRes.evaluations.filter((e) => !e.sharedWithIntern).length);
         setPrograms(progRes.data);
+        setRecentTasks(
+          [...tasks]
+            .sort((a, b) => +new Date(b.updatedAt || b.createdAt) - +new Date(a.updatedAt || a.createdAt))
+            .slice(0, 20),
+        );
+        setRecentEvals(
+          [...evalRes.evaluations]
+            .sort((a, b) => +new Date(b.evaluatedAt) - +new Date(a.evaluatedAt))
+            .slice(0, 20),
+        );
+        const months: { label: string; value: number }[] = [];
+        const now = new Date();
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const key = `${d.getFullYear()}-${d.getMonth()}`;
+          const count = tasks.filter((t) => {
+            const doneAt = t.reviewedAt || (t.status === 'complete' ? t.updatedAt : null);
+            if (!doneAt) return false;
+            const dd = new Date(doneAt);
+            return dd.getFullYear() === d.getFullYear() && dd.getMonth() === d.getMonth() && `${dd.getFullYear()}-${dd.getMonth()}` === key;
+          }).length;
+          months.push({ label: d.toLocaleDateString('en-US', { month: 'short' }), value: count });
+        }
+        setMonthlyDone(months);
+        setUpcoming(
+          bcRes.broadcasts
+            .filter((b) => b.dueDate)
+            .sort((a, b) => +new Date(a.dueDate as string) - +new Date(b.dueDate as string))
+            .slice(0, 4),
+        );
       } catch (err) {
         toastHelper.error(getErrorMessage(err));
       } finally {
@@ -86,31 +119,88 @@ export default function AdminDashboardScreen() {
   }, [company?._id]);
 
   const stats = [
-    { label: 'Active Interns', value: String(internsCount), icon: Users, delta: '+12%', deltaLabel: 'vs last month' },
-    { label: 'Tasks in Progress', value: String(inProgressCount), icon: CheckSquare, delta: '+5%', deltaLabel: 'vs last month' },
-    { label: 'Completed Tasks', value: String(completedCount), icon: CheckCircle2, delta: '+18%', deltaLabel: 'vs last month' },
-    { label: 'Pending Evaluations', value: '24', icon: ClipboardList, delta: '-2%', deltaDirection: 'down' as const, deltaLabel: 'vs last month' },
+    { label: 'Active Internships', value: String(internsCount), icon: Users, delta: `${internsCount} open`, deltaLabel: 'active postings' },
+    { label: 'Tasks in Progress', value: String(inProgressCount), icon: CheckSquare, delta: `${completedCount} done`, deltaLabel: 'completed total' },
+    { label: 'Completed Tasks', value: String(completedCount), icon: CheckCircle2, delta: 'all time', deltaLabel: 'non-archived' },
+    { label: 'Pending Evaluations', value: String(pendingEvals), icon: ClipboardList, delta: 'draft', deltaLabel: 'not shared yet' },
   ];
 
-  const topPerformers = internsCount
-    ? [
-        { rank: 1, name: 'Emad Abd Elaaty', role: 'UX Designer', points: '2840 pts' },
-        { rank: 2, name: 'Ali Elz3ery', role: 'ZABAL', points: '2610 pts' },
-        { rank: 3, name: 'ziad elsayed', role: 'frontend', points: '2495 pts' },
-      ]
-    : [];
+  const internNameOf = (id: string): string => {
+    const f = interns.find((i) => i._id === id);
+    return f ? `${f.firstName} ${f.lastName}`.trim() || f.email : id.slice(-6).toUpperCase();
+  };
+
+  const openBroadcast = async (groupId: string) => {
+    if (!company?._id) return;
+    setOpeningId(groupId);
+    try {
+      const res = await taskService.listByGroup(company._id, groupId);
+      const rows = res.tasks;
+      if (rows.length === 0) {
+        toastHelper.error('No tasks in this group yet');
+        return;
+      }
+      const first = rows[0];
+      const iid = typeof first.internId === 'string' ? first.internId : '';
+      router.push(`/company/admin/tasks/${first._id}?groupId=${groupId}&internId=${iid}`);
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setOpeningId('');
+    }
+  };
+
+  const topPerformers = [...interns]
+    .sort((a, b) => (b.totalPoints ?? 0) - (a.totalPoints ?? 0))
+    .slice(0, 3)
+    .map((i, idx) => ({
+      rank: idx + 1,
+      _id: i._id,
+      name: `${i.firstName} ${i.lastName}`.trim() || i.email,
+      email: i.email,
+      role: i.headline || 'Intern',
+      points: `${(i.totalPoints ?? 0).toLocaleString()} pts`,
+      src: i.profilePicture?.secure_url,
+      firstName: i.firstName,
+      lastName: i.lastName,
+    }));
+
+  const activityFeed = [
+    ...recentTasks
+      .filter((t) => t.status === 'complete')
+      .slice(0, 4)
+      .map((t) => ({
+        key: `t-${t._id}`,
+        title: 'Task Completed',
+        time: timeAgo(t.reviewedAt || t.updatedAt),
+        detail: `${internNameOf(typeof t.internId === 'string' ? t.internId : '')} completed "${t.title}"`,
+        ts: +new Date(t.reviewedAt || t.updatedAt || t.createdAt),
+      })),
+    ...recentEvals.slice(0, 4).map((e) => ({
+      key: `e-${e._id}`,
+      title: e.sharedWithIntern ? 'Evaluation Shared' : 'Evaluation Submitted',
+      time: timeAgo(e.sharedAt || e.evaluatedAt),
+      detail: `${internNameOf(e.internId)} received ${e.overallScore}/100`,
+      ts: +new Date(e.sharedAt || e.evaluatedAt),
+    })),
+  ]
+    .sort((a, b) => b.ts - a.ts)
+    .slice(0, 6);
 
   return (
-    <div className="flex bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Dashboard" />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar
           title="Dashboard Overview"
           actions={
-            <button className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600">
+            <Link
+              href="/company/post-internship"
+              className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600"
+            >
               <Plus size={16} /> New Internship
-            </button>
+            </Link>
           }
         />
 
@@ -221,57 +311,59 @@ export default function AdminDashboardScreen() {
               </div>
 
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 lg:col-span-2">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 lg:col-span-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold text-slate-900">Internship Performance</h3>
-                      <p className="text-sm text-slate-500">Visual overview of active vs completed metrics</p>
-                    </div>
-                    <div className="flex rounded-lg border border-slate-200 p-0.5 text-xs">
-                      <button
-                        onClick={() => setPerfRange('weekly')}
-                        className={`rounded-md px-3 py-1.5 ${
-                          perfRange === 'weekly' ? 'bg-slate-900 text-white font-medium' : 'text-slate-500'
-                        }`}
-                      >
-                        Weekly
-                      </button>
-                      <button
-                        onClick={() => setPerfRange('monthly')}
-                        className={`rounded-md px-3 py-1.5 ${
-                          perfRange === 'monthly' ? 'bg-slate-900 font-medium text-white' : 'text-slate-500'
-                        }`}
-                      >
-                        Monthly
-                      </button>
+                      <h3 className="text-lg font-semibold text-slate-900">Task Completions</h3>
+                      <p className="text-sm text-slate-500">Completed tasks per month · last 6 months</p>
                     </div>
                   </div>
 
                   <div className="mt-6">
-                    <PerformanceChart data={perfRange === 'weekly' ? PERFORMANCE_WEEKLY : PERFORMANCE_MONTHLY} />
+                    <PerformanceChart data={monthlyDone.length > 0 ? monthlyDone : [{ label: '—', value: 0 }]} />
                   </div>
                   <div className="mt-4 flex gap-6 text-xs text-slate-500">
-                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Active Interns</span>
-                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-800" /> Completed Tasks</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Completed Tasks</span>
                   </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-6">
                   <h3 className="text-lg font-semibold text-slate-900">Upcoming Deadlines</h3>
                   <div className="mt-4 space-y-3">
-                    {DEADLINES.map((d) => (
-                      <div key={d.title} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3">
-                        <div className={`flex h-11 w-11 flex-col items-center justify-center rounded-lg text-[10px] font-semibold ${d.chip}`}>
-                          {d.date.split(' ')[0]}
-                          <span className="text-[9px] font-normal">{d.date.split(' ')[1]}</span>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-slate-900">{d.title}</p>
-                          <p className="text-xs text-slate-400">{d.tag}</p>
-                        </div>
-                        <MoreHorizontal size={16} className="text-slate-300" />
-                      </div>
-                    ))}
+                    {upcoming.length === 0 ? (
+                      <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-400">
+                        No open tasks with due dates.
+                      </p>
+                    ) : (
+                      upcoming.map((b) => {
+                        const d = new Date(b.dueDate as string);
+                        const done = b.members.filter((m) => m.status === 'complete').length;
+                        return (
+                          <button
+                            key={b.taskGroupId}
+                            onClick={() => openBroadcast(b.taskGroupId)}
+                            disabled={openingId === b.taskGroupId}
+                            className="flex w-full items-center gap-3 rounded-xl border border-slate-100 p-3 text-left hover:bg-slate-50 disabled:opacity-60"
+                          >
+                            <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-amber-50 text-[10px] font-semibold text-amber-600">
+                              {d.toLocaleDateString('en-US', { day: '2-digit' }).toUpperCase()}
+                              <span className="text-[9px] font-normal">{d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}</span>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium text-slate-900">{b.title}</p>
+                              <p className="truncate text-xs text-slate-400">
+                                Group · {b.totalMembers} member(s) · {done} done
+                              </p>
+                            </div>
+                            {openingId === b.taskGroupId ? (
+                              <Loader2 size={16} className="shrink-0 animate-spin text-slate-400" />
+                            ) : (
+                              <MoreHorizontal size={16} className="shrink-0 text-slate-300" />
+                            )}
+                          </button>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </div>
@@ -288,12 +380,12 @@ export default function AdminDashboardScreen() {
                     ) : (
                       programs.slice(0, 4).map((p) => (
                         <div key={p._id}>
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-slate-900">{p.name}</p>
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate font-medium text-slate-900">{p.name}</p>
                               <p className="text-xs text-slate-400">{p.internIds.length} Interns</p>
                             </div>
-                            <p className="text-sm font-medium text-emerald-600 capitalize">{p.status}</p>
+                            <p className="shrink-0 text-sm font-medium capitalize text-emerald-600">{p.status}</p>
                           </div>
                         </div>
                       ))
@@ -305,30 +397,32 @@ export default function AdminDashboardScreen() {
                   <h3 className="text-lg font-semibold text-slate-900">Top Performers</h3>
                   <div className="mt-4 space-y-3">
                     {topPerformers.length === 0 ? (
-                      <p className="text-sm text-slate-400">No ranked interns yet.</p>
+                      <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-400">No ranked interns yet.</p>
                     ) : (
                       topPerformers.map((p) => (
-                        <div key={p.rank} className="flex items-center gap-3">
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">{p.rank}</span>
-                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
-                            {p.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}
+                        <Link key={p._id} href={`/company/admin/interns/${p._id}`} className="flex items-center gap-3 rounded-xl p-1 hover:bg-slate-50">
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">{p.rank}</span>
+                          <InternAvatar
+                            src={p.src}
+                            firstName={p.firstName}
+                            lastName={p.lastName}
+                            email={p.email}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-slate-900">{p.name}</p>
+                            <p className="truncate text-xs text-slate-400">{p.role}</p>
                           </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-slate-900">{p.name}</p>
-                            <p className="text-xs text-slate-400">{p.role}</p>
-                          </div>
-                          <div className="text-right text-xs">
+                          <div className="shrink-0 text-right text-xs">
                             <p className="flex items-center gap-1 font-semibold text-emerald-600">
                               <Trophy size={12} /> {p.points}
                             </p>
-                            <p className="text-slate-400">Top 5%</p>
                           </div>
-                        </div>
+                        </Link>
                       ))
                     )}
-                    <button className="mt-2 w-full rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+                    <Link href="/company/admin/leaderboard" className="mt-2 block w-full rounded-lg border border-slate-200 py-2 text-center text-sm font-medium text-slate-600 hover:bg-slate-50">
                       View Full Leaderboard
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -336,19 +430,20 @@ export default function AdminDashboardScreen() {
               <div className="rounded-2xl border border-slate-200 bg-white p-6">
                 <h3 className="text-lg font-semibold text-slate-900">Recent Activity</h3>
                 <div className="mt-4 divide-y divide-slate-100">
-                  {ACTIVITY.map((a) => (
-                    <div key={a.detail} className="flex items-center justify-between py-3">
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{a.title}</p>
-                        <p className="text-xs text-slate-400">{a.detail}</p>
+                  {activityFeed.length === 0 ? (
+                    <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-400">No recent activity yet.</p>
+                  ) : (
+                    activityFeed.map((a) => (
+                      <div key={a.key} className="flex items-center justify-between gap-3 py-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-slate-900">{a.title}</p>
+                          <p className="truncate text-xs text-slate-400">{a.detail}</p>
+                        </div>
+                        <span className="shrink-0 text-xs text-slate-400">{a.time}</span>
                       </div>
-                      <span className="text-xs text-slate-400">{a.time}</span>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
-                <button className="mt-2 text-sm font-medium text-slate-500 hover:text-slate-700">
-                  Show older activity
-                </button>
               </div>
             </>
           )}

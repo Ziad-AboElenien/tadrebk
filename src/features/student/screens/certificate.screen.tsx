@@ -31,7 +31,7 @@ export default function CertificateScreen() {
   const logoBlank = useBlankImage(logoUrl);
 
   if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>;
-  if (!internship) return <div className="text-center py-20 text-gray-500">Invalid certificate link.</div>;
+  if (!internship) return <div className="text-center py-20 text-slate-500">Invalid certificate link.</div>;
 
   const company = (internship.companyId as any)?._id
     ? (internship.companyId as any)
@@ -92,17 +92,17 @@ export default function CertificateScreen() {
 
               {/* Body */}
               <div className="text-center max-w-2xl mx-auto">
-                <p className="text-sm text-gray-500 font-medium tracking-wide mb-1">This certifies that</p>
-                <p className="text-2xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight break-words" style={{ fontFamily: 'Georgia, serif' }}>
+                <p className="text-sm text-slate-500 font-medium tracking-wide mb-1">This certifies that</p>
+                <p className="text-2xl sm:text-4xl font-bold text-slate-900 mb-3 tracking-tight break-words" style={{ fontFamily: 'Georgia, serif' }}>
                   {studentName}
                 </p>
                 <div className="w-16 h-0.5 bg-amber-400/60 mx-auto mb-4" />
-                <p className="text-gray-500 text-sm leading-relaxed">
+                <p className="text-slate-500 text-sm leading-relaxed">
                   has successfully completed the internship program
                 </p>
-                <p className="text-lg sm:text-xl font-bold text-gray-800 mt-1 mb-4">{internship.title}</p>
-                <p className="text-gray-500 text-sm leading-relaxed">
-                  at <span className="font-bold text-gray-800">{companyName}</span>
+                <p className="text-lg sm:text-xl font-bold text-slate-800 mt-1 mb-4">{internship.title}</p>
+                <p className="text-slate-500 text-sm leading-relaxed">
+                  at <span className="font-bold text-slate-800">{companyName}</span>
                 </p>
               </div>
 
@@ -118,15 +118,15 @@ export default function CertificateScreen() {
               {/* Footer */}
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Issue Date</p>
-                  <p className="text-sm font-semibold text-gray-700 mt-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Issue Date</p>
+                  <p className="text-sm font-semibold text-slate-700 mt-1">
                     {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </p>
                 </div>
                 <div className="text-right">
                   <div className="w-32 h-px bg-gray-300 mb-1 ml-auto" />
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">Authorized Signature</p>
-                  <p className="text-sm font-semibold text-gray-700 mt-1">{companyName}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Authorized Signature</p>
+                  <p className="text-sm font-semibold text-slate-700 mt-1">{companyName}</p>
                 </div>
               </div>
             </div>
@@ -144,7 +144,7 @@ export default function CertificateScreen() {
         </button>
         <Link
           href="/my-applications"
-          className="rounded-2xl bg-white px-8 py-3 text-sm font-bold text-gray-600 shadow-lg border border-gray-200 hover:bg-gray-50 transition text-center"
+          className="rounded-2xl bg-white px-8 py-3 text-sm font-bold text-slate-600 shadow-lg border border-slate-200 hover:bg-slate-50 transition text-center"
         >
           Back
         </Link>

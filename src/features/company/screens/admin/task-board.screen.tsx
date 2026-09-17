@@ -2,33 +2,42 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Search,
-  ArrowUpDown,
-  Filter,
   Plus,
   Circle,
   PlayCircle,
   Clock,
   CheckCircle2,
-  MoreHorizontal,
-  MoreVertical,
   Calendar,
+  Loader2,
+  Users2,
+  Filter,
+  ArrowUpDown,
+  Check,
   MessageSquare,
+  MoreHorizontal,
+  Trash2,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
-import { taskService } from '@/features/company/services/task.service';
+import ConfirmModal from '@/components/ui/ConfirmModal';
+import Select from '@/components/ui/Select';
+import { taskService, BroadcastCard } from '@/features/company/services/task.service';
 import { internService } from '@/features/company/services/intern.service';
 import { Task, TaskStatus, Intern } from '@/features/company/types/management';
+import InternAvatar from '@/components/ui/InternAvatar';
+import GlassFilter from '@/components/ui/GlassFilter';
+import { priorityTheme } from '@/features/company/utils/taskPriorityTheme';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
 const PRIORITY_STYLES: Record<string, string> = {
-  HIGH: 'bg-rose-50 text-rose-500',
-  MEDIUM: 'bg-amber-50 text-amber-600',
-  LOW: 'bg-emerald-50 text-emerald-600',
+  high: 'bg-rose-50 text-rose-500',
+  medium: 'bg-amber-50 text-amber-600',
+  low: 'bg-emerald-50 text-emerald-600',
 };
 
 const STATUS_ORDER: { key: TaskStatus; title: string; icon: typeof Circle; iconColor: string }[] = [
@@ -38,75 +47,60 @@ const STATUS_ORDER: { key: TaskStatus; title: string; icon: typeof Circle; iconC
   { key: 'complete', title: 'Complete', icon: CheckCircle2, iconColor: 'text-emerald-500' },
 ];
 
-function formatDue(dateStr: string): string {
+const STATUS_RANK: Record<string, number> = {
+  todo: 0,
+  in_progress: 1,
+  in_review: 2,
+  complete: 3,
+};
+
+function formatDue(dateStr?: string | null): string {
+  if (!dateStr) return '—';
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function TaskCard({ task, internId }: { task: Task; internId?: string }) {
-  const priority = task.priority ? task.priority.toUpperCase() : '';
-  const points = task.pointsAwarded != null ? `${task.pointsAwarded} pts` : null;
-  const isBroadcast = Boolean(task.taskGroupId);
-  return (
-    <Link href={internId ? `/company/admin/tasks/${task._id}?internId=${internId}` : `/company/admin/tasks/${task._id}`} className="block rounded-xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-sm">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-400">{task._id.slice(-8).toUpperCase()}</span>
-        <div className="flex items-center gap-1.5">
-          {isBroadcast && (
-            <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
-              Group
-            </span>
-          )}
-          {priority && (
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${PRIORITY_STYLES[priority] || 'bg-slate-100 text-slate-500'}`}>
-              {priority}
-            </span>
-          )}
-        </div>
-      </div>
-      <p className="mt-2 text-sm font-semibold text-slate-900">{task.title}</p>
-      {task.description && <p className="mt-1 text-xs text-slate-400 line-clamp-2">{task.description}</p>}
-      {(task.tags || []).length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {task.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-600">
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-      <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
-        <div className="flex items-center gap-3 text-xs text-slate-400">
-          <span className="flex items-center gap-1"><Calendar size={13} /> {formatDue(task.dueDate)}</span>
-          {points && <span className="flex items-center gap-1 text-emerald-600">{points}</span>}
-        </div>
-        <div className="flex items-center gap-1 text-slate-300">
-          <MessageSquare size={13} />
-          <MoreVertical size={16} />
-        </div>
-      </div>
-    </Link>
-  );
+function idOf(v: unknown): string {
+  return typeof v === 'string' ? v : ((v as { _id?: unknown } | null)?._id as string) || '';
 }
 
 export default function TaskBoardScreen() {
+  const router = useRouter();
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
-  const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [broadcasts, setBroadcasts] = useState<BroadcastCard[]>([]);
+  const [singles, setSingles] = useState<Task[]>([]);
   const [interns, setInterns] = useState<Intern[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [internFilter, setInternFilter] = useState('');
+  const [opening, setOpening] = useState('');
+  const [colMenu, setColMenu] = useState<TaskStatus | null>(null);
+  const [confirmBulk, setConfirmBulk] = useState<{ action: 'archive' | 'complete'; status: TaskStatus } | null>(null);
+  const [bulking, setBulking] = useState(false);
+  const [view, setView] = useState<'board' | 'list'>('board');
+  const [priorityFilter, setPriorityFilter] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<'default' | 'due' | 'title' | 'priority'>('default');
+  const [filterOpen, setFilterOpen] = useState(false);
 
-  const fetchTasks = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     if (!companyId) return;
     setLoading(true);
     try {
-      const [taskRes, internRes] = await Promise.all([
+      const all: BroadcastCard[] = [];
+      let page = 1;
+      for (;;) {
+        const res = await taskService.listBroadcasts(companyId, { page, limit: 100 });
+        all.push(...res.broadcasts);
+        if (page >= (res.pagination.pages || 1)) break;
+        page += 1;
+      }
+      const [tRes, iRes] = await Promise.all([
         taskService.listTasks(companyId, { limit: 100 }),
         internService.listAllInterns(companyId),
       ]);
-      setAllTasks(taskRes.tasks);
-      setInterns(internRes);
+      setBroadcasts(all);
+      setSingles(tRes.tasks.filter((t) => !t.taskGroupId && t.status !== 'archived'));
+      setInterns(iRes);
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     } finally {
@@ -115,49 +109,146 @@ export default function TaskBoardScreen() {
   }, [companyId]);
 
   useEffect(() => {
-    const t = setTimeout(fetchTasks, 0);
+    const t = setTimeout(fetchAll, 0);
     return () => clearTimeout(t);
-  }, [fetchTasks]);
+  }, [fetchAll]);
+
+  const internMap = useMemo(() => new Map(interns.map((i) => [i._id, i])), [interns]);
+
+  const activeFilterCount =
+    (internFilter ? 1 : 0) + priorityFilter.length + (sortBy !== 'default' ? 1 : 0);
+
+  const runBulkColumn = async () => {
+    if (!companyId || !confirmBulk) return;
+    setBulking(true);
+    try {
+      const items = columns[confirmBulk.status];
+      const ids: string[] = [];
+      for (const item of items) {
+        if (item.kind === 'single') {
+          ids.push(item.task._id);
+        } else {
+          try {
+            const res = await taskService.listByGroup(companyId, item.card.taskGroupId);
+            res.tasks.forEach((t) => ids.push(t._id));
+          } catch {
+            // skip groups that fail to load
+          }
+        }
+      }
+      if (ids.length === 0) {
+        toastHelper.error('No tasks to update in this column');
+        return;
+      }
+      const results = await Promise.allSettled(
+        ids.map((id) =>
+          confirmBulk.action === 'archive'
+            ? taskService.archiveTask(companyId, id)
+            : taskService.transitionTask(companyId, id, { to: 'complete' }),
+        ),
+      );
+      const ok = results.filter((r) => r.status === 'fulfilled').length;
+      const fail = results.length - ok;
+      toastHelper.success(
+        fail > 0 ? `${ok} updated · ${fail} failed` : `${ok} task(s) ${confirmBulk.action === 'archive' ? 'archived' : 'marked complete'}`,
+      );
+      setConfirmBulk(null);
+      setColMenu(null);
+      fetchAll();
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setBulking(false);
+    }
+  };
+
+  const openBroadcast = async (groupId: string) => {
+    if (!companyId) return;
+    setOpening(groupId);
+    try {
+      const res = await taskService.listByGroup(companyId, groupId);
+      const rows = res.tasks;
+      if (rows.length === 0) {
+        toastHelper.error('No tasks in this group yet');
+        return;
+      }
+      const first = rows[0];
+      router.push(`/company/admin/tasks/${first._id}?groupId=${groupId}&internId=${idOf(first.internId)}`);
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setOpening('');
+    }
+  };
 
   const columns = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const visible = allTasks.filter((t) => {
-      if (internFilter && t.internId !== internFilter) return false;
-      if (!q) return true;
-      const haystack = [t.title, t.description, (t.tags || []).join(' ')].join(' ').toLowerCase();
-      return haystack.includes(q);
-    });
-    const grouped: Record<TaskStatus, Task[]> = {
+    const matchPriority = (p?: string | null) =>
+      priorityFilter.length === 0 || (p != null && priorityFilter.includes(p));
+    const grouped: Record<TaskStatus, ({ kind: 'group'; card: BroadcastCard } | { kind: 'single'; task: Task })[]> = {
       todo: [],
       in_progress: [],
       in_review: [],
       complete: [],
       archived: [],
     };
-    visible.forEach((t) => {
-      if (grouped[t.status]) grouped[t.status].push(t);
-      else grouped.todo.push({ ...t, status: 'todo' });
+    broadcasts.forEach((b) => {
+      if (internFilter && !b.members.some((m) => m.internId === internFilter)) return;
+      if (!matchPriority(b.priority)) return;
+      if (q && !`${b.title} ${b.description || ''}`.toLowerCase().includes(q)) return;
+      const statuses = b.members.map((m) => m.status).filter((s) => s in grouped);
+      const rank = statuses.length > 0 ? Math.min(...statuses.map((s) => STATUS_RANK[s] ?? 0)) : 0;
+      const key = (Object.keys(STATUS_RANK).find((k) => STATUS_RANK[k] === rank) || 'todo') as TaskStatus;
+      grouped[key].push({ kind: 'group', card: b });
+    });
+    singles.forEach((t) => {
+      if (internFilter && idOf(t.internId) !== internFilter) return;
+      if (!matchPriority(t.priority)) return;
+      if (q && !`${t.title} ${t.description || ''} ${(t.tags || []).join(' ')}`.toLowerCase().includes(q)) return;
+      if (grouped[t.status]) grouped[t.status].push({ kind: 'single', task: t });
+    });
+    const prioRank: Record<string, number> = { high: 0, medium: 1, low: 2 };
+    const sortFn = (a: { due?: string | null; title: string; prio?: string | null }, b: { due?: string | null; title: string; prio?: string | null }) => {
+      if (sortBy === 'due') {
+        const da = a.due ? new Date(a.due).getTime() : Number.MAX_SAFE_INTEGER;
+        const db = b.due ? new Date(b.due).getTime() : Number.MAX_SAFE_INTEGER;
+        return da - db;
+      }
+      if (sortBy === 'title') return a.title.localeCompare(b.title);
+      if (sortBy === 'priority') return (prioRank[a.prio || ''] ?? 3) - (prioRank[b.prio || ''] ?? 3);
+      return 0;
+    };
+    (Object.keys(grouped) as TaskStatus[]).forEach((k) => {
+      grouped[k].sort((a, b) =>
+        sortFn(
+          a.kind === 'group'
+            ? { due: a.card.dueDate, title: a.card.title, prio: a.card.priority }
+            : { due: a.task.dueDate, title: a.task.title, prio: a.task.priority },
+          b.kind === 'group'
+            ? { due: b.card.dueDate, title: b.card.title, prio: b.card.priority }
+            : { due: b.task.dueDate, title: b.task.title, prio: b.task.priority },
+        ),
+      );
     });
     return grouped;
-  }, [allTasks, search, internFilter]);
+  }, [broadcasts, singles, search, internFilter, priorityFilter, sortBy]);
+
+  const activeIntern = internFilter ? internMap.get(internFilter) : undefined;
 
   return (
-    <div className="flex bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Tasks" />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Task Board" />
 
         <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold text-slate-900">
-                {internFilter
-                  ? `Tasks · ${(() => {
-                      const f = interns.find((i) => i._id === internFilter);
-                      return f ? `${f.firstName} ${f.lastName}`.trim() : 'Student';
-                    })()}`
-                  : 'Project Sprint: Oct 2024'}
+            <div className="min-w-0">
+              <h2 className="truncate text-2xl font-semibold text-slate-900">
+                {activeIntern
+                  ? `Tasks · ${`${activeIntern.firstName} ${activeIntern.lastName}`.trim() || activeIntern.email}`
+                  : 'Tasks Board'}
               </h2>
               <p className="text-sm text-slate-500">Track intern contributions and project milestones in real-time.</p>
             </div>
@@ -171,29 +262,135 @@ export default function TaskBoardScreen() {
                   className="rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                 />
               </div>
-              <select
-                value={internFilter}
-                onChange={(e) => setInternFilter(e.target.value)}
-                className="max-w-[200px] cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-emerald-400"
-                aria-label="Filter by intern"
-              >
-                <option value="">All interns</option>
-                {interns.map((i) => (
-                  <option key={i._id} value={i._id}>
-                    {`${i.firstName} ${i.lastName}`.trim() || i.email}
-                  </option>
-                ))}
-              </select>
-              <div className="flex rounded-lg border border-slate-200 bg-white p-1 text-sm">
-                <button className="rounded-md bg-slate-100 px-3 py-1.5 font-medium text-slate-900">Board View</button>
-                <button className="rounded-md px-3 py-1.5 text-slate-500">List View</button>
+              <GlassFilter
+                options={[
+                  { key: 'board', label: 'Board View' },
+                  { key: 'list', label: 'List View' },
+                ]}
+                value={view}
+                onChange={(key) => setView(key as 'board' | 'list')}
+                ariaLabel="Switch view"
+              />
+              <div className="relative">
+                <button
+                  onClick={() => setFilterOpen((o) => !o)}
+                  className={`flex items-center gap-1.5 rounded-lg border bg-white px-3 py-2 text-sm hover:bg-slate-50 ${
+                    activeFilterCount > 0 ? 'border-emerald-300 text-emerald-600' : 'border-slate-200 text-slate-600'
+                  }`}
+                >
+                  <Filter size={15} /> Filter
+                  {activeFilterCount > 0 && (
+                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-semibold text-white">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+                {filterOpen && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setFilterOpen(false)} />
+                    <div className="absolute right-0 top-full z-40 mt-2 w-80 max-w-[88vw] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/60">
+                      <div className="flex items-center justify-between bg-slate-50/80 px-4 py-3">
+                        <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                          <Filter size={14} className="text-emerald-500" /> Filters
+                        </p>
+                        {activeFilterCount > 0 && (
+                          <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+                            {activeFilterCount} active
+                          </span>
+                        )}
+                      </div>
+                      <div className="max-h-[60vh] space-y-4 overflow-y-auto p-4">
+                        <div>
+                          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                            <Users2 size={12} /> Intern
+                          </p>
+                          <Select
+                            value={internFilter}
+                            onChange={(e) => setInternFilter(e.target.value)}
+                            placeholder="All interns"
+                            className="mt-2"
+                          >
+                            <option value="">All interns</option>
+                            {interns.map((i) => (
+                              <option key={i._id} value={i._id}>
+                                {`${i.firstName} ${i.lastName}`.trim() || i.email}
+                              </option>
+                            ))}
+                          </Select>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Priority</p>
+                          <div className="mt-2 grid grid-cols-3 gap-1.5">
+                            {['high', 'medium', 'low'].map((p) => (
+                              <button
+                                key={p}
+                                onClick={() =>
+                                  setPriorityFilter((prev) =>
+                                    prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p],
+                                  )
+                                }
+                                className={`rounded-xl border px-3 py-2 text-sm capitalize transition-all ${
+                                  priorityFilter.includes(p)
+                                    ? 'border-emerald-300 bg-emerald-50 font-medium text-emerald-700 shadow-sm'
+                                    : 'border-slate-100 bg-white text-slate-600 hover:border-slate-200 hover:bg-slate-50'
+                                }`}
+                              >
+                                <span className="flex items-center justify-center gap-1">
+                                  {p}
+                                  {priorityFilter.includes(p) && <Check size={13} className="shrink-0" />}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                            <ArrowUpDown size={12} /> Sort by
+                          </p>
+                          <div className="mt-2 space-y-1">
+                            {[
+                              { key: 'default', label: 'Default order' },
+                              { key: 'due', label: 'Due date' },
+                              { key: 'title', label: 'Title A–Z' },
+                              { key: 'priority', label: 'Priority' },
+                            ].map((o) => (
+                              <button
+                                key={o.key}
+                                onClick={() => setSortBy(o.key as typeof sortBy)}
+                                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                                  sortBy === o.key ? 'bg-emerald-50 font-medium text-emerald-700' : 'text-slate-600 hover:bg-slate-50'
+                                }`}
+                              >
+                                {o.label}
+                                {sortBy === o.key && <Check size={14} className="shrink-0" />}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-4 py-3">
+                        <button
+                          onClick={() => {
+                            setPriorityFilter([]);
+                            setInternFilter('');
+                            setSortBy('default');
+                          }}
+                          disabled={activeFilterCount === 0}
+                          className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-rose-500 disabled:opacity-40"
+                        >
+                          Clear all
+                        </button>
+                        <button
+                          onClick={() => setFilterOpen(false)}
+                          className="rounded-lg bg-emerald-500 px-5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-emerald-600"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
-              <button className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
-                <Filter size={15} /> Filter
-              </button>
-              <button className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
-                <ArrowUpDown size={15} /> Sort
-              </button>
               <Link
                 href="/company/admin/tasks/new"
                 className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600"
@@ -216,19 +413,24 @@ export default function TaskBoardScreen() {
                   </div>
                   <div className="space-y-3">
                     {[0, 1, 2].map((card) => (
-                      <div key={card} className="rounded-xl border border-slate-200 bg-white p-4">
-                        <div className="space-y-2">
-                          <div className="h-3.5 w-full rounded-full bg-slate-200" />
-                          <div className="h-3.5 w-3/4 rounded-full bg-slate-200" />
-                        </div>
-                        <div className="mt-3 flex gap-2">
-                          <div className="h-5 w-20 rounded-full bg-slate-200" />
-                          <div className="h-5 w-16 rounded-full bg-slate-200" />
-                        </div>
-                        <div className="mt-4 flex items-center gap-3 border-t border-slate-100 pt-3">
-                          <div className="h-7 w-7 rounded-full bg-slate-200" />
-                          <div className="h-2.5 w-20 rounded-full bg-slate-200" />
-                          <div className="ml-auto h-2.5 w-12 rounded-full bg-slate-200" />
+                      <div key={card} className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                        <div className="h-1.5 w-full bg-slate-200" />
+                        <div className="p-4">
+                          <div className="space-y-2">
+                            <div className="h-3.5 w-full rounded-full bg-slate-200" />
+                            <div className="h-3.5 w-3/4 rounded-full bg-slate-200" />
+                          </div>
+                          <div className="mt-3">
+                            <div className="h-1.5 rounded-full bg-slate-100" />
+                          </div>
+                          <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
+                            <div className="flex -space-x-1.5">
+                              <div className="h-6 w-6 rounded-full border-2 border-white bg-slate-200" />
+                              <div className="h-6 w-6 rounded-full border-2 border-white bg-slate-200" />
+                              <div className="h-6 w-6 rounded-full border-2 border-white bg-slate-200" />
+                            </div>
+                            <div className="ml-auto h-2.5 w-12 rounded-full bg-slate-200" />
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -236,6 +438,125 @@ export default function TaskBoardScreen() {
                 </div>
               ))}
             </div>
+          ) : view === 'list' ? (
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+              {(Object.keys(columns) as TaskStatus[])
+                .filter((k) => k !== 'archived')
+                .flatMap((k) => columns[k]).length === 0 ? (
+                <p className="p-6 text-center text-sm text-slate-400">No tasks found.</p>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {(Object.keys(columns) as TaskStatus[])
+                    .filter((k) => k !== 'archived')
+                    .flatMap((k) => columns[k])
+                    .map((item) =>
+                      item.kind === 'group' ? (
+                        <button
+                          key={item.card.taskGroupId}
+                          onClick={() => openBroadcast(item.card.taskGroupId)}
+                          disabled={opening === item.card.taskGroupId}
+                          style={{ borderLeftColor: priorityTheme(item.card.priority).banner }}
+                          className={`flex w-full flex-wrap items-center gap-3 border-l-4 px-4 py-3.5 text-left transition-shadow hover:shadow-sm disabled:opacity-60 sm:flex-nowrap ${priorityTheme(item.card.priority).cardBg}`}
+                        >
+                          <div className="flex min-w-0 flex-1 items-center gap-3">
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 font-semibold text-indigo-600">
+                              {opening === item.card.taskGroupId ? (
+                                <Loader2 size={16} className="animate-spin" />
+                              ) : (
+                                <Users2 size={16} />
+                              )}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-semibold text-slate-900">
+                                {item.card.title}
+                                <span className="ml-2 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
+                                  Group · {item.card.totalMembers}
+                                </span>
+                              </span>
+                              <span className="mt-0.5 block truncate text-xs text-slate-400">
+                                {item.card.description || 'No description'}
+                              </span>
+                              <span className="mt-1.5 flex items-center gap-2">
+                                <span className="flex -space-x-1.5">
+                                  {item.card.members.slice(0, 4).map((m) => (
+                                    <InternAvatar
+                                      key={m.internId}
+                                      src={m.intern?.profilePicture}
+                                      firstName={m.intern?.firstName}
+                                      lastName={m.intern?.lastName}
+                                      email={m.intern?.email}
+                                      className="h-5 w-5 border border-white text-[7px]"
+                                    />
+                                  ))}
+                                </span>
+                                <span className="text-[11px] text-slate-400">
+                                  {item.card.members.filter((m) => m.status === 'complete').length}/{item.card.totalMembers} done
+                                </span>
+                                {item.card.priority && (
+                                  <span className={`rounded-full px-1.5 py-px text-[10px] font-semibold uppercase ${PRIORITY_STYLES[item.card.priority] || 'bg-slate-100 text-slate-500'}`}>
+                                    {item.card.priority}
+                                  </span>
+                                )}
+                              </span>
+                            </span>
+                          </div>
+                          <span className="flex shrink-0 items-center gap-2 text-xs text-slate-400">
+                            <Calendar size={13} /> {formatDue(item.card.dueDate)}
+                          </span>
+                        </button>
+                      ) : (
+                        <Link
+                          key={item.task._id}
+                          href={`/company/admin/tasks/${item.task._id}?internId=${idOf(item.task.internId)}`}
+                          style={{ borderLeftColor: priorityTheme(item.task.priority).banner }}
+                          className={`flex w-full flex-wrap items-center gap-3 border-l-4 px-4 py-3.5 transition-shadow hover:shadow-sm sm:flex-nowrap ${priorityTheme(item.task.priority).cardBg}`}
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold text-slate-900">{item.task.title}</span>
+                            <span className="mt-0.5 block truncate text-xs text-slate-400">
+                              {(() => {
+                                const f = internMap.get(idOf(item.task.internId));
+                                return f ? `${`${f.firstName} ${f.lastName}`.trim() || f.email} · ` : '';
+                              })()}
+                              {item.task.description || 'No description'}
+                            </span>
+                            {(item.task.tags || []).length > 0 && (
+                              <span className="mt-1.5 flex flex-wrap gap-1">
+                                {item.task.tags.slice(0, 3).map((tag) => (
+                                  <span key={tag} className="rounded-full bg-emerald-50 px-2 py-px text-[10px] font-medium text-emerald-600">
+                                    {tag}
+                                  </span>
+                                ))}
+                              </span>
+                            )}
+                          </span>
+                          <span className="flex shrink-0 items-center gap-2">
+                            {item.task.priority && (
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${PRIORITY_STYLES[item.task.priority] || 'bg-slate-100 text-slate-500'}`}>
+                                {item.task.priority}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1 text-xs text-slate-400">
+                              <Calendar size={13} /> {formatDue(item.task.dueDate)}
+                            </span>
+                            {item.task.pointsAwarded != null && (
+                              <span className="text-xs font-semibold text-emerald-600">{item.task.pointsAwarded} pts</span>
+                            )}
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
+                              item.task.status === 'complete' ? 'bg-emerald-100 text-emerald-700'
+                              : item.task.status === 'in_review' ? 'bg-blue-100 text-blue-700'
+                              : item.task.status === 'in_progress' ? 'bg-amber-100 text-amber-700'
+                              : 'bg-slate-200 text-slate-500'
+                            }`}>
+                              {item.task.status.replace('_', ' ')}
+                            </span>
+                          </span>
+                        </Link>
+                      ),
+                    )}
+                </div>
+              )}
+            </section>
           ) : (
             <div className="grid grid-cols-1 gap-4 overflow-x-auto sm:grid-cols-2 lg:grid-cols-4">
               {STATUS_ORDER.map((col) => (
@@ -248,16 +569,83 @@ export default function TaskBoardScreen() {
                         {columns[col.key].length}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-slate-400">
-                      <button aria-label={`Add task to ${col.title}`}><Plus size={15} /></button>
-                      <button aria-label={`More options for ${col.title}`}><MoreHorizontal size={15} /></button>
+                    <div className="relative flex items-center gap-1 text-slate-400">
+                      <button
+                        aria-label={`More options for ${col.title}`}
+                        onClick={() => setColMenu((m) => (m === col.key ? null : col.key))}
+                        className="rounded-md p-1 hover:bg-slate-200/70 hover:text-slate-600"
+                      >
+                        <MoreHorizontal size={15} />
+                      </button>
+                      {colMenu === col.key && (
+                        <>
+                          <div className="fixed inset-0 z-30" onClick={() => setColMenu(null)} />
+                          <div className="absolute right-0 top-full z-40 mt-1.5 w-48 rounded-xl border border-slate-200 bg-white py-1.5 text-left shadow-xl">
+                            {col.key !== 'complete' && columns[col.key].length > 0 && (
+                              <button
+                                onClick={() => {
+                                  setConfirmBulk({ action: 'complete', status: col.key });
+                                  setColMenu(null);
+                                }}
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50"
+                              >
+                                <CheckCircle2 size={14} /> Mark all complete
+                              </button>
+                            )}
+                            {columns[col.key].length > 0 && (
+                              <button
+                                onClick={() => {
+                                  setConfirmBulk({ action: 'archive', status: col.key });
+                                  setColMenu(null);
+                                }}
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-rose-500 hover:bg-rose-50"
+                              >
+                                <Trash2 size={14} /> Archive all
+                              </button>
+                            )}
+                            {columns[col.key].length === 0 && (
+                              <p className="px-3 py-2 text-xs text-slate-400">No tasks in this column.</p>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    {columns[col.key].map((t) => (
-                      <TaskCard key={t._id} task={t} internId={internFilter || undefined} />
-                    ))}
+                    {columns[col.key].map((item) =>
+                      item.kind === 'group' ? (
+                        <GroupCard
+                          key={item.card.taskGroupId}
+                          card={item.card}
+                          opening={opening === item.card.taskGroupId}
+                          onOpen={() => openBroadcast(item.card.taskGroupId)}
+                        />
+                      ) : (
+                        <Link
+                          key={item.task._id}
+                          href={`/company/admin/tasks/${item.task._id}?internId=${idOf(item.task.internId)}`}
+                          className={`block overflow-hidden rounded-xl border border-slate-200 ${priorityTheme(item.task.priority).cardBg} transition-shadow hover:shadow-md`}
+                        >
+                          <div className="h-1.5 w-full" style={{ backgroundColor: priorityTheme(item.task.priority).banner }} />
+                          <div className="p-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-medium text-slate-400">{item.task._id.slice(-8).toUpperCase()}</span>
+                            {item.task.priority && (
+                              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${priorityTheme(item.task.priority).chip}`}>
+                                {item.task.priority.toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-2 break-words text-sm font-semibold text-slate-900">{item.task.title}</p>
+                          {item.task.description && (
+                            <p className="mt-1 break-words text-xs text-slate-400 line-clamp-2">{item.task.description}</p>
+                          )}
+                          <SingleAssignee internId={idOf(item.task.internId)} internMap={internMap} dueDate={item.task.dueDate} points={item.task.pointsAwarded} />
+                          </div>
+                        </Link>
+                      ),
+                    )}
                     <Link
                       href="/company/admin/tasks/new"
                       className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2.5 text-sm font-medium text-slate-400 hover:bg-white"
@@ -270,6 +658,153 @@ export default function TaskBoardScreen() {
             </div>
           )}
         </main>
+      </div>
+
+      <ConfirmModal
+        open={!!confirmBulk}
+        title={confirmBulk?.action === 'archive' ? 'Archive all tasks in this column?' : 'Mark all tasks in this column complete?'}
+        message="This applies to every task currently shown in the column."
+        confirmLabel={confirmBulk?.action === 'archive' ? 'Archive all' : 'Mark complete'}
+        loading={bulking}
+        onConfirm={runBulkColumn}
+        onCancel={() => setConfirmBulk(null)}
+      />
+    </div>
+  );
+}
+
+function GroupCard({
+  card,
+  opening,
+  onOpen,
+}: {
+  card: BroadcastCard;
+  opening: boolean;
+  onOpen: () => void;
+}) {
+  const members = card.members;
+  const done = members.filter((m) => m.status === 'complete').length;
+  const pct = members.length > 0 ? Math.round((done / members.length) * 100) : 0;
+  const theme = priorityTheme(card.priority);
+  return (
+    <button
+      onClick={onOpen}
+      disabled={opening}
+      className={`block w-full overflow-hidden rounded-xl border border-slate-200 ${theme.cardBg} text-left transition-shadow hover:shadow-md disabled:opacity-60`}
+    >
+      <div className="h-1.5 w-full" style={{ backgroundColor: theme.banner }} />
+      <div className="p-4">
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-1.5 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
+          <Calendar size={11} /> {formatDue(card.dueDate)}
+        </span>
+        {card.priority ? (
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${PRIORITY_STYLES[card.priority] || 'bg-slate-100 text-slate-500'}`}>
+            {card.priority.toUpperCase()}
+          </span>
+        ) : (
+          <span className="flex items-center gap-1.5 text-xs text-slate-400">
+            <MessageSquare size={13} />
+          </span>
+        )}
+      </div>
+      <p className="mt-2 break-words text-sm font-semibold text-slate-900">{card.title}</p>
+      {card.description && (
+        <p className="mt-1 break-words text-xs text-slate-400 line-clamp-2">{card.description}</p>
+      )}
+      <div className="mt-3">
+        <div className="flex items-center justify-between text-[11px] text-slate-500">
+          <span className="font-medium">{done}/{members.length} done</span>
+          <span className="font-semibold text-emerald-600">{pct}%</span>
+        </div>
+        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100">
+          <div className="h-1.5 rounded-full bg-emerald-500 transition-all" style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+        <div className="flex -space-x-2">
+          {members.slice(0, 5).map((m) => (
+            <span
+              key={m.internId}
+              title={`${m.intern ? `${m.intern.firstName} ${m.intern.lastName}`.trim() : m.internId} · ${m.status.replace('_', ' ')}`}
+              className="relative"
+            >
+              <InternAvatar
+                src={m.intern?.profilePicture}
+                firstName={m.intern?.firstName}
+                lastName={m.intern?.lastName}
+                email={m.intern?.email}
+                className="h-7 w-7 border-2 border-white text-[9px]"
+              />
+              <span
+                className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white ${
+                  m.status === 'complete' ? 'bg-emerald-500'
+                  : m.status === 'in_review' ? 'bg-blue-500'
+                  : m.status === 'in_progress' ? 'bg-amber-400'
+                  : 'bg-slate-300'
+                }`}
+              />
+            </span>
+          ))}
+          {members.length > 5 && (
+            <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-slate-100 text-[9px] font-semibold text-slate-500">
+              +{members.length - 5}
+            </span>
+          )}
+        </div>
+{opening ? (
+<Loader2 size={15} className="animate-spin text-slate-400" />
+) : (
+<span className="text-xs font-medium text-slate-400">{members.length} member{members.length === 1 ? '' : 's'}</span>
+)}
+</div>
+      </div>
+    </button>
+  );
+}
+
+function SingleAssignee({
+  internId,
+  internMap,
+  dueDate,
+  points,
+}: {
+  internId: string;
+  internMap: Map<string, Intern>;
+  dueDate?: string | null;
+  points?: number | null;
+}) {
+  const intern = internMap.get(internId);
+  return (
+    <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+      <div className="flex min-w-0 items-center gap-2">
+        {intern ? (
+          <>
+            <InternAvatar
+              src={intern.profilePicture?.secure_url}
+              firstName={intern.firstName}
+              lastName={intern.lastName}
+              email={intern.email}
+              className="h-6 w-6 text-[9px]"
+            />
+            <span className="truncate text-xs text-slate-500">
+              {`${intern.firstName} ${intern.lastName}`.trim() || intern.email}
+            </span>
+          </>
+        ) : (
+          <span className="flex items-center gap-1 text-xs text-slate-400">
+            <Calendar size={13} /> {formatDue(dueDate)}
+          </span>
+        )}
+      </div>
+      <div className="flex shrink-0 items-center gap-2 text-xs text-slate-400">
+        {intern && (
+          <span className="flex items-center gap-1">
+            <Calendar size={13} /> {formatDue(dueDate)}
+          </span>
+        )}
+        {points != null && <span className="font-medium text-emerald-600">{points} pts</span>}
+        <MessageSquare size={13} />
       </div>
     </div>
   );

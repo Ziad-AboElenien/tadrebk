@@ -66,7 +66,7 @@ export default function FilterSidebar({
     <div className="w-full md:w-64 p-6 bg-white rounded-2xl border border-gray-50 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-bold text-lg text-dark flex items-center gap-2">
-          <i className="fas fa-sliders-h text-sm text-gray-300" />
+          <i className="fas fa-sliders-h text-sm text-slate-300" />
           Filters
         </h2>
         {(filters.title || filters.type || filters.location || filters.closed) && (
@@ -79,11 +79,11 @@ export default function FilterSidebar({
       <div className="space-y-5">
         {/* Title Search */}
         <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
             Search
           </label>
           <div className="relative">
-            <i className="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 text-sm" />
+            <i className="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-sm" />
             <Input
               placeholder="Internship title..."
               value={filters.title || ''}
@@ -95,7 +95,7 @@ export default function FilterSidebar({
 
         {/* Working Time */}
         <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
             Working Time
           </label>
           <Select
@@ -111,7 +111,7 @@ export default function FilterSidebar({
 
         {/* Location */}
         <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
             Location
           </label>
           <Select
@@ -128,7 +128,7 @@ export default function FilterSidebar({
 
         {/* Status */}
         <div>
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
             Status
           </label>
           <Select

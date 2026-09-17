@@ -138,15 +138,15 @@ export default function SignupForm({ role }: SignupFormProps) {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isCompany ? 'bg-gray-100' : 'bg-emerald-50'}`}>
-            <i className={`${isCompany ? 'fas fa-building text-gray-600' : 'fas fa-graduation-cap text-primary'} text-sm`} />
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isCompany ? 'bg-slate-100' : 'bg-emerald-50'}`}>
+            <i className={`${isCompany ? 'fas fa-building text-slate-600' : 'fas fa-graduation-cap text-emerald-600'} text-sm`} />
           </div>
-          <span className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+          <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
             {isCompany ? 'Company' : 'Student'} Sign Up
           </span>
         </div>
-        <h1 className="text-3xl font-black text-dark mb-2">Create your account</h1>
-        <p className="text-gray-400 text-sm">
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Create your account</h1>
+        <p className="text-slate-400 text-sm">
           {isCompany
             ? "You'll set up your company profile after confirming your email."
             : 'Join thousands of students finding their dream internships.'}
@@ -158,7 +158,7 @@ export default function SignupForm({ role }: SignupFormProps) {
         type="button"
         id="google-signup-btn"
         onClick={signInWithGoogle}
-        className="w-full flex items-center justify-center gap-3 border-2 border-gray-100 hover:border-gray-200 bg-white py-3 rounded-xl font-semibold text-sm text-gray-700 transition-all mb-6 hover:shadow-sm"
+        className="w-full flex items-center justify-center gap-3 border-2 border-slate-100 hover:border-slate-200 bg-white py-3 rounded-xl font-semibold text-sm text-slate-700 transition-all mb-6 hover:shadow-sm"
       >
         <i className="fab fa-google text-lg" style={{ color: '#4285F4' }} />
         Continue with Google
@@ -166,9 +166,9 @@ export default function SignupForm({ role }: SignupFormProps) {
 
       {/* Divider */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="flex-1 h-px bg-gray-100" />
-        <span className="text-xs text-gray-300 font-medium">or sign up with email</span>
-        <div className="flex-1 h-px bg-gray-100" />
+        <div className="flex-1 h-px bg-slate-100" />
+        <span className="text-xs text-slate-300 font-medium">or sign up with email</span>
+        <div className="flex-1 h-px bg-slate-100" />
       </div>
 
       {/* Form */}
@@ -220,7 +220,7 @@ export default function SignupForm({ role }: SignupFormProps) {
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-slate-400 hover:text-slate-600 transition-colors"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               <i className={`fas fa-eye${showPassword ? '-slash' : ''} text-sm`} />
@@ -240,7 +240,7 @@ export default function SignupForm({ role }: SignupFormProps) {
             <button
               type="button"
               onClick={() => setShowConfirm((s) => !s)}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-slate-400 hover:text-slate-600 transition-colors"
               aria-label={showConfirm ? 'Hide confirm password' : 'Show confirm password'}
             >
               <i className={`fas fa-eye${showConfirm ? '-slash' : ''} text-sm`} />
@@ -254,7 +254,7 @@ export default function SignupForm({ role }: SignupFormProps) {
         {!isCompany && (
           <>
             <div className="pt-2">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Academic Information</p>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Academic Information</p>
             </div>
 
             <UniversityAutocomplete
@@ -341,29 +341,29 @@ export default function SignupForm({ role }: SignupFormProps) {
       </form>
 
       {/* Sign in link */}
-      <p className="text-center text-gray-400 text-sm mt-6">
+      <p className="text-center text-slate-400 text-sm mt-6">
         Already have an account?{' '}
         <Link
           href={`/login/${role}`}
-          className="text-primary font-semibold hover:underline"
+          className="text-emerald-600 font-semibold hover:underline"
         >
           Sign in
         </Link>
       </p>
 
       {/* Switch role */}
-      <p className="text-center text-gray-300 text-xs mt-3">
+      <p className="text-center text-slate-300 text-xs mt-3">
         {isCompany ? (
           <>
             Signing up as a student?{' '}
-            <Link href="/signup/student" className="text-gray-400 hover:text-primary transition-colors">
+            <Link href="/signup/student" className="text-slate-400 hover:text-emerald-600 transition-colors">
               Switch here
             </Link>
           </>
         ) : (
           <>
             Are you a company?{' '}
-            <Link href="/signup/company" className="text-gray-400 hover:text-primary transition-colors">
+            <Link href="/signup/company" className="text-slate-400 hover:text-emerald-600 transition-colors">
               Switch here
             </Link>
           </>

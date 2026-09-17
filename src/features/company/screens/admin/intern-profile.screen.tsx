@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Share2,
@@ -16,7 +16,6 @@ import {
   Phone,
   Building2,
   CalendarRange,
-  Sunrise,
   FileCode2,
   Users2,
   Info,
@@ -38,18 +37,6 @@ const SKILLS = [
   { label: 'Teamwork & Communication', pct: 88 },
 ];
 
-const BADGES = [
-  { icon: Sunrise, label: 'Early Bird', color: 'bg-blue-50 text-blue-500' },
-  { icon: FileCode2, label: 'Code Master', color: 'bg-emerald-50 text-emerald-600' },
-  { icon: TrendingUp, label: 'Top Contributor', color: 'bg-amber-50 text-amber-600' },
-  { icon: Users2, label: 'Team Player', color: 'bg-indigo-50 text-indigo-600' },
-];
-
-const REQUIREMENTS = [
-  { title: 'Final Internship Report', due: 'Sept 25, 2024', status: 'Pending', color: 'bg-slate-100 text-slate-500' },
-  { title: 'Peer Review Submission', due: 'Sept 20, 2024', status: 'Action Required', color: 'bg-rose-50 text-rose-500' },
-];
-
 const TABS = ['Performance Overview', 'Task History', 'Feedback & Reviews'];
 
 function formatDate(dateStr?: string | null): string {
@@ -59,6 +46,7 @@ function formatDate(dateStr?: string | null): string {
 
 export default function InternProfileScreen() {
   const params = useParams();
+  const router = useRouter();
   const company = useAppSelector((s) => s.company.currentCompany);
   const internId = params.internId as string;
   const [intern, setIntern] = useState<Intern | null>(null);
@@ -81,9 +69,9 @@ export default function InternProfileScreen() {
 
   if (loading) {
     return (
-      <div className="flex bg-slate-50">
+      <div className="flex min-h-screen bg-slate-50">
         <Sidebar active="Interns" />
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar title="Intern Profile" />
           <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8 animate-pulse">
             <div className="flex items-center justify-between">
@@ -128,6 +116,15 @@ export default function InternProfileScreen() {
                           <div className="h-3.5 w-full max-w-[180px] rounded-full bg-slate-200" />
                         </div>
                       </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-6">
+                  <div className="h-4 w-44 rounded-full bg-slate-200" />
+                  <div className="mt-4 space-y-2">
+                    {[0, 1].map((i) => (
+                      <div key={i} className="h-12 rounded-xl bg-slate-100" />
                     ))}
                   </div>
                 </div>
@@ -177,9 +174,9 @@ export default function InternProfileScreen() {
 
   if (!intern) {
     return (
-      <div className="flex bg-slate-50">
+      <div className="flex min-h-screen bg-slate-50">
         <Sidebar active="Interns" />
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar title="Intern Profile" />
           <div className="text-center py-20 text-sm text-slate-400">Intern not found.</div>
         </div>
@@ -196,10 +193,10 @@ export default function InternProfileScreen() {
     : SKILLS;
 
   return (
-    <div className="flex bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Interns" />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Intern Profile" />
 
         <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
@@ -209,18 +206,26 @@ export default function InternProfileScreen() {
                 <ArrowLeft size={15} /> Back to Interns
               </Link>
               <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600">
-                Intern ID: {intern._id.slice(-6).toUpperCase()}
+                Intern ID: {intern._id ? intern._id.slice(-6).toUpperCase() : '—'}
               </span>
               <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white">Active</span>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <button className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
+              <button
+                onClick={() => {
+                  navigator.clipboard?.writeText(window.location.href).then(
+                    () => toastHelper.success('Profile link copied'),
+                    () => toastHelper.error('Could not copy link'),
+                  );
+                }}
+                className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+              >
                 <Share2 size={15} /> Share
               </button>
-              <button className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 hover:bg-slate-50">
-                <MoreVertical size={16} />
-              </button>
-              <button className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600">
+              <button
+                onClick={() => router.push(`/company/admin/evaluations?internId=${intern._id}`)}
+                className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600"
+              >
                 Evaluate Intern
               </button>
             </div>
@@ -229,11 +234,19 @@ export default function InternProfileScreen() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="space-y-6">
               <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center">
-                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-blue-700 text-2xl font-semibold text-white">
-                  {initials || '?'}
-                </div>
-                <h3 className="mt-4 text-lg font-semibold text-slate-900">{name || '—'}</h3>
-                <p className="text-sm text-slate-400">{intern.headline || 'Intern'}</p>
+                {intern.profilePicture?.secure_url ? (
+                  <img
+                    src={intern.profilePicture.secure_url}
+                    alt={name}
+                    className="mx-auto h-24 w-24 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-blue-700 text-2xl font-semibold text-white">
+                    {initials || '?'}
+                  </div>
+                )}
+                <h3 className="mt-4 break-words text-lg font-semibold text-slate-900">{name || '—'}</h3>
+                <p className="break-words text-sm text-slate-400">{intern.headline || 'Intern'}</p>
                 <div className="mt-3 flex justify-center gap-2">
                   <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600">
                     <Crown size={11} className="mr-1 inline" /> {intern.totalPoints} Pts
@@ -249,6 +262,21 @@ export default function InternProfileScreen() {
                     <p className="text-lg font-semibold text-slate-900">{intern.isConfirmed ? 'Active' : 'Pending'}</p>
                   </div>
                 </div>
+                {intern.resume?.secure_url && (
+                  <a
+                    href={intern.resume.secure_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                  >
+                    <FileCode2 size={15} /> View CV
+                  </a>
+                )}
+                {intern.ratingCount != null && intern.ratingCount > 0 && (
+                  <p className="mt-3 flex items-center justify-center gap-1 text-sm text-amber-600">
+                    <Award size={14} /> {((intern.ratingSum || 0) / intern.ratingCount).toFixed(1)} rating ({intern.ratingCount})
+                  </p>
+                )}
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-6">
@@ -258,15 +286,17 @@ export default function InternProfileScreen() {
                     { icon: GraduationCap, label: 'SKILLS', value: (intern.skills || []).join(', ') || '—' },
                     { icon: Mail, label: 'EMAIL ADDRESS', value: email },
                     { icon: Phone, label: 'PHONE NUMBER', value: phone || '—' },
-                    { icon: MapPin, label: 'LOCATION', value: '—' },
+                    { icon: MapPin, label: 'LOCATION', value: intern.address || '—' },
                     { icon: Building2, label: 'HEADLINE', value: intern.headline || '—' },
+                    { icon: Users2, label: 'GENDER', value: intern.gender || '—' },
+                    { icon: CalendarRange, label: 'DATE OF BIRTH', value: formatDate(intern.dateOfBirth) },
                     { icon: CalendarRange, label: 'INTERNSHIP PERIOD', value: `${formatDate(intern.internshipStartDate)} — ${formatDate(intern.internshipEndDate)}` },
                   ].map((f) => (
                     <div key={f.label} className="flex items-start gap-3">
-                      <f.icon size={16} className="mt-0.5 text-slate-400" />
-                      <div className="min-w-0">
+                      <f.icon size={16} className="mt-0.5 shrink-0 text-slate-400" />
+                      <div className="min-w-0 flex-1">
                         <dt className="text-xs text-slate-400">{f.label}</dt>
-                        <dd className="font-medium text-slate-900 break-words">{f.value}</dd>
+                        <dd className="break-words font-medium text-slate-900">{f.value}</dd>
                       </div>
                     </div>
                   ))}
@@ -275,7 +305,7 @@ export default function InternProfileScreen() {
 
               <div className="rounded-2xl bg-slate-900 p-6 text-white">
                 <h3 className="font-semibold">Supervisor Notes</h3>
-                <p className="mt-3 rounded-lg bg-white/5 p-3 text-sm italic text-slate-300">
+                <p className="mt-3 break-words rounded-lg bg-white/5 p-3 text-sm italic text-slate-300">
                   {intern.bio || 'No supervisor notes yet for this intern.'}
                 </p>
               </div>
@@ -310,15 +340,15 @@ export default function InternProfileScreen() {
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-6">
-                <div className="flex gap-6 overflow-x-auto border-b border-slate-100 text-sm">
+                <div className="flex gap-6 overflow-x-auto border-b border-slate-100 text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {TABS.map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
-                      className={`-mb-px border-b-2 pb-3 font-medium transition-colors ${
+                      className={`whitespace-nowrap pb-3 font-medium transition-colors ${
                         activeTab === tab
-                          ? 'border-emerald-500 text-emerald-600'
-                          : 'border-transparent text-slate-400 hover:text-slate-600'
+                          ? 'text-emerald-600 shadow-[inset_0_-2px_0_0_#10b981]'
+                          : 'text-slate-400 hover:text-slate-600'
                       }`}
                     >
                       {tab}
@@ -336,9 +366,9 @@ export default function InternProfileScreen() {
                       <div className="mt-4 space-y-3">
                         {skillList.map((s) => (
                           <div key={s.label}>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-slate-600">{s.label}</span>
-                              <span className="font-medium text-slate-900">{s.pct}%</span>
+                            <div className="flex justify-between gap-2 text-xs">
+                              <span className="min-w-0 flex-1 break-words text-slate-600">{s.label}</span>
+                              <span className="shrink-0 font-medium text-slate-900">{s.pct}%</span>
                             </div>
                             <div className="mt-1 h-1.5 rounded-full bg-slate-100">
                               <div className="h-1.5 rounded-full bg-emerald-500" style={{ width: `${s.pct}%` }} />
@@ -361,32 +391,64 @@ export default function InternProfileScreen() {
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div className="rounded-2xl border border-slate-200 bg-white p-6">
-                  <h3 className="font-semibold text-slate-900">Badges & Achievements</h3>
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    {BADGES.map((b) => (
-                      <div key={b.label} className="flex flex-col items-center gap-2 rounded-xl border border-slate-100 py-4 text-center">
-                        <span className={`flex h-10 w-10 items-center justify-center rounded-full ${b.color}`}>
-                          <b.icon size={18} />
-                        </span>
-                        <span className="text-xs font-medium text-slate-600">{b.label}</span>
-                      </div>
-                    ))}
+                  <h3 className="font-semibold text-slate-900">Education</h3>
+                  <div className="mt-4 space-y-3">
+                    {!intern.education || intern.education.length === 0 ? (
+                      <p className="text-sm text-slate-400">No education listed.</p>
+                    ) : (
+                      intern.education.map((e, i) => (
+                        <div key={i} className="rounded-xl border border-slate-100 p-3">
+                          <p className="break-words text-sm font-medium text-slate-900">
+                            {[e.degree, e.field].filter(Boolean).join(' · ') || 'Education'}
+                          </p>
+                          {e.institution && <p className="break-words text-xs text-slate-500">{e.institution}</p>}
+                          {(e.grade || e.startDate) && (
+                            <p className="mt-0.5 text-xs text-slate-400">
+                              {[e.grade, [formatDate(e.startDate), formatDate(e.endDate)].filter((d) => d !== '—').join(' — ')].filter(Boolean).join(' · ')}
+                            </p>
+                          )}
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-6">
-                  <h3 className="font-semibold text-slate-900">Upcoming Requirements</h3>
+                  <h3 className="font-semibold text-slate-900">Experience</h3>
                   <div className="mt-4 space-y-3">
-                    {REQUIREMENTS.map((r) => (
-                      <div key={r.title} className="flex items-center justify-between rounded-xl border border-slate-100 p-3">
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">{r.title}</p>
-                          <p className="text-xs text-slate-400">Due: {r.due}</p>
+                    {!intern.experience || intern.experience.length === 0 ? (
+                      <p className="text-sm text-slate-400">No experience listed.</p>
+                    ) : (
+                      intern.experience.map((e, i) => (
+                        <div key={i} className="rounded-xl border border-slate-100 p-3">
+                          <p className="break-words text-sm font-medium text-slate-900">
+                            {[e.internshipTitle, e.companyName].filter(Boolean).join(' @ ') || 'Experience'}
+                          </p>
+                          {e.completedAt && <p className="text-xs text-slate-400">Completed {formatDate(e.completedAt)}</p>}
                         </div>
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${r.color}`}>{r.status}</span>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-6">
+                <h3 className="font-semibold text-slate-900">Courses & Certificates</h3>
+                <div className="mt-4 space-y-2">
+                  {!intern.courses || intern.courses.length === 0 ? (
+                    <p className="text-sm text-slate-400">No courses listed.</p>
+                  ) : (
+                    intern.courses.map((c, i) => (
+                      <div key={i} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 p-3">
+                        <p className="min-w-0 flex-1 break-words text-sm font-medium text-slate-900">{c.name || 'Course'}</p>
+                        {c.certificate?.secure_url && (
+                          <a href={c.certificate.secure_url} target="_blank" rel="noreferrer" className="shrink-0 text-xs font-medium text-emerald-600 hover:underline">
+                            Certificate
+                          </a>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

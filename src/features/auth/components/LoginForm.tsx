@@ -150,15 +150,15 @@ export default function LoginForm({ role }: LoginFormProps) {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isCompany ? 'bg-gray-100' : 'bg-emerald-50'}`}>
-            <i className={`${isCompany ? 'fas fa-building text-gray-600' : 'fas fa-graduation-cap text-primary'} text-sm`} />
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isCompany ? 'bg-slate-100' : 'bg-emerald-50'}`}>
+            <i className={`${isCompany ? 'fas fa-building text-slate-600' : 'fas fa-graduation-cap text-emerald-600'} text-sm`} />
           </div>
-          <span className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+          <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
             {isCompany ? 'Company' : 'Student'} Sign In
           </span>
         </div>
-        <h1 className="text-3xl font-black text-dark mb-2">Welcome back</h1>
-        <p className="text-gray-400 text-sm">Sign in to continue to your account.</p>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back</h1>
+        <p className="text-slate-400 text-sm">Sign in to continue to your account.</p>
       </div>
 
       {/* Google Auth */}
@@ -166,7 +166,7 @@ export default function LoginForm({ role }: LoginFormProps) {
         type="button"
         id="google-login-btn"
         onClick={signInWithGoogle}
-        className="w-full flex items-center justify-center gap-3 border-2 border-gray-100 hover:border-gray-200 bg-white py-3 rounded-xl font-semibold text-sm text-gray-700 transition-all mb-6 hover:shadow-sm"
+        className="w-full flex items-center justify-center gap-3 border-2 border-slate-100 hover:border-slate-200 bg-white py-3 rounded-xl font-semibold text-sm text-slate-700 transition-all mb-6 hover:shadow-sm"
       >
         <i className="fab fa-google text-lg" style={{ color: '#4285F4' }} />
         Continue with Google
@@ -174,9 +174,9 @@ export default function LoginForm({ role }: LoginFormProps) {
 
       {/* Divider */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="flex-1 h-px bg-gray-100" />
-        <span className="text-xs text-gray-300 font-medium">or continue with email</span>
-        <div className="flex-1 h-px bg-gray-100" />
+        <div className="flex-1 h-px bg-slate-100" />
+        <span className="text-xs text-slate-300 font-medium">or continue with email</span>
+        <div className="flex-1 h-px bg-slate-100" />
       </div>
 
       {/* Form */}
@@ -203,7 +203,7 @@ export default function LoginForm({ role }: LoginFormProps) {
               <button
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-slate-400 hover:text-slate-600 transition-colors"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 <i className={`fas fa-eye${showPassword ? '-slash' : ''} text-sm`} />
@@ -216,7 +216,7 @@ export default function LoginForm({ role }: LoginFormProps) {
           <div className="mt-2 text-right">
             <Link
               href="/forgot-password"
-              className="text-xs text-primary hover:underline font-medium"
+              className="text-xs text-emerald-600 hover:underline font-medium"
             >
               Forgot password?
             </Link>
@@ -235,26 +235,26 @@ export default function LoginForm({ role }: LoginFormProps) {
       </form>
 
       {/* Sign up link */}
-      <p className="text-center text-gray-400 text-sm mt-6">
+      <p className="text-center text-slate-400 text-sm mt-6">
         Don&apos;t have an account?{' '}
-        <Link href="/get-started" className="text-primary font-semibold hover:underline">
+        <Link href="/get-started" className="text-emerald-600 font-semibold hover:underline">
           Sign up free
         </Link>
       </p>
 
       {/* Switch role */}
-      <p className="text-center text-gray-300 text-xs mt-3">
+      <p className="text-center text-slate-300 text-xs mt-3">
         {isCompany ? (
           <>
             Signing in as a student?{' '}
-            <Link href="/login/student" className="text-gray-400 hover:text-primary transition-colors">
+            <Link href="/login/student" className="text-slate-400 hover:text-emerald-600 transition-colors">
               Switch here
             </Link>
           </>
         ) : (
           <>
             Are you a company?{' '}
-            <Link href="/login/company" className="text-gray-400 hover:text-primary transition-colors">
+            <Link href="/login/company" className="text-slate-400 hover:text-emerald-600 transition-colors">
               Switch here
             </Link>
           </>

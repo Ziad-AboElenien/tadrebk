@@ -69,26 +69,26 @@ export default function ApplyModal({
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
       <div className="relative bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-lg animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-extrabold text-gray-900">Apply for Internship</h3>
-          <button onClick={onCancel} className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition">
+          <h3 className="text-xl font-bold text-slate-900">Apply for Internship</h3>
+          <button onClick={onCancel} className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition">
             <i className="fas fa-times text-sm" />
           </button>
         </div>
 
-        <div className="mb-5 rounded-xl bg-gray-50 p-4">
-          <p className="text-sm font-bold text-gray-900">{internshipTitle}</p>
-          {companyName && <p className="text-xs text-gray-400 mt-0.5">{companyName}</p>}
+        <div className="mb-5 rounded-xl bg-slate-50 p-4">
+          <p className="text-sm font-bold text-slate-900">{internshipTitle}</p>
+          {companyName && <p className="text-xs text-slate-400 mt-0.5">{companyName}</p>}
         </div>
 
         {/* Resume upload */}
         <div className="mb-6">
-          <label className="block text-sm font-bold text-gray-700 mb-2">
-            Resume / CV <span className="text-gray-400 font-normal">(optional — your profile CV will be used if omitted)</span>
+          <label className="block text-sm font-bold text-slate-700 mb-2">
+            Resume / CV <span className="text-slate-400 font-normal">(optional — your profile CV will be used if omitted)</span>
           </label>
           <div className="flex items-center gap-3">
             <label className="flex-1 flex items-center gap-3 rounded-2xl border border-dashed border-gray-300 px-4 py-3 cursor-pointer transition hover:border-emerald-400 hover:bg-emerald-50/30">
               <i className="fas fa-cloud-upload-alt text-emerald-500 text-lg" />
-              <span className="text-sm text-gray-500 truncate">
+              <span className="text-sm text-slate-500 truncate">
                 {resumeFile ? resumeFile.name : 'Upload a new CV (PDF, DOC, DOCX)'}
               </span>
               <input
@@ -113,10 +113,10 @@ export default function ApplyModal({
         {/* Questions */}
         {hasQuestions && (
           <div className="mb-6 space-y-5">
-            <p className="text-sm font-bold text-gray-700">Application Questions</p>
+            <p className="text-sm font-bold text-slate-700">Application Questions</p>
             {questions.map((q, qi) => (
               <div key={qi}>
-                <label className="block text-sm font-semibold text-gray-600 mb-2">
+                <label className="block text-sm font-semibold text-slate-600 mb-2">
                   {qi + 1}. {q.prompt}
                 </label>
                 {q.type === 'mcq' ? (
@@ -127,7 +127,7 @@ export default function ApplyModal({
                         className={`flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition ${
                           (answers[qi] as any)?.selectedOption === opt
                             ? 'border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/10'
-                            : 'border-gray-200 hover:border-gray-300'
+                            : 'border-slate-200 hover:border-gray-300'
                         }`}
                       >
                         <input
@@ -138,7 +138,7 @@ export default function ApplyModal({
                           onChange={() => setAnswer(qi, opt)}
                           className="accent-emerald-600"
                         />
-                        <span className="text-sm text-gray-700">{opt}</span>
+                        <span className="text-sm text-slate-700">{opt}</span>
                       </label>
                     ))}
                   </div>
@@ -148,7 +148,7 @@ export default function ApplyModal({
                     onChange={(e) => setAnswer(qi, e.target.value)}
                     rows={3}
                     placeholder="Write your answer..."
-                    className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-700 outline-none resize-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 placeholder:text-gray-400"
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none resize-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 placeholder:text-slate-400"
                   />
                 )}
               </div>
@@ -158,17 +158,17 @@ export default function ApplyModal({
 
         {/* Cover letter */}
         <div className="mb-6">
-          <label className="block text-sm font-bold text-gray-700 mb-2">
-            Cover Letter <span className="text-gray-400 font-normal">(optional)</span>
+          <label className="block text-sm font-bold text-slate-700 mb-2">
+            Cover Letter <span className="text-slate-400 font-normal">(optional)</span>
           </label>
           <textarea
             value={coverLetter}
             onChange={(e) => setCoverLetter(e.target.value)}
             placeholder="Tell the employer why you're a great fit for this role..."
             rows={4}
-            className="w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-700 outline-none resize-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 placeholder:text-gray-400"
+            className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none resize-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 placeholder:text-slate-400"
           />
-          <p className="mt-1.5 text-xs text-gray-400 text-right">{coverLetter.length} characters</p>
+          <p className="mt-1.5 text-xs text-slate-400 text-right">{coverLetter.length} characters</p>
         </div>
 
         <div className="flex gap-3">

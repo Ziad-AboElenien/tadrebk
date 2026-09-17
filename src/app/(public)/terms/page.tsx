@@ -98,10 +98,10 @@ export default function TermsPage() {
           <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-6">
             Legal
           </span>
-          <h1 className="text-5xl md:text-6xl font-black text-[#1a2e35] tracking-tight mb-6">
+          <h1 className="text-5xl md:text-6xl font-bold text-[#1a2e35] tracking-tight mb-6">
             Terms of Service
           </h1>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
             Last updated: August 2026. Please read these terms carefully before using Tadrebk.
           </p>
         </div>
@@ -112,17 +112,17 @@ export default function TermsPage() {
         <div className="max-w-3xl mx-auto px-4 space-y-12">
           {sections.map((s) => (
             <div key={s.title}>
-              <h2 className="text-2xl font-black text-[#1a2e35] tracking-tight mb-4">{s.title}</h2>
+              <h2 className="text-2xl font-bold text-[#1a2e35] tracking-tight mb-4">{s.title}</h2>
               <div className="space-y-3">
                 {s.body.map((p) => (
-                  <p key={p} className="text-gray-500 leading-relaxed">{p}</p>
+                  <p key={p} className="text-slate-500 leading-relaxed">{p}</p>
                 ))}
               </div>
             </div>
           ))}
 
           <div className="bg-green-50 border border-green-100 rounded-2xl p-6">
-            <p className="text-gray-600 text-sm leading-relaxed">
+            <p className="text-slate-600 text-sm leading-relaxed">
               Questions about these terms? <Link href="/contact" className="font-semibold text-emerald-600 hover:text-emerald-700">Contact our team</Link>.
             </p>
           </div>

@@ -64,13 +64,13 @@ function InternshipCardInner({
             </div>
 
             {/* Title */}
-            <h3 className="text-base font-bold leading-snug text-gray-900 line-clamp-2 group-hover:text-emerald-600 transition-colors mb-2">
+            <h3 className="text-base font-bold leading-snug text-slate-900 line-clamp-2 group-hover:text-emerald-600 transition-colors mb-2">
               {internship.title}
             </h3>
 
             {/* Working time */}
             {internship.workingTime && (
-              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-white/70 text-gray-600 mb-3">
+              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-white/70 text-slate-600 mb-3">
                 <i className="fas fa-clock text-[9px]" />
                 {internship.workingTime === 'full-time' ? 'Full-time' : 'Part-time'}
               </span>
@@ -90,7 +90,7 @@ function InternshipCardInner({
                   </span>
                 ))}
                 {internship.technicalSkills.length > 3 && (
-                  <span className="inline-flex items-center rounded-full bg-white/70 px-2.5 py-0.5 text-[11px] font-semibold text-gray-500">
+                  <span className="inline-flex items-center rounded-full bg-white/70 px-2.5 py-0.5 text-[11px] font-semibold text-slate-500">
                     +{internship.technicalSkills.length - 3}
                   </span>
                 )}
@@ -110,7 +110,7 @@ function InternshipCardInner({
                 </span>
               ))}
               {tracks.length > 2 && (
-                <span className="inline-flex items-center rounded-full bg-white/70 px-2.5 py-0.5 text-[11px] font-semibold text-gray-500">
+                <span className="inline-flex items-center rounded-full bg-white/70 px-2.5 py-0.5 text-[11px] font-semibold text-slate-500">
                   +{tracks.length - 2}
                 </span>
               )}
@@ -140,7 +140,7 @@ function InternshipCardInner({
               alt=""
               boxClassName="h-12 w-12 flex-shrink-0 rounded-xl overflow-hidden ring-2 ring-white/70 group-hover:ring-emerald-200 transition-all"
               imgClassName="w-full h-full object-cover"
-              iconClassName="fas fa-building text-lg text-gray-300"
+              iconClassName="fas fa-building text-lg text-slate-300"
             />
             <div className="flex flex-col items-end gap-1.5">
               {internship.location && (
@@ -157,7 +157,7 @@ function InternshipCardInner({
                 </span>
               )}
               {internship.workingTime && (
-                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-white/70 text-gray-600">
+                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold bg-white/70 text-slate-600">
                   <i className="fas fa-clock text-[9px]" />
                   {internship.workingTime === 'full-time' ? 'Full-time' : 'Part-time'}
                 </span>
@@ -178,12 +178,12 @@ function InternshipCardInner({
           </div>
 
           {/* Title */}
-          <h3 className="text-base font-bold leading-snug text-gray-900 line-clamp-2 group-hover:text-emerald-600 transition-colors">
+          <h3 className="text-base font-bold leading-snug text-slate-900 line-clamp-2 group-hover:text-emerald-600 transition-colors">
             {internship.title}
           </h3>
 
           {/* Details */}
-          <div className="mt-3 space-y-2 text-sm text-gray-500">
+          <div className="mt-3 space-y-2 text-sm text-slate-500">
             <p className="flex items-center gap-2">
               <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 shrink-0">
                 <i className="fas fa-map-marker-alt text-[10px]" />
@@ -225,7 +225,7 @@ function InternshipCardInner({
               </span>
             ))}
             {rest > 0 && (
-              <span className="inline-flex items-center rounded-full bg-white/70 px-2.5 py-0.5 text-[11px] font-semibold text-gray-500">
+              <span className="inline-flex items-center rounded-full bg-white/70 px-2.5 py-0.5 text-[11px] font-semibold text-slate-500">
                 +{rest}
               </span>
             )}
@@ -247,7 +247,7 @@ function InternshipCardInner({
           className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border-2 transition-all ${
             saved
               ? 'border-emerald-200 bg-emerald-50 text-emerald-500'
-              : 'border-white/70 bg-white/40 text-gray-400 hover:border-emerald-200 hover:text-emerald-500 hover:bg-emerald-50'
+              : 'border-white/70 bg-white/40 text-slate-400 hover:border-emerald-200 hover:text-emerald-500 hover:bg-emerald-50'
           }`}
         >
           <i className="fas fa-bookmark" />

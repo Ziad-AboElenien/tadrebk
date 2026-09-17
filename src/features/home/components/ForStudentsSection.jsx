@@ -20,8 +20,8 @@ export default function ForStudentsSection() {
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-900/60 text-emerald-400">
             <i className="fas fa-users text-lg" />
           </div>
-          <h3 className="text-2xl font-extrabold text-white">For Students</h3>
-          <p className="mt-3 text-sm leading-relaxed text-gray-400">
+          <h3 className="text-2xl font-bold text-white">For Students</h3>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
             Create your profile, discover internships that match your skills, and launch your career — all for free.
           </p>
           <Link href="/get-started" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-600">
@@ -41,7 +41,7 @@ export default function ForStudentsSection() {
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-white">
             <i className="fas fa-briefcase text-lg" />
           </div>
-          <h3 className="text-2xl font-extrabold text-white">For Companies</h3>
+          <h3 className="text-2xl font-bold text-white">For Companies</h3>
           <p className="mt-3 text-sm leading-relaxed text-emerald-100">
             Post internship opportunities and find the best emerging talent from Egypt&apos;s top universities.
           </p>

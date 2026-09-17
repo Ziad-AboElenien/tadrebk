@@ -86,7 +86,7 @@ export default function StudentOnboardingScreen() {
                 className={`flex items-center justify-center rounded-full text-xs font-bold transition-colors duration-500 ${
                   s <= step
                     ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
-                    : 'bg-gray-200 text-gray-400'
+                    : 'bg-slate-200 text-slate-400'
                 }`}
                 animate={{
                   width: s === step ? 40 : 32,
@@ -102,7 +102,7 @@ export default function StudentOnboardingScreen() {
                 )}
               </motion.div>
               {s < 3 && (
-                <div className="w-12 sm:w-20 h-1 rounded-full bg-gray-200 overflow-hidden">
+                <div className="w-12 sm:w-20 h-1 rounded-full bg-slate-200 overflow-hidden">
                   <motion.div
                     className="h-full bg-emerald-500 rounded-full"
                     initial={{ width: '0%' }}
@@ -116,7 +116,7 @@ export default function StudentOnboardingScreen() {
             </div>
           ))}
         </div>
-        <p className="text-center text-xs text-gray-400 font-medium">
+        <p className="text-center text-xs text-slate-400 font-medium">
           Step {step} of 3
         </p>
       </div>

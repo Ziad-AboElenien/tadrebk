@@ -10,7 +10,6 @@ import {
   Ban,
   Layers,
   Search,
-  SlidersHorizontal,
   MoreHorizontal,
   Trash2,
   Play,
@@ -20,6 +19,7 @@ import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import GlassFilter from '@/components/ui/GlassFilter';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { Internship, getInternshipTracks } from '@/features/internship/types';
 import { syncInternshipsClosedState, markInternshipClosed, markInternshipOpen } from '@/features/internship/utils/closedInternshipState';
@@ -51,7 +51,6 @@ export default function InternsManagementScreen() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
-  const [filterOpen, setFilterOpen] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [busyRow, setBusyRow] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Internship | null>(null);
@@ -144,10 +143,10 @@ export default function InternsManagementScreen() {
   ];
 
   return (
-    <div className="flex bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Interns" />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Interns Management" />
 
         <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
@@ -190,45 +189,22 @@ export default function InternsManagementScreen() {
                 <h3 className="font-semibold text-slate-900">Internship Postings</h3>
                 <p className="text-sm text-slate-400">Manage and monitor all your internships.</p>
               </div>
-              <div className="relative flex items-center gap-2">
-                <div className="relative">
+              <div className="relative flex flex-wrap items-center gap-2">
+                <div className="relative min-w-0 flex-1 sm:flex-none">
                   <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by title..."
-                    className="w-64 rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                    className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 sm:w-64"
                   />
                 </div>
-                <button
-                  onClick={() => setFilterOpen((v) => !v)}
-                  aria-label="Filter internships"
-                  className={`relative flex h-9 w-9 items-center justify-center rounded-lg border text-slate-500 transition-colors ${
-                    filter !== 'all' ? 'border-emerald-300 bg-emerald-50 text-emerald-600' : 'border-slate-200 bg-white hover:bg-slate-50'
-                  }`}
-                >
-                  <SlidersHorizontal size={15} />
-                </button>
-
-                {filterOpen && (
-                  <div className="absolute right-0 top-11 z-20 w-40 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
-                    {FILTERS.map((f) => (
-                      <button
-                        key={f.key}
-                        onClick={() => {
-                          setFilter(f.key);
-                          setFilterOpen(false);
-                        }}
-                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                          filter === f.key ? 'bg-emerald-50 font-medium text-emerald-600' : 'text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        {f.label}
-                        {filter === f.key && <CheckCircle2 size={14} />}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <GlassFilter
+                  options={FILTERS}
+                  value={filter}
+                  onChange={(key) => setFilter(key as FilterKey)}
+                  ariaLabel="Filter internships"
+                />
               </div>
             </div>
 

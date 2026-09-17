@@ -10,6 +10,7 @@ import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import GlassFilter from '@/components/ui/GlassFilter';
 import Link from 'next/link';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
@@ -102,7 +103,7 @@ export default function AdminDashboardScreen() {
   if (role !== 'admin') {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <p className="text-gray-500 mb-4">You do not have admin access.</p>
+        <p className="text-slate-500 mb-4">You do not have admin access.</p>
         <Link href="/"><Button>Go Home</Button></Link>
       </div>
     );
@@ -116,40 +117,39 @@ export default function AdminDashboardScreen() {
             <i className="fas fa-shield-halved" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-dark">Admin Dashboard</h1>
-            <p className="text-gray-500 text-sm">Manage companies, approvals, and bans</p>
+            <h1 className="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
+            <p className="text-slate-500 text-sm">Manage companies, approvals, and bans</p>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-gray-50 rounded-xl p-1 w-fit">
-        {(['pending', 'approved', 'all'] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all capitalize ${
-              tab === t ? 'bg-white text-dark shadow-sm' : 'text-gray-500 hover:text-dark'
-            }`}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+{/* Tabs */}
+<div className="mb-6 w-fit">
+<GlassFilter
+options={[
+{ key: 'pending', label: 'Pending' },
+{ key: 'approved', label: 'Approved' },
+{ key: 'all', label: 'All' },
+]}
+value={tab}
+onChange={(key) => setTab(key as Tab)}
+ariaLabel="Filter companies"
+/>
+</div>
 
       {loading ? (
         <div className="flex justify-center py-20"><Spinner /></div>
       ) : companies.length === 0 ? (
-        <div className="bg-white border border-gray-100 rounded-3xl shadow-sm text-center py-16 text-gray-400">
+        <div className="bg-white border border-slate-100 rounded-3xl shadow-sm text-center py-16 text-slate-400">
           <i className="fas fa-building text-3xl mb-3 block" />
           <p className="font-semibold">No companies found</p>
           <p className="text-sm mt-1">{tab === 'pending' ? 'No pending approvals.' : 'No companies match this filter.'}</p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
-          <div className="divide-y divide-gray-50">
+        <div className="bg-white border border-slate-100 rounded-3xl shadow-sm overflow-hidden">
+          <div className="divide-y divide-slate-100">
             {companies.map((company) => (
-              <div key={company._id} className="p-6 sm:p-8 hover:bg-gray-50/50 transition-colors">
+              <div key={company._id} className="p-6 sm:p-8 hover:bg-slate-50/50 transition-colors">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4 flex-1 min-w-0">
                     <MediaImage
@@ -157,16 +157,16 @@ export default function AdminDashboardScreen() {
                       alt={company.name}
                       boxClassName="w-12 h-12 rounded-xl shrink-0 overflow-hidden"
                       imgClassName="w-full h-full object-cover"
-                      iconClassName="fas fa-building text-lg text-gray-300"
+                      iconClassName="fas fa-building text-lg text-slate-300"
                     />
                     <div className="min-w-0">
-                      <h3 className="font-bold text-dark truncate">{company.name}</h3>
-                      <p className="text-sm text-gray-500 truncate">
+                      <h3 className="font-bold text-slate-900 truncate">{company.name}</h3>
+                      <p className="text-sm text-slate-500 truncate">
                         {company.industry && <span className="mr-3">{company.industry}</span>}
                         {company.companyEmail && <span>{company.companyEmail}</span>}
                       </p>
                       {company.createdAt && (
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-xs text-slate-400 mt-0.5">
                           Created {new Date(company.createdAt).toLocaleDateString('en-US', {
                             year: 'numeric', month: 'short', day: 'numeric',
                           })}

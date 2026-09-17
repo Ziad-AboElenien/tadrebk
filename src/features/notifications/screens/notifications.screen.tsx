@@ -40,7 +40,7 @@ function statusBadge(status?: string) {
     pending: 'bg-amber-100 text-amber-700',
   };
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${colors[status] || 'bg-gray-100 text-gray-700'}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${colors[status] || 'bg-slate-100 text-slate-700'}`}>
       <i className={`fas fa-circle text-[6px] ${status === 'accepted' ? 'text-emerald-500' : status === 'rejected' ? 'text-red-500' : 'text-amber-500'}`} />
       {status}
     </span>
@@ -129,11 +129,11 @@ export default function NotificationsScreen() {
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link href={dashboardHref} className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+          <Link href={dashboardHref} className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:underline">
             <i className="fas fa-arrow-left text-xs" /> Back to Dashboard
           </Link>
-          <h1 className="text-3xl font-extrabold text-gray-900">Notifications</h1>
-          <p className="mt-1 text-sm text-gray-400">
+          <h1 className="text-3xl font-bold text-slate-900">Notifications</h1>
+          <p className="mt-1 text-sm text-slate-400">
             {unreadCount > 0 ? `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up!'}
           </p>
         </div>
@@ -145,7 +145,7 @@ export default function NotificationsScreen() {
               className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all backdrop-blur-xl border ${
                 filter === tab
                   ? 'bg-white/70 border-white/80 text-emerald-700 shadow-md shadow-emerald-100/50'
-                  : 'bg-white/50 border-white/60 text-gray-500 hover:bg-white/70 hover:text-gray-700'
+                  : 'bg-white/50 border-white/60 text-slate-500 hover:bg-white/70 hover:text-slate-700'
               }`}
             >
               {tab}
@@ -163,8 +163,8 @@ export default function NotificationsScreen() {
         <div className="flex justify-center py-20"><Spinner size="lg" /></div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-20 text-center">
-          <i className="fas fa-bell text-4xl text-gray-300" />
-          <p className="text-sm text-gray-400">
+          <i className="fas fa-bell text-4xl text-slate-300" />
+          <p className="text-sm text-slate-400">
             {filter === 'Unread'
               ? "You're all caught up!"
               : role === 'company'
@@ -182,7 +182,7 @@ export default function NotificationsScreen() {
                 className={`flex items-start gap-4 rounded-2xl border px-5 py-5 transition-all ${
                   !n.read
                     ? 'border-emerald-100 bg-gradient-to-r from-emerald-50/60 to-white hover:border-emerald-200 hover:shadow-sm cursor-pointer'
-                    : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm cursor-pointer'
+                    : 'border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm cursor-pointer'
                 }`}
               >
                 <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full ${
@@ -194,15 +194,15 @@ export default function NotificationsScreen() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <h3 className={`text-sm ${!n.read ? 'font-extrabold text-gray-900' : 'font-semibold text-gray-700'}`}>{n.title}</h3>
+                      <h3 className={`text-sm ${!n.read ? 'font-bold text-slate-900' : 'font-semibold text-slate-700'}`}>{n.title}</h3>
                       {!n.read && (
                         <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white">NEW</span>
                       )}
                       {statusBadge(n.data?.status)}
                     </div>
                   </div>
-                  <p className="mt-1 text-sm leading-relaxed text-gray-500">{n.message}</p>
-                  <p className="mt-2 flex items-center gap-1.5 text-xs text-gray-400">
+                  <p className="mt-1 text-sm leading-relaxed text-slate-500">{n.message}</p>
+                  <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
                     <i className="fas fa-clock text-[11px]" />{timeAgo(n.createdAt)}
                   </p>
                 </div>

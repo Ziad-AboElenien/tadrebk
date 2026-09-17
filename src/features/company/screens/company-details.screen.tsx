@@ -53,12 +53,12 @@ export default function CompanyDetailsScreen() {
   }, [companyId]);
 
   if (loading) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><Spinner /></div>;
+    return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><Spinner /></div>;
   }
 
   if (!company) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-50">
         <div className="max-w-4xl mx-auto px-4 py-12">
           <EmptyState title="Company not found" description="The company you're looking for doesn't exist or has been removed." action={<Link href="/internships"><Button variant="outline">Back to Internships</Button></Link>} />
         </div>
@@ -70,10 +70,10 @@ export default function CompanyDetailsScreen() {
   const coverUrl = getCompanyImgUrl(company.coverPicture);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <main className="mx-auto max-w-5xl px-4 sm:px-8 py-8">
         {/* Back */}
-        <Link href="/internships" className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+        <Link href="/internships" className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:underline">
           <i className="fas fa-arrow-left text-xs" /> Back to Internships
         </Link>
 
@@ -104,15 +104,15 @@ export default function CompanyDetailsScreen() {
                 <img src={logoUrl!} alt="" className="w-full h-full object-contain p-2" onLoad={logoBlank.onImgLoad} onError={() => setLogoError(true)} />
               </div>
             ) : (
-              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-gray-100 flex items-center justify-center ring-4 ring-white shadow-xl shrink-0">
-                <i className="fas fa-building text-2xl sm:text-3xl text-gray-300" />
+              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-slate-100 flex items-center justify-center ring-4 ring-white shadow-xl shrink-0">
+                <i className="fas fa-building text-2xl sm:text-3xl text-slate-300" />
               </div>
             )}
             <div className="text-center sm:text-left pb-1">
-              <h1 className="text-xl sm:text-3xl font-black text-dark">{company.name}</h1>
+              <h1 className="text-xl sm:text-3xl font-bold text-slate-900">{company.name}</h1>
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 {company.industry && (
-                  <span className="px-3 py-1 bg-emerald-50 text-primary text-sm font-semibold rounded-full border border-emerald-100">
+                  <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-sm font-semibold rounded-full border border-emerald-100">
                     {company.industry}
                   </span>
                 )}
@@ -120,15 +120,15 @@ export default function CompanyDetailsScreen() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-5 mt-5 text-sm text-gray-500">
+          <div className="flex flex-wrap gap-5 mt-5 text-sm text-slate-500">
             {company.companyEmail && (
               <span className="flex items-center gap-1.5 max-w-full">
-                <i className="fas fa-envelope text-gray-300 text-xs shrink-0" /> <span className="break-all">{company.companyEmail}</span>
+                <i className="fas fa-envelope text-slate-300 text-xs shrink-0" /> <span className="break-all">{company.companyEmail}</span>
               </span>
             )}
             {company.address && (
               <span className="flex items-center gap-1.5 max-w-full">
-                <i className="fas fa-location-dot text-gray-300 text-xs shrink-0" /> <span className="break-all">{company.address}</span>
+                <i className="fas fa-location-dot text-slate-300 text-xs shrink-0" /> <span className="break-all">{company.address}</span>
               </span>
             )}
             {company.googleMapsUrl && (
@@ -136,52 +136,52 @@ export default function CompanyDetailsScreen() {
                 href={company.googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 max-w-full text-primary hover:underline"
+                className="flex items-center gap-1.5 max-w-full text-emerald-600 hover:underline"
               >
-                <i className="fas fa-map-pin text-gray-300 text-xs shrink-0" /> View on Google Maps
+                <i className="fas fa-map-pin text-slate-300 text-xs shrink-0" /> View on Google Maps
               </a>
             )}
             {company.numberOfEmployees && (
               <span className="flex items-center gap-1.5 whitespace-nowrap">
-                <i className="fas fa-users text-gray-300 text-xs" /> {company.numberOfEmployees} employees
+                <i className="fas fa-users text-slate-300 text-xs" /> {company.numberOfEmployees} employees
               </span>
             )}
             <span className="flex items-center gap-1.5 whitespace-nowrap">
-              <i className="fas fa-briefcase text-gray-300 text-xs" /> {totalInternships} open position{totalInternships !== 1 ? 's' : ''}
+              <i className="fas fa-briefcase text-slate-300 text-xs" /> {totalInternships} open position{totalInternships !== 1 ? 's' : ''}
             </span>
             {company.createdAt && (
               <span className="flex items-center gap-1.5 whitespace-nowrap">
-                <i className="fas fa-calendar text-gray-300 text-xs" /> Joined {formatDate(company.createdAt)}
+                <i className="fas fa-calendar text-slate-300 text-xs" /> Joined {formatDate(company.createdAt)}
               </span>
             )}
           </div>
         </div>
 
         {/* About */}
-        <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
-          <h2 className="font-bold text-dark text-lg mb-3 flex items-center gap-2">
-            <i className="fas fa-building text-primary text-base" /> About
+        <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
+          <h2 className="font-bold text-slate-900 text-lg mb-3 flex items-center gap-2">
+            <i className="fas fa-building text-emerald-600 text-base" /> About
           </h2>
           {company.description ? (
-            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap break-words">{company.description}</p>
+            <p className="text-slate-600 leading-relaxed whitespace-pre-wrap break-words">{company.description}</p>
           ) : (
-            <p className="text-gray-400 italic">No description provided.</p>
+            <p className="text-slate-400 italic">No description provided.</p>
           )}
         </div>
 
         {/* Open Positions */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-dark flex items-center gap-2">
-              <i className="fas fa-list text-primary text-base" /> Open Positions
-              <span className="text-sm font-semibold text-gray-400 bg-gray-100 px-2.5 py-0.5 rounded-full">{totalInternships}</span>
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <i className="fas fa-list text-emerald-600 text-base" /> Open Positions
+              <span className="text-sm font-semibold text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">{totalInternships}</span>
             </h2>
           </div>
 
           {internships.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-3xl border border-gray-100">
-              <i className="fas fa-file-circle-plus text-3xl text-gray-300 mb-3 block" />
-              <p className="font-semibold text-gray-500">No open positions at the moment</p>
+            <div className="text-center py-16 bg-white rounded-3xl border border-slate-100">
+              <i className="fas fa-file-circle-plus text-3xl text-slate-300 mb-3 block" />
+              <p className="font-semibold text-slate-500">No open positions at the moment</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -193,11 +193,11 @@ export default function CompanyDetailsScreen() {
         </div>
 
         {/* Contact */}
-        <div className="bg-gradient-to-br from-primary/5 to-emerald-50 border border-primary/10 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
-          <h2 className="font-bold text-dark text-lg mb-3 flex items-center gap-2">
-            <i className="fas fa-headset text-primary text-base" /> Get in Touch
+        <div className="bg-gradient-to-br from-primary/5 to-emerald-50 border border-emerald-500/10 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
+          <h2 className="font-bold text-slate-900 text-lg mb-3 flex items-center gap-2">
+            <i className="fas fa-headset text-emerald-600 text-base" /> Get in Touch
           </h2>
-          <p className="text-sm text-gray-600 mb-4">Interested in this company or have questions about their opportunities?</p>
+          <p className="text-sm text-slate-600 mb-4">Interested in this company or have questions about their opportunities?</p>
           <div className="flex flex-wrap gap-3">
             <a href={`mailto:${company.companyEmail}`}>
               <Button variant="primary" leftIcon={<i className="fas fa-envelope text-xs" />}>Send Email</Button>

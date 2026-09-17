@@ -73,7 +73,16 @@ export const internService = {
 
   async getIntern(companyId: string, internId: string): Promise<Intern> {
     const { data } = await api.get<InternRawResponse>(`/company/${companyId}/interns/${internId}`);
-    if (Array.isArray(data?.data)) return (data.data as Intern[])[0];
-    return (data?.data as Intern) ?? data?.interns?.[0];
+    const d = data?.data as unknown;
+    if (Array.isArray(d)) {
+      if (d[0]) return d[0] as Intern;
+    } else if (d && typeof d === 'object') {
+      if ('_id' in d) return d as Intern;
+      const nested = (d as { intern?: Intern; user?: Intern }).intern ?? (d as { user?: Intern }).user;
+      if (nested) return nested;
+    }
+    const flat = data?.interns?.[0];
+    if (flat) return flat;
+    throw new Error('Intern not found');
   },
 };

@@ -82,8 +82,8 @@ export default function OTPInput({
               'w-10 sm:w-12 h-14 text-center text-xl font-bold border-2 rounded-xl transition-all duration-200',
               'focus:outline-none focus:ring-0',
               digits[i]
-                ? 'border-primary bg-primary/5 text-dark'
-                : 'border-gray-200 bg-white text-dark',
+                ? 'border-emerald-500 bg-emerald-500/5 text-slate-900'
+                : 'border-slate-200 bg-white text-slate-900',
               error ? 'border-red-400 bg-red-50' : '',
               'disabled:opacity-50 disabled:cursor-not-allowed',
             ]

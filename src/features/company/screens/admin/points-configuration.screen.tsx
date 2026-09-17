@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
+import GlassFilter from '@/components/ui/GlassFilter';
 
 const STATS = [
   { label: 'ACTIVE RULES', value: '12', icon: Sliders, badge: '5 categories configured' },
@@ -40,10 +41,10 @@ export default function PointsConfigurationScreen() {
   const [activeTab, setActiveTab] = useState(TABS[0]);
 
   return (
-    <div className="flex bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Points" />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Points Configuration" />
 
         <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
@@ -74,19 +75,12 @@ export default function PointsConfigurationScreen() {
             ))}
           </div>
 
-          <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
-            {TABS.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTab === tab ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
+          <GlassFilter
+            options={TABS.map((t) => ({ key: t, label: t }))}
+            value={activeTab}
+            onChange={setActiveTab}
+            ariaLabel="Points sections"
+          />
 
           {activeTab === 'Earning Rules' && (
             <div className="rounded-2xl border border-slate-200 bg-white p-6">

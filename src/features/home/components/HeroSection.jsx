@@ -74,7 +74,7 @@ export default function HeroSection() {
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                  className="text-4xl sm:text-6xl md:text-7xl font-black text-gray-900 leading-[1.05] tracking-tight mb-6"
+                  className="text-4xl sm:text-6xl md:text-7xl font-bold text-slate-900 leading-[1.05] tracking-tight mb-6"
                 >
                   Find internships that<br />
                   <span className="bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent">
@@ -86,7 +86,7 @@ export default function HeroSection() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-                  className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-8 font-medium leading-relaxed"
+                  className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mb-8 font-medium leading-relaxed"
                 >
                   Egypt&apos;s first platform connecting university students with top internship opportunities — all in one organized, professional place.
                 </motion.p>
@@ -100,23 +100,23 @@ export default function HeroSection() {
                 >
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-white rounded-2xl shadow-lg shadow-emerald-100/50 ring-1 ring-gray-100 overflow-hidden transition-all duration-300">
                     <div className="flex items-center flex-1 gap-3 px-5 py-4">
-                      <i className="fas fa-search text-gray-400 shrink-0" />
+                      <i className="fas fa-search text-slate-400 shrink-0" />
                       <input
                         type="text"
                         placeholder="Search internships..."
-                        className="w-full text-sm sm:text-sm text-gray-800 placeholder:text-gray-400 bg-transparent outline-none ring-0 focus:ring-0 focus:outline-none"
+                        className="w-full text-sm sm:text-sm text-slate-800 placeholder:text-slate-400 bg-transparent outline-none ring-0 focus:ring-0 focus:outline-none"
                         style={{ fontSize: 'max(16px, 1rem)' }}
                         value={searchTitle}
                         onChange={(e) => setSearchTitle(e.target.value)}
                       />
                     </div>
-                    <div className="hidden sm:block w-px self-stretch bg-gray-100" />
-                    <div className="flex items-center flex-1 gap-3 border-t border-gray-100 sm:border-0 px-5 py-4">
+                    <div className="hidden sm:block w-px self-stretch bg-slate-100" />
+                    <div className="flex items-center flex-1 gap-3 border-t border-slate-100 sm:border-0 px-5 py-4">
                       <i className="fas fa-location-dot text-emerald-500 shrink-0" />
                       <input
                         type="text"
                         placeholder="Location"
-                        className="w-full text-sm sm:text-sm text-gray-800 placeholder:text-gray-400 bg-transparent outline-none ring-0 focus:ring-0 focus:outline-none"
+                        className="w-full text-sm sm:text-sm text-slate-800 placeholder:text-slate-400 bg-transparent outline-none ring-0 focus:ring-0 focus:outline-none"
                         style={{ fontSize: 'max(16px, 1rem)' }}
                         value={searchLocation}
                         onChange={(e) => setSearchLocation(e.target.value)}
@@ -129,7 +129,7 @@ export default function HeroSection() {
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                    <span className="text-sm font-semibold text-gray-400">Quick search:</span>
+                    <span className="text-sm font-semibold text-slate-400">Quick search:</span>
                     {quickTags.map((term) => (
                       <motion.button
                         key={term}
@@ -137,7 +137,7 @@ export default function HeroSection() {
                         whileHover={{ scale: 1.05, y: -1 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => router.push(`/internships?title=${encodeURIComponent(term)}`)}
-                        className="rounded-full border border-gray-200 bg-white px-4 py-1 text-sm text-gray-600 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-200"
+                        className="rounded-full border border-slate-200 bg-white px-4 py-1 text-sm text-slate-600 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-200"
                       >
                         {term}
                       </motion.button>
@@ -151,16 +151,16 @@ export default function HeroSection() {
                   transition={{ duration: 0.6, delay: 0.5 }}
                   className="mt-14"
                 >
-                  <p className="mb-4 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400">
+                  <p className="mb-4 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400">
                     <i className="fas fa-landmark text-sm" />
                     Trusted by students from
                   </p>
-                  <div className="border-y border-gray-100 bg-white/80 py-4 overflow-hidden">
+                  <div className="border-y border-slate-100 bg-white/80 py-4 overflow-hidden">
                     <div className="flex items-center justify-center gap-0 overflow-x-auto scrollbar-none min-w-0">
                       {universities.map((u, i) => (
                         <span key={u} className="flex items-center shrink-0">
-                          <span className="whitespace-nowrap px-4 sm:px-10 text-xs sm:text-sm font-bold text-gray-800 hover:text-emerald-600 transition-colors cursor-default">{u}</span>
-                          {i < universities.length - 1 && <span className="h-4 w-px bg-gray-200 shrink-0" />}
+                          <span className="whitespace-nowrap px-4 sm:px-10 text-xs sm:text-sm font-bold text-slate-800 hover:text-emerald-600 transition-colors cursor-default">{u}</span>
+                          {i < universities.length - 1 && <span className="h-4 w-px bg-slate-200 shrink-0" />}
                         </span>
                       ))}
                     </div>
@@ -172,7 +172,7 @@ export default function HeroSection() {
           </SwiperSlide>
         </Swiper>
 
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1 text-gray-300 pointer-events-none">
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1 text-slate-300 pointer-events-none">
           <span className="text-[10px] font-semibold uppercase tracking-widest">Scroll</span>
           <i className="fas fa-chevron-down text-sm animate-bounce" />
         </div>

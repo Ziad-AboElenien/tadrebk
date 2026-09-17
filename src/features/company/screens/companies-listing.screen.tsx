@@ -58,10 +58,10 @@ export default function CompaniesListingScreen() {
         <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-4">
           Our Partners
         </span>
-        <h1 className="text-4xl md:text-5xl font-black text-[#1a2e35] tracking-tight mb-4">
+        <h1 className="text-4xl md:text-5xl font-bold text-[#1a2e35] tracking-tight mb-4">
           Trusted Companies
         </h1>
-        <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+        <p className="text-slate-400 text-lg max-w-2xl mx-auto">
           {companies.length} organizations hiring interns through Tadrebk.
         </p>
       </div>
@@ -69,14 +69,14 @@ export default function CompaniesListingScreen() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 max-w-2xl mx-auto mb-10">
         <div className="flex-1 relative">
-          <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 text-sm" />
+          <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-sm" />
           <input
             type="text"
             placeholder="Search by name, industry, or location..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             autoComplete="off"
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-600 outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all placeholder:text-gray-300"
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-sm text-slate-600 outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300 transition-all placeholder:text-slate-300"
           />
         </div>
         <div className="min-w-[160px]">
@@ -94,7 +94,7 @@ export default function CompaniesListingScreen() {
       {loading ? (
         <div className="flex justify-center py-20"><Spinner /></div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-20 text-gray-400 animate-fade-in">
+        <div className="text-center py-20 text-slate-400 animate-fade-in">
           <i className="fas fa-building text-4xl mb-4 block" />
           <p className="font-semibold">{companies.length === 0 ? 'No companies yet.' : 'No companies match your search.'}</p>
           {(search || industryFilter) && (
@@ -108,7 +108,7 @@ export default function CompaniesListingScreen() {
         </div>
       ) : (
         <>
-          <p className="text-sm text-gray-400 mb-6">{filtered.length} company{filtered.length !== 1 ? 'ies' : 'y'} found</p>
+          <p className="text-sm text-slate-400 mb-6">{filtered.length} company{filtered.length !== 1 ? 'ies' : 'y'} found</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((company) => {
               const logoUrl = getCompanyImgUrl(company.logo);
@@ -124,14 +124,14 @@ export default function CompaniesListingScreen() {
                       alt={company.name}
                       boxClassName="w-16 h-16 rounded-xl shrink-0 overflow-hidden"
                       imgClassName="w-full h-full object-cover"
-                      iconClassName="fas fa-building text-2xl text-gray-300"
+                      iconClassName="fas fa-building text-2xl text-slate-300"
                     />
                     <div className="min-w-0">
                       <h3 className="font-bold text-[#1a2e35] group-hover:text-emerald-600 transition-colors truncate">
                         {company.name}
                       </h3>
                       {company.industry && (
-                        <span className="text-xs bg-gray-50 text-gray-500 px-2 py-0.5 rounded-full mt-1 inline-block">
+                        <span className="text-xs bg-slate-50 text-slate-500 px-2 py-0.5 rounded-full mt-1 inline-block">
                           {company.industry}
                         </span>
                       )}
@@ -140,12 +140,12 @@ export default function CompaniesListingScreen() {
                   {(company.address || company.companyEmail) && (
                     <div className="mt-4 pt-4 border-t border-gray-50 space-y-1.5">
                       {company.address && (
-                        <p className="text-xs text-gray-400 flex items-center gap-2">
+                        <p className="text-xs text-slate-400 flex items-center gap-2">
                           <i className="fas fa-location-dot text-[10px]" /> {company.address}
                         </p>
                       )}
                       {company.companyEmail && (
-                        <p className="text-xs text-gray-400 flex items-center gap-2">
+                        <p className="text-xs text-slate-400 flex items-center gap-2">
                           <i className="fas fa-envelope text-[10px]" /> {company.companyEmail}
                         </p>
                       )}

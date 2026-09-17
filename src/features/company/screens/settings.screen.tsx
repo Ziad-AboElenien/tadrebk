@@ -156,7 +156,7 @@ export default function CompanySettingsScreen() {
   if (!company) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <p className="text-gray-500 mb-4">No company profile found.</p>
+        <p className="text-slate-500 mb-4">No company profile found.</p>
         <Link href="/company/onboarding">
           <Button>Complete Company Profile</Button>
         </Link>
@@ -168,11 +168,11 @@ export default function CompanySettingsScreen() {
   const coverUrl = getCompanyImgUrl(company.coverPicture);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <main className="mx-auto max-w-4xl px-4 sm:px-8 py-8">
 
         {/* Back */}
-        <Link href="/company/admin" className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+        <Link href="/company/admin" className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:underline">
           <i className="fas fa-arrow-left text-xs" /> Back to Dashboard
         </Link>
 
@@ -198,11 +198,11 @@ export default function CompanySettingsScreen() {
         <div className="relative px-4 sm:px-6 -mt-10 mb-8">
           <div className="flex items-end gap-4">
             <div className="relative group shrink-0">
-              <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl bg-gray-100 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl bg-slate-100 flex items-center justify-center">
                 {logoBlank.showImage ? (
                   <img src={logoUrl!} alt={company.name} className="w-full h-full object-cover" onLoad={logoBlank.onImgLoad} />
                 ) : (
-                  <i className="fas fa-building text-3xl text-gray-300" />
+                  <i className="fas fa-building text-3xl text-slate-300" />
                 )}
               </div>
               <input ref={logoRef} id="company-logo-input" type="file" accept="image/*" onChange={(e) => onFileSelect(e, 'logo')} className="hidden" />
@@ -215,13 +215,13 @@ export default function CompanySettingsScreen() {
               </div>
             </div>
             <div className="pb-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-black text-dark truncate">{company.name}</h1>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-0.5 text-sm text-gray-500">
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 truncate">{company.name}</h1>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-0.5 text-sm text-slate-500">
                 {company.industry && (
-                  <span className="flex items-center gap-1.5"><i className="fas fa-building text-gray-300 text-xs" />{company.industry}</span>
+                  <span className="flex items-center gap-1.5"><i className="fas fa-building text-slate-300 text-xs" />{company.industry}</span>
                 )}
                 {company.companyEmail && (
-                  <span className="flex items-center gap-1.5"><i className="fas fa-envelope text-gray-300 text-xs" />{company.companyEmail}</span>
+                  <span className="flex items-center gap-1.5"><i className="fas fa-envelope text-slate-300 text-xs" />{company.companyEmail}</span>
                 )}
                 {company.approvedByAdmin === false && (
                   <span className="flex items-center gap-1.5 text-amber-600"><i className="fas fa-clock text-xs" />Pending approval</span>
@@ -232,14 +232,14 @@ export default function CompanySettingsScreen() {
         </div>
 
         {/* â”€â”€ Company Details Form â”€â”€ */}
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
             <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
               <i className="fas fa-building" />
             </div>
             <div>
-              <h2 className="font-bold text-dark">Company details</h2>
-              <p className="text-xs text-gray-400">Update your company information</p>
+              <h2 className="font-bold text-slate-900">Company details</h2>
+              <p className="text-xs text-slate-400">Update your company information</p>
             </div>
           </div>
 
@@ -270,11 +270,11 @@ export default function CompanySettingsScreen() {
             )}
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-gray-700">Description</label>
+              <label className="text-sm font-semibold text-slate-700">Description</label>
               <textarea
                 {...register('description')}
                 rows={4}
-                className={`w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-gray-300 transition-all duration-200 resize-y ${errors.description ? 'border-red-400' : 'border-gray-200'}`}
+                className={`w-full border rounded-xl bg-white text-slate-800 placeholder:text-slate-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-emerald-500 hover:border-gray-300 transition-all duration-200 resize-y ${errors.description ? 'border-red-400' : 'border-slate-200'}`}
                 placeholder="Tell us about your company..."
               />
               {errors.description && (
@@ -286,14 +286,14 @@ export default function CompanySettingsScreen() {
               <Input
                 label="Address"
                 error={errors.address?.message}
-                leftIcon={<i className="fas fa-location-dot text-gray-400" />}
+                leftIcon={<i className="fas fa-location-dot text-slate-400" />}
                 {...register('address')}
               />
               <Input
                 label="Company email"
                 type="email"
                 error={errors.companyEmail?.message}
-                leftIcon={<i className="fas fa-envelope text-gray-400" />}
+                leftIcon={<i className="fas fa-envelope text-slate-400" />}
                 {...register('companyEmail')}
               />
             </div>
@@ -308,17 +308,17 @@ export default function CompanySettingsScreen() {
                   setValue('location.lng', ln, { shouldValidate: true });
                 }}
               />
-              <p className="text-xs text-gray-400 mt-1">Leave empty to remove the Google Maps link from your public profile.</p>
+              <p className="text-xs text-slate-400 mt-1">Leave empty to remove the Google Maps link from your public profile.</p>
             </div>
 
             <Input
               label="Number of employees"
               error={errors.numberOfEmployees?.message}
-              leftIcon={<i className="fas fa-users text-gray-400" />}
+              leftIcon={<i className="fas fa-users text-slate-400" />}
               {...register('numberOfEmployees')}
             />
 
-            <div className="flex justify-end pt-4 border-t border-gray-100">
+            <div className="flex justify-end pt-4 border-t border-slate-100">
               <Button loading={saving} type="submit" leftIcon={<i className="fas fa-check text-xs" />}>
                 Save changes
               </Button>
@@ -327,40 +327,40 @@ export default function CompanySettingsScreen() {
         </form>
 
         {/* â”€â”€ Account Section â”€â”€ */}
-        <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+        <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
             <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
               <i className="fas fa-shield-halved" />
             </div>
             <div>
-              <h2 className="font-bold text-dark">Account security</h2>
-              <p className="text-xs text-gray-400">Manage your login credentials</p>
+              <h2 className="font-bold text-slate-900">Account security</h2>
+              <p className="text-xs text-slate-400">Manage your login credentials</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Link href="/company/change-password">
-              <div className="rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 hover:border-gray-200 transition-all p-5 cursor-pointer">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-200 transition-all p-5 cursor-pointer">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
                     <i className="fas fa-key" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-dark">Change password</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Update your password regularly</p>
+                    <p className="text-sm font-bold text-slate-900">Change password</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Update your password regularly</p>
                   </div>
                 </div>
               </div>
             </Link>
             <Link href="/company/change-email">
-              <div className="rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 hover:border-gray-200 transition-all p-5 cursor-pointer">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-200 transition-all p-5 cursor-pointer">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center text-sky-600 shrink-0">
                     <i className="fas fa-envelope" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-dark">Change email</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Update your company email</p>
+                    <p className="text-sm font-bold text-slate-900">Change email</p>
+                    <p className="text-xs text-slate-400 mt-0.5">Update your company email</p>
                   </div>
                 </div>
               </div>

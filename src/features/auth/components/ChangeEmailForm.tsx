@@ -80,7 +80,7 @@ export default function ChangeEmailForm() {
         </form>
       ) : (
         <div className="space-y-5">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-slate-600">
             Enter the OTP sent to <strong>{newEmail}</strong>
           </p>
           <OTPInput

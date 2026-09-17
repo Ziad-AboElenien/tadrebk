@@ -80,7 +80,7 @@ export default function Step3Recommendations({
   }, [selectedTracks]);
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-8 h-full flex flex-col">
+    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 h-full flex flex-col">
       <div className="flex-1 overflow-y-auto scrollbar-none -mx-2 px-2">
         {/* Success Header */}
         <div className="text-center mb-6">
@@ -96,7 +96,7 @@ export default function Step3Recommendations({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-xl sm:text-2xl font-black text-gray-900"
+            className="text-xl sm:text-2xl font-bold text-slate-900"
           >
             You&apos;re all set, {userName}!
           </motion.h2>
@@ -104,7 +104,7 @@ export default function Step3Recommendations({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="mt-2 text-sm text-gray-400"
+            className="mt-2 text-sm text-slate-400"
           >
             Here are tracks we recommend for you
           </motion.p>
@@ -137,17 +137,17 @@ export default function Step3Recommendations({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
         >
-          <p className="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">
+          <p className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wide">
             {loading ? 'Finding matches...' : 'Matching internships for you'}
           </p>
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((n) => (
-                <div key={n} className="animate-pulse flex gap-3 rounded-xl bg-gray-50 p-3">
-                  <div className="h-12 w-12 rounded-lg bg-gray-200" />
+                <div key={n} className="animate-pulse flex gap-3 rounded-xl bg-slate-50 p-3">
+                  <div className="h-12 w-12 rounded-lg bg-slate-200" />
                   <div className="flex-1 space-y-2 py-1">
-                    <div className="h-3 bg-gray-200 rounded w-3/4" />
-                    <div className="h-2.5 bg-gray-200 rounded w-1/2" />
+                    <div className="h-3 bg-slate-200 rounded w-3/4" />
+                    <div className="h-2.5 bg-slate-200 rounded w-1/2" />
                   </div>
                 </div>
               ))}
@@ -172,7 +172,7 @@ export default function Step3Recommendations({
                   >
                     <Link
                       href={`/internships/${intern._id}`}
-                      className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3 hover:bg-white hover:border-emerald-200 hover:shadow-sm transition-all duration-200 group"
+                      className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 hover:bg-white hover:border-emerald-200 hover:shadow-sm transition-all duration-200 group"
                     >
                       <div
                         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${
@@ -182,21 +182,21 @@ export default function Step3Recommendations({
                         <i className="fas fa-briefcase" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">
+                        <p className="text-xs font-bold text-slate-900 truncate group-hover:text-emerald-600 transition-colors">
                           {intern.title}
                         </p>
-                        <p className="text-[10px] text-gray-400 truncate">
+                        <p className="text-[10px] text-slate-400 truncate">
                           {companyName} &middot; {intern.location || 'Remote'}
                         </p>
                       </div>
-                      <i className="fas fa-chevron-right text-[10px] text-gray-300 group-hover:text-emerald-500 transition-colors shrink-0" />
+                      <i className="fas fa-chevron-right text-[10px] text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
                     </Link>
                   </motion.div>
                 );
               })}
             </div>
           ) : (
-            <p className="text-xs text-gray-400 text-center py-4">
+            <p className="text-xs text-slate-400 text-center py-4">
               No matching internships found right now. Check back later!
             </p>
           )}
@@ -204,7 +204,7 @@ export default function Step3Recommendations({
       </div>
 
       {/* Actions */}
-      <div className="mt-4 pt-4 border-t border-gray-100 flex gap-3">
+      <div className="mt-4 pt-4 border-t border-slate-100 flex gap-3">
         <Button variant="secondary" onClick={onBack} className="flex-1" disabled={saving}>
           <i className="fas fa-arrow-left text-xs mr-2" />
           Back

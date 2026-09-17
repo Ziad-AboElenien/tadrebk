@@ -103,7 +103,7 @@ export default function PostInternshipScreen() {
   if (!company) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <p className="text-gray-500 mb-4">Complete your company profile first.</p>
+        <p className="text-slate-500 mb-4">Complete your company profile first.</p>
         <Link href="/company/onboarding">
           <Button>Complete Company Profile</Button>
         </Link>
@@ -117,8 +117,8 @@ export default function PostInternshipScreen() {
         <div className="w-20 h-20 rounded-3xl bg-amber-50 flex items-center justify-center mx-auto mb-6">
           <i className="fas fa-clock text-3xl text-amber-500" />
         </div>
-        <h1 className="text-2xl font-black text-dark mb-3">Account pending approval</h1>
-        <p className="text-gray-500 mb-8 max-w-md mx-auto">
+        <h1 className="text-2xl font-bold text-dark mb-3">Account pending approval</h1>
+        <p className="text-slate-500 mb-8 max-w-md mx-auto">
           Your company account is still under review. You can post internships once it has been approved by the admin.
         </p>
         <Link href="/company/admin">
@@ -184,8 +184,8 @@ export default function PostInternshipScreen() {
                 </svg>
               </div>
             </div>
-            <h2 className="text-2xl font-black text-dark mb-3">Internship Posted!</h2>
-            <p className="text-gray-500 mb-8">Your internship has been published successfully. Start reviewing applicants now.</p>
+            <h2 className="text-2xl font-bold text-dark mb-3">Internship Posted!</h2>
+            <p className="text-slate-500 mb-8">Your internship has been published successfully. Start reviewing applicants now.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button onClick={() => router.push('/company/admin')} className="!bg-gradient-to-r !from-emerald-500 !to-emerald-600 !shadow-lg !shadow-emerald-200 !font-bold !px-8 !py-3.5">
                 <i className="fas fa-th-large mr-2" />
@@ -206,7 +206,7 @@ export default function PostInternshipScreen() {
 
       {!showSuccessModal && (
         <>
-          <h1 className="text-2xl font-black text-dark mb-8">Post a new internship</h1>
+          <h1 className="text-2xl font-bold text-dark mb-8">Post a new internship</h1>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Input
           label="Title"
@@ -216,11 +216,11 @@ export default function PostInternshipScreen() {
         />
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-gray-700">Description</label>
+          <label className="text-sm font-semibold text-slate-700">Description</label>
           <textarea
             {...register('description')}
             rows={6}
-            className={`w-full border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-gray-300 transition-all duration-200 resize-y ${errors.description ? 'border-red-400' : 'border-gray-200'}`}
+            className={`w-full border rounded-xl bg-white text-slate-800 placeholder:text-slate-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-gray-300 transition-all duration-200 resize-y ${errors.description ? 'border-red-400' : 'border-slate-200'}`}
             placeholder="Describe the internship responsibilities and requirements..."
           />
           {errors.description && (
@@ -280,9 +280,9 @@ export default function PostInternshipScreen() {
 
         {/* Track */}
         <div>
-          <label className="text-sm font-semibold text-gray-700 mb-2 block">
-            Track <span className="text-red-500">*</span> <span className="text-gray-400 font-normal">(select 1 to {MAX_TRACKS_PER_POST})</span>
-            {selectedCategories.length > 0 && <span className="text-gray-400 font-normal"> — <span className="text-primary font-bold">{selectedCategories.length}</span>/{MAX_TRACKS_PER_POST} selected</span>}
+          <label className="text-sm font-semibold text-slate-700 mb-2 block">
+            Track <span className="text-red-500">*</span> <span className="text-slate-400 font-normal">(select 1 to {MAX_TRACKS_PER_POST})</span>
+            {selectedCategories.length > 0 && <span className="text-slate-400 font-normal"> — <span className="text-primary font-bold">{selectedCategories.length}</span>/{MAX_TRACKS_PER_POST} selected</span>}
           </label>
 
           {/* Selected chips */}
@@ -336,8 +336,8 @@ export default function PostInternshipScreen() {
                       : on
                         ? 'bg-emerald-50 text-emerald-600 border-emerald-200 cursor-default'
                         : selectedCategories.length >= MAX_TRACKS_PER_POST
-                          ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-primary/40 hover:text-primary cursor-pointer'
+                          ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed'
+                          : 'bg-white text-slate-600 border-slate-200 hover:border-primary/40 hover:text-primary cursor-pointer'
                   }`}
                 >
                   {isOther ? <><i className="fas fa-pen text-[10px] mr-1" />{label}</> : on ? <><i className="fas fa-check text-[10px] mr-1" />{label}</> : label}
@@ -372,7 +372,7 @@ export default function PostInternshipScreen() {
                   }
                 }}
                 placeholder="Type your track..."
-                className="flex-1 border border-gray-200 rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-gray-300 transition-all duration-200"
+                className="flex-1 border border-slate-200 rounded-xl bg-white text-slate-800 placeholder:text-slate-400 px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-gray-300 transition-all duration-200"
                 autoFocus
               />
               <button
@@ -398,7 +398,7 @@ export default function PostInternshipScreen() {
               <button
                 type="button"
                 onClick={() => { setShowCategoryInput(false); setCategoryText(''); }}
-                className="w-8 h-8 rounded-xl bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors shrink-0"
+                className="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition-colors shrink-0"
               >
                 <i className="fas fa-xmark text-xs" />
               </button>
@@ -419,7 +419,7 @@ export default function PostInternshipScreen() {
         {/* Questions builder */}
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <label className="text-sm font-semibold text-gray-700">Application Questions <span className="text-gray-400 font-normal">(optional)</span></label>
+            <label className="text-sm font-semibold text-slate-700">Application Questions <span className="text-slate-400 font-normal">(optional)</span></label>
             <div className="flex gap-2">
               <button type="button" onClick={() => addQuestion('mcq')} className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 px-3 py-1.5 rounded-lg border border-emerald-200 hover:bg-emerald-50 transition">
                 <i className="fas fa-list-ul text-[10px]" /> MCQ
@@ -431,11 +431,11 @@ export default function PostInternshipScreen() {
           </div>
 
           {questions.length === 0 && (
-            <p className="text-xs text-gray-400 italic">No questions yet. Add MCQ or writing questions for applicants.</p>
+            <p className="text-xs text-slate-400 italic">No questions yet. Add MCQ or writing questions for applicants.</p>
           )}
 
           {questions.map((q, qi) => (
-            <div key={qi} className="border border-gray-200 rounded-2xl p-5 bg-gray-50/50 relative">
+            <div key={qi} className="border border-slate-200 rounded-2xl p-5 bg-slate-50/50 relative">
               <button
                 type="button"
                 onClick={() => removeQuestion(qi)}
@@ -448,23 +448,23 @@ export default function PostInternshipScreen() {
                 <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
                   {q.type === 'mcq' ? 'Multiple Choice' : 'Writing'}
                 </span>
-                <span className="text-[10px] text-gray-400 font-medium">Question {qi + 1}</span>
+                <span className="text-[10px] text-slate-400 font-medium">Question {qi + 1}</span>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-gray-600">Prompt</label>
+                <label className="text-xs font-semibold text-slate-600">Prompt</label>
                 <input
                   type="text"
                   value={q.prompt}
                   onChange={(e) => updateQuestion(qi, { prompt: e.target.value })}
                   placeholder="e.g. Why do you want this internship?"
-                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 placeholder:text-gray-400"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 placeholder:text-slate-400"
                 />
               </div>
 
               {q.type === 'mcq' && (
                 <div className="mt-3 space-y-2">
-                  <label className="text-xs font-semibold text-gray-600">Options</label>
+                  <label className="text-xs font-semibold text-slate-600">Options</label>
                   {q.options.map((opt, oi) => (
                     <div key={oi} className="flex items-center gap-2">
                       <input
@@ -472,13 +472,13 @@ export default function PostInternshipScreen() {
                         value={opt}
                         onChange={(e) => updateOption(qi, oi, e.target.value)}
                         placeholder={`Option ${oi + 1}`}
-                        className="flex-1 rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 placeholder:text-gray-400"
+                        className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 placeholder:text-slate-400"
                       />
                       {q.options.length > 2 && (
                         <button
                           type="button"
                           onClick={() => removeOption(qi, oi)}
-                          className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
+                          className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition"
                         >
                           <i className="fas fa-minus text-[10px]" />
                         </button>

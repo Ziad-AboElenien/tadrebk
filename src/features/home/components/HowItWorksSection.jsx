@@ -24,10 +24,10 @@ export default function HowItWorksSection() {
             viewport={{ once: true, margin: '50px' }}
             variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
           >
-            <motion.h2 variants={fadeUp} custom={0} className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
+            <motion.h2 variants={fadeUp} custom={0} className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
               How It Works
             </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="text-gray-400 text-sm mt-3 max-w-md mx-auto">
+            <motion.p variants={fadeUp} custom={1} className="text-slate-400 text-sm mt-3 max-w-md mx-auto">
               Six easy steps to land your next internship.
             </motion.p>
           </motion.div>
@@ -43,14 +43,14 @@ export default function HowItWorksSection() {
               variants={scaleIn}
               custom={i}
               whileHover={{ y: -8, transition: { duration: 0.3 } }}
-              className="relative bg-white rounded-2xl border border-gray-100 shadow-sm p-8 hover:shadow-xl hover:shadow-emerald-100/50 hover:border-emerald-100 transition-all duration-300 group cursor-default"
+              className="relative bg-white rounded-2xl border border-slate-100 shadow-sm p-8 hover:shadow-xl hover:shadow-emerald-100/50 hover:border-emerald-100 transition-all duration-300 group cursor-default"
             >
-              <span className="absolute right-4 top-4 text-4xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors duration-300">{item.step}</span>
+              <span className="absolute right-4 top-4 text-4xl font-bold text-gray-100 group-hover:text-emerald-100 transition-colors duration-300">{item.step}</span>
               <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${item.color} text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
                 <i className={`fas ${item.icon} text-lg`} />
               </div>
-              <h3 className="text-base font-black text-gray-900 group-hover:text-emerald-700 transition-colors duration-300">{item.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-gray-400">{item.desc}</p>
+              <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition-colors duration-300">{item.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{item.desc}</p>
             </motion.div>
           ))}
         </div>

@@ -27,7 +27,7 @@ export default function CategoriesSection() {
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
             >
               <motion.span variants={fadeUp} custom={0} className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-1 block">Explore Fields</motion.span>
-              <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
+              <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
                 Browse by Category
               </motion.h2>
             </motion.div>
@@ -60,14 +60,14 @@ export default function CategoriesSection() {
             >
               <Link
                 href={`/internships?title=${cat.query}`}
-                className="group flex items-center gap-4 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:shadow-emerald-100/50 hover:ring-1 hover:ring-emerald-200 hover:-translate-y-1 transition-all duration-300"
+                className="group flex items-center gap-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:shadow-emerald-100/50 hover:ring-1 hover:ring-emerald-200 hover:-translate-y-1 transition-all duration-300"
               >
                 <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${cat.color} text-white group-hover:scale-110 group-hover:rotate-3 shadow-md transition-all duration-300`}>
                   <i className={`fas ${cat.icon} text-lg`} />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-gray-900 group-hover:text-emerald-700 transition-colors">{cat.label}</p>
-                  <p className="text-xs text-gray-400">{cat.count} opportunities &rarr;</p>
+                  <p className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">{cat.label}</p>
+                  <p className="text-xs text-slate-400">{cat.count} opportunities &rarr;</p>
                 </div>
               </Link>
             </motion.div>

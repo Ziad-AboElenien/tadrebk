@@ -14,11 +14,16 @@ import {
   CheckCircle2,
   Save,
   Layers,
+  Users2,
+  MoreHorizontal,
+  Clock,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import InternAvatar from '@/components/ui/InternAvatar';
+import { priorityTheme } from '@/features/company/utils/taskPriorityTheme';
 import Select from '@/components/ui/Select';
 import { taskService } from '@/features/company/services/task.service';
 import { internService } from '@/features/company/services/intern.service';
@@ -98,12 +103,14 @@ export default function TaskDetailScreen() {
   const searchParams = useSearchParams();
   const taskId = params.taskId as string;
   const focusedInternId = searchParams.get('internId') || '';
+  const groupId = searchParams.get('groupId') || '';
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
 
   const [task, setTask] = useState<Task | null>(null);
   const [interns, setInterns] = useState<Intern[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [groupRows, setGroupRows] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [editing, setEditing] = useState(false);
@@ -127,6 +134,7 @@ export default function TaskDetailScreen() {
 
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkTitle, setBulkTitle] = useState('');
@@ -136,30 +144,52 @@ export default function TaskDetailScreen() {
   const [savingBulk, setSavingBulk] = useState(false);
   const [bulkErrors, setBulkErrors] = useState<Record<string, string>>({});
 
+  const applyTask = (t: Task) => {
+    setTask(t);
+    setTitle(t.title);
+    setDescription(t.description ?? '');
+    setPriority(t.priority ?? 'medium');
+    setTags(t.tags ?? []);
+    setDueDate(t.dueDate ? t.dueDate.slice(0, 10) : '');
+    setFeedback(t.reviewerFeedback ?? '');
+  };
+
   const fetchTask = useCallback(async () => {
     if (!companyId || !taskId) return;
     setLoading(true);
     try {
-      const [taskRes, internRes, projRes] = await Promise.all([
-        taskService.getTask(companyId, taskId),
-        internService.listInterns(companyId, { limit: 100 }),
-        projectService.listProjects(companyId, { limit: 100 }),
-      ]);
-      setTask(taskRes);
-      setInterns(internRes.data);
-      setProjects(projRes.data);
-      setTitle(taskRes.title);
-      setDescription(taskRes.description ?? '');
-      setPriority(taskRes.priority ?? 'medium');
-      setTags(taskRes.tags ?? []);
-      setDueDate(taskRes.dueDate ? taskRes.dueDate.slice(0, 10) : '');
-      setFeedback(taskRes.reviewerFeedback ?? '');
+      if (groupId) {
+        const [groupRes, internRes, projRes] = await Promise.all([
+          taskService.listByGroup(companyId, groupId),
+          internService.listInterns(companyId, { limit: 100 }),
+          projectService.listProjects(companyId, { limit: 100 }),
+        ]);
+        const rows = groupRes.tasks;
+        setGroupRows(rows);
+        setInterns(internRes.data);
+        setProjects(projRes.data);
+        const rowIdOf = (v: unknown): string =>
+          typeof v === 'string' ? v : ((v as { _id?: unknown } | null)?._id as string) || '';
+        const initial = (focusedInternId && rows.find((t) => rowIdOf(t.internId) === focusedInternId)) || rows[0] || null;
+        if (initial) applyTask(initial);
+        else setTask(null);
+      } else {
+        const [taskRes, internRes, projRes] = await Promise.all([
+          taskService.getTask(companyId, taskId),
+          internService.listInterns(companyId, { limit: 100 }),
+          projectService.listProjects(companyId, { limit: 100 }),
+        ]);
+        applyTask(taskRes);
+        setInterns(internRes.data);
+        setProjects(projRes.data);
+        setGroupRows([]);
+      }
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [companyId, taskId]);
+  }, [companyId, taskId, groupId, focusedInternId]);
 
   useEffect(() => {
     const t = setTimeout(fetchTask, 0);
@@ -168,12 +198,12 @@ export default function TaskDetailScreen() {
 
   if (loading) {
     return (
-      <div className="flex bg-slate-50">
+      <div className="flex min-h-screen bg-slate-50">
         <Sidebar active="Tasks" />
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar title="Task Details" />
           <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8 animate-pulse">
-            <div className="h-9 w-64 rounded-lg bg-slate-200" />
+            <div className="h-32 rounded-2xl bg-slate-200 sm:h-36" />
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <div className="space-y-6 lg:col-span-2">
                 <div className="h-64 rounded-2xl border border-slate-200 bg-white" />
@@ -192,9 +222,9 @@ export default function TaskDetailScreen() {
 
   if (!task) {
     return (
-      <div className="flex bg-slate-50">
+      <div className="flex min-h-screen bg-slate-50">
         <Sidebar active="Tasks" />
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar title="Task Details" />
           <div className="py-20 text-center text-sm text-slate-400">Task not found.</div>
         </div>
@@ -202,18 +232,116 @@ export default function TaskDetailScreen() {
     );
   }
 
-  const intern = interns.find((i) => i._id === task.internId);
+  const rowInternId = (v: unknown): string =>
+    typeof v === 'string' ? v : ((v as { _id?: unknown } | null)?._id as string) || '';
+  const intern = interns.find((i) => i._id === rowInternId(task.internId));
+  // In group mode the actions below must target the selected row, not the URL taskId.
+  const activeTaskId = task._id || taskId;
   const project = task.projectId ? projects.find((p) => p._id === task.projectId) : undefined;
   const nexts = NEXT_STATUSES[task.status] ?? [];
   const isGroup = Boolean(task.taskGroupId);
 
   const removeTag = (tag: string) => setTags((t) => t.filter((x) => x !== tag));
   const addTag = (tag: string) => !tags.includes(tag) && setTags((t) => [...t, tag]);
+  const syncGroupRow = (updated: Task) => {
+    setTask(updated);
+    setGroupRows((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
+  };
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     setFiles(Array.from(e.target.files).slice(0, 10));
   };
+
+  const renderSubmission = (visibilityClass: string) => (
+    <section className={`rounded-2xl border border-slate-200 bg-white p-6 ${visibilityClass}`}>
+      <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+        <Clock size={18} className="text-emerald-500" /> Submission Progress
+      </h3>
+      <div className="mt-4 space-y-0">
+        {[
+          { label: 'Created', date: task.createdAt, done: true },
+          { label: 'Submitted by intern', date: task.submittedAt, done: !!task.submittedAt },
+          {
+            label: task.pointsAwarded != null ? `Reviewed · ${task.pointsAwarded} pts` : 'Reviewed',
+            date: task.reviewedAt,
+            done: !!task.reviewedAt,
+          },
+        ].map((s, i, arr) => (
+          <div key={s.label} className="flex gap-3">
+            <div className="flex flex-col items-center">
+              <span className={`flex h-6 w-6 items-center justify-center rounded-full ${s.done ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                {s.done ? <CheckCircle2 size={13} /> : <Clock size={13} />}
+              </span>
+              {i < arr.length - 1 && <span className={`h-6 w-px ${s.done ? 'bg-emerald-200' : 'bg-slate-100'}`} />}
+            </div>
+            <div className="pb-5">
+              <p className={`text-sm font-medium ${s.done ? 'text-slate-900' : 'text-slate-400'}`}>{s.label}</p>
+              <p className="text-xs text-slate-400">{s.date ? formatDate(s.date) : 'Pending'}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+
+  const renderAttachments = (visibilityClass: string) => (
+    <section className={`rounded-2xl border border-slate-200 bg-white p-6 ${visibilityClass}`}>
+      <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+        <Paperclip size={18} className="text-emerald-500" /> Attachments
+      </h3>
+
+      <div className="mt-4 space-y-2">
+        {task.attachments.length === 0 ? (
+          <p className="text-sm text-slate-400">No attachments yet.</p>
+        ) : (
+          task.attachments.map((att) => (
+            <div key={att.public_id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
+              <a href={att.secure_url} target="_blank" rel="noreferrer" className="flex min-w-0 items-center gap-2 text-slate-700 hover:text-emerald-600">
+                <Paperclip size={14} className="shrink-0 text-slate-400" />
+                <span className="truncate">{att.name || 'Attachment'}</span>
+                {att.size ? <span className="shrink-0 text-xs text-slate-400">{formatBytes(att.size)}</span> : null}
+              </a>
+              <button
+                onClick={() => handleRemoveAttachment(att.public_id)}
+                disabled={removingId === att.public_id}
+                aria-label={`Remove ${att.name || 'attachment'}`}
+                className="ml-3 shrink-0 text-slate-400 hover:text-rose-500"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+
+      <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center">
+        <UploadCloud size={24} className="text-emerald-400" />
+        <p className="mt-2 text-sm font-medium text-slate-700">Add more files</p>
+        <p className="text-xs text-slate-400">Maximum file size 10MB (PDF, JPG, PNG)</p>
+        <input type="file" multiple hidden onChange={handleFiles} />
+      </label>
+      {files.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {files.map((f, idx) => (
+            <div key={idx} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
+              <span className="truncate text-slate-600">{f.name}</span>
+              <button onClick={() => setFiles((prev) => prev.filter((_, i) => i !== idx))} aria-label={`Remove ${f.name}`}>
+                <X size={14} className="text-slate-400 hover:text-rose-500" />
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={handleAddFiles}
+            disabled={addingFiles}
+            className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60"
+          >
+            {addingFiles ? 'Uploading...' : `Attach ${files.length} file(s)`}
+          </button>
+        </div>
+      )}
+    </section>
+  );
 
   const handleSaveEdit = async () => {
     if (!companyId) return;
@@ -223,14 +351,14 @@ export default function TaskDetailScreen() {
     if (Object.keys(errs).length > 0) return;
     setSavingEdit(true);
     try {
-      const updated = await taskService.updateTask(companyId, taskId, {
+      const updated = await taskService.updateTask(companyId, activeTaskId, {
         title: title.trim(),
         description: description.trim() || undefined,
         priority,
         tags,
         dueDate: dueDate || undefined,
       });
-      setTask(updated);
+      syncGroupRow(updated);
       setEditing(false);
       toastHelper.success('Task updated');
     } catch (err) {
@@ -244,12 +372,12 @@ export default function TaskDetailScreen() {
     if (!companyId || !to) return;
     setTransitioningTo(to);
     try {
-      const updated = await taskService.transitionTask(companyId, taskId, {
+      const updated = await taskService.transitionTask(companyId, activeTaskId, {
         to,
         reviewerFeedback: feedback.trim() || undefined,
         pointsAwarded: to === 'complete' && points ? Number(points) : undefined,
       });
-      setTask(updated);
+      syncGroupRow(updated);
       toastHelper.success(`Task moved to ${STATUS_LABEL[to]}`);
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
@@ -262,8 +390,8 @@ export default function TaskDetailScreen() {
     if (!companyId) return;
     setSavingFeedback(true);
     try {
-      const updated = await taskService.saveFeedback(companyId, taskId, feedback.trim());
-      setTask(updated);
+      const updated = await taskService.saveFeedback(companyId, activeTaskId, feedback.trim());
+      syncGroupRow(updated);
       toastHelper.success('Feedback saved');
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
@@ -280,8 +408,8 @@ export default function TaskDetailScreen() {
     }
     setAddingFiles(true);
     try {
-      const updated = await taskService.addAttachments(companyId, taskId, files);
-      setTask(updated);
+      const updated = await taskService.addAttachments(companyId, activeTaskId, files);
+      syncGroupRow(updated);
       setFiles([]);
       toastHelper.success('Attachments added');
     } catch (err) {
@@ -295,8 +423,8 @@ export default function TaskDetailScreen() {
     if (!companyId) return;
     setRemovingId(attachmentId);
     try {
-      const updated = await taskService.removeAttachment(companyId, taskId, attachmentId);
-      setTask(updated);
+      const updated = await taskService.removeAttachment(companyId, activeTaskId, attachmentId);
+      syncGroupRow(updated);
       toastHelper.success('Attachment removed');
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
@@ -309,7 +437,7 @@ export default function TaskDetailScreen() {
     if (!companyId) return;
     setArchiving(true);
     try {
-      await taskService.archiveTask(companyId, taskId);
+      await taskService.archiveTask(companyId, activeTaskId);
       toastHelper.success('Task archived');
       window.location.href = '/company/admin/tasks';
     } catch (err) {
@@ -344,13 +472,42 @@ export default function TaskDetailScreen() {
   };
 
   return (
-    <div className="flex bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Tasks" />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Task Details" />
 
         <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          {(() => {
+            const theme = priorityTheme(task.priority);
+            return (
+              <div
+                className="relative overflow-hidden rounded-2xl p-6 text-white"
+                style={{ background: `linear-gradient(120deg, ${theme.banner} 0%, ${theme.banner}cc 55%, ${theme.banner}99 100%)` }}
+              >
+                <div className="pointer-events-none absolute -left-10 top-0 h-full w-40 -skew-x-12 bg-white/15" />
+                <div className="pointer-events-none absolute left-24 top-0 h-full w-10 -skew-x-12 bg-white/10" />
+                <div className="pointer-events-none absolute -bottom-16 right-10 h-44 w-44 rounded-full border-[12px] border-white/20" />
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-20"
+                  style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.85) 1px, transparent 1px)', backgroundSize: '16px 16px' }}
+                />
+                <div className="relative flex flex-wrap items-end justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-white/80">
+                      {task.priority ? `${task.priority} priority` : 'Task'}
+                      {groupId && groupRows.length > 0 ? ` · ${groupRows.length} member(s)` : ''}
+                    </p>
+                    <h2 className="mt-1 break-words text-xl font-bold sm:text-2xl">{task.title}</h2>
+                  </div>
+                  <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold capitalize backdrop-blur">
+                    {task.status.replace('_', ' ')}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-3">
               <Link href="/company/admin/tasks" className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
@@ -362,33 +519,8 @@ export default function TaskDetailScreen() {
               <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${PRIORITY_STYLES[task.priority] || 'bg-slate-100 text-slate-500'}`}>
                 {task.priority?.toUpperCase()}
               </span>
-              {focusedInternId && (
-                <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600">
-                  {(() => {
-                    const f = interns.find((i) => i._id === focusedInternId);
-                    return f ? `Submission · ${f.firstName} ${f.lastName}`.trim() : 'Student submission';
-                  })()}
-                </span>
-              )}
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => setConfirmArchive(true)}
-                className="flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm text-rose-500 hover:bg-rose-50"
-              >
-                <Trash2 size={15} /> Archive
-              </button>
-              {isGroup && (
-                <button
-                  onClick={() => {
-                    setBulkErrors({});
-                    setBulkOpen(true);
-                  }}
-                  className="flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50"
-                >
-                  <Layers size={15} /> Update Group
-                </button>
-              )}
+            <div className="relative flex flex-wrap items-center gap-3">
               {nexts.map((n) => (
                 <button
                   key={n.to}
@@ -399,6 +531,42 @@ export default function TaskDetailScreen() {
                   <CheckCircle2 size={16} /> {transitioningTo === n.to ? 'Moving...' : n.label}
                 </button>
               ))}
+              <button
+                onClick={() => setActionsOpen((o) => !o)}
+                aria-label="More actions"
+                aria-expanded={actionsOpen}
+                className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 hover:bg-slate-50"
+              >
+                <MoreHorizontal size={16} />
+              </button>
+              {actionsOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setActionsOpen(false)} />
+                  <div className="absolute right-0 top-full z-40 mt-2 w-52 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl">
+                    {isGroup && (
+                      <button
+                        onClick={() => {
+                          setActionsOpen(false);
+                          setBulkErrors({});
+                          setBulkOpen(true);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50"
+                      >
+                        <Layers size={14} /> Update Group
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        setActionsOpen(false);
+                        setConfirmArchive(true);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-rose-500 hover:bg-rose-50"
+                    >
+                      <Trash2 size={14} /> Archive Task
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -407,23 +575,23 @@ export default function TaskDetailScreen() {
               <section className="rounded-2xl border border-slate-200 bg-white p-6">
                 {!editing ? (
                   <>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-slate-900">{task.title}</h3>
+<div className="flex items-start justify-between gap-3">
+<div className="min-w-0">
+<h3 className="break-words text-lg font-semibold text-slate-900">{task.title}</h3>
                         <p className="mt-1 text-sm text-slate-400">
                           Created {formatDate(task.createdAt)}
                           {task.submittedAt ? ` · Submitted ${formatDate(task.submittedAt)}` : ''}
                           {task.reviewedAt ? ` · Reviewed ${formatDate(task.reviewedAt)}` : ''}
                         </p>
                       </div>
-                      <button onClick={() => { setEditing(true); setFieldErrors({}); }} className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
+                      <button onClick={() => { setEditing(true); setFieldErrors({}); }} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
                         <Save size={15} /> Edit
                       </button>
                     </div>
                     {task.description && (
-                      <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-slate-600">
-                        {task.description}
-                      </p>
+<p className="mt-4 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-600">
+{task.description}
+</p>
                     )}
                     {(task.tags || []).length > 0 && (
                       <div className="mt-4 flex flex-wrap gap-1.5">
@@ -566,89 +734,80 @@ export default function TaskDetailScreen() {
                     </div>
 
                     <div className="mt-5 flex items-center gap-3 border-t border-slate-100 pt-4">
-                      <button
-                        onClick={handleSaveEdit}
-                        disabled={savingEdit}
-                        className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60"
-                      >
-                        {savingEdit ? 'Saving...' : 'Save Changes'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </section>
-
-              <section className="rounded-2xl border border-slate-200 bg-white p-6">
-                <h3 className="flex items-center gap-2 font-semibold text-slate-900">
-                  <Paperclip size={18} className="text-emerald-500" /> Attachments
-                </h3>
-
-                <div className="mt-4 space-y-2">
-                  {task.attachments.length === 0 ? (
-                    <p className="text-sm text-slate-400">No attachments yet.</p>
-                  ) : (
-                    task.attachments.map((att) => (
-                      <div key={att.public_id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
-                        <a href={att.secure_url} target="_blank" rel="noreferrer" className="flex min-w-0 items-center gap-2 text-slate-700 hover:text-emerald-600">
-                          <Paperclip size={14} className="shrink-0 text-slate-400" />
-                          <span className="truncate">{att.name || 'Attachment'}</span>
-                          {att.size ? <span className="shrink-0 text-xs text-slate-400">{formatBytes(att.size)}</span> : null}
-                        </a>
-                        <button
-                          onClick={() => handleRemoveAttachment(att.public_id)}
-                          disabled={removingId === att.public_id}
-                          aria-label={`Remove ${att.name || 'attachment'}`}
-                          className="ml-3 shrink-0 text-slate-400 hover:text-rose-500"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center">
-                  <UploadCloud size={24} className="text-emerald-400" />
-                  <p className="mt-2 text-sm font-medium text-slate-700">Add more files</p>
-                  <p className="text-xs text-slate-400">Maximum file size 10MB (PDF, JPG, PNG)</p>
-                  <input type="file" multiple hidden onChange={handleFiles} />
-                </label>
-                {files.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {files.map((f, idx) => (
-                      <div key={idx} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
-                        <span className="truncate text-slate-600">{f.name}</span>
-                        <button onClick={() => setFiles((prev) => prev.filter((_, i) => i !== idx))} aria-label={`Remove ${f.name}`}>
-                          <X size={14} className="text-slate-400 hover:text-rose-500" />
-                        </button>
-                      </div>
-                    ))}
                     <button
-                      onClick={handleAddFiles}
-                      disabled={addingFiles}
-                      className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60"
+                      onClick={handleSaveEdit}
+                      disabled={savingEdit}
+                      className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60"
                     >
-                      {addingFiles ? 'Uploading...' : `Attach ${files.length} file(s)`}
+                      {savingEdit ? 'Saving...' : 'Save Changes'}
                     </button>
                   </div>
-                )}
+                </div>
+              )}
+            </section>
+
+          {groupId && groupRows.length > 0 && (
+            <section className="rounded-2xl border border-slate-200 bg-white p-6">
+                <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+                  <Users2 size={18} className="text-emerald-500" /> Assigned Students
+                  <span className="text-sm font-normal text-slate-400">({groupRows.length})</span>
+                </h3>
+                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {groupRows.map((r) => {
+                    const iid = rowInternId(r.internId);
+                    const f = interns.find((i) => i._id === iid);
+                    const selected = r._id === task._id;
+                    return (
+                      <button
+                        key={r._id}
+                        onClick={() => applyTask(r)}
+                        className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
+                          selected
+                            ? 'border-emerald-300 bg-emerald-50/50'
+                            : 'border-slate-100 hover:bg-slate-50'
+                        }`}
+                      >
+                        <InternAvatar
+                          src={f?.profilePicture?.secure_url}
+                          firstName={f?.firstName}
+                          lastName={f?.lastName}
+                          email={f?.email}
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium text-slate-800">
+                            {f ? `${f.firstName} ${f.lastName}`.trim() || f.email : iid.slice(-6).toUpperCase()}
+                          </span>
+                          <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${STATUS_CHIP[r.status] || 'bg-slate-100 text-slate-500'}`}>
+                            {r.status.replace('_', ' ')}
+                          </span>
+                        </span>
+                        {selected && <CheckCircle2 size={16} className="shrink-0 text-emerald-500" />}
+                      </button>
+                    );
+                  })}
+                </div>
               </section>
-            </div>
+            )}
+
+            {renderSubmission('hidden lg:block')}
+
+            {renderAttachments('hidden lg:block')}
+          </div>
 
             <div className="space-y-6">
               <section className="rounded-2xl border border-slate-200 bg-white p-6">
                 <h3 className="font-semibold text-slate-900">Assignee</h3>
                 {intern ? (
-                  <div className="mt-4 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
-                      {initials(`${intern.firstName} ${intern.lastName}`.trim()) || '?'}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-900">
-                        {`${intern.firstName} ${intern.lastName}`.trim() || intern.email}
-                      </p>
-                      <p className="truncate text-xs text-slate-400">{intern.email}</p>
-                    </div>
+<div className="mt-4 flex items-center gap-3">
+<Link href={`/company/admin/interns/${intern._id}`} title="View profile">
+<InternAvatar src={intern.profilePicture?.secure_url} firstName={intern.firstName} lastName={intern.lastName} email={intern.email} className="h-10 w-10" />
+</Link>
+<div className="min-w-0">
+<Link href={`/company/admin/interns/${intern._id}`} className="truncate text-sm font-medium text-slate-900 hover:text-emerald-600 hover:underline">
+{`${intern.firstName} ${intern.lastName}`.trim() || intern.email}
+</Link>
+<p className="truncate text-xs text-slate-400">{intern.email}</p>
+</div>
                     <Link
                       href={`/company/admin/interns/${intern._id}`}
                       className="ml-auto rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
@@ -663,6 +822,11 @@ export default function TaskDetailScreen() {
 
               <section className="rounded-2xl border border-slate-200 bg-white p-6">
                 <h3 className="font-semibold text-slate-900">Reviewer Feedback</h3>
+                {task.reviewerFeedback && (
+                  <blockquote className="mt-3 whitespace-pre-wrap break-words rounded-xl bg-slate-50 p-3 text-sm italic text-slate-600">
+                    “{task.reviewerFeedback}”
+                  </blockquote>
+                )}
                 <textarea
                   rows={4}
                   value={feedback}
@@ -692,16 +856,16 @@ export default function TaskDetailScreen() {
                     <Save size={14} /> {savingFeedback ? 'Saving...' : 'Save Feedback'}
                   </button>
                 </div>
-              </section>
-
-              <section className="rounded-2xl flex gap-3 border border-blue-100 bg-blue-50/60 p-5">
-                <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-blue-600" />
-                <p className="text-xs leading-relaxed text-blue-800">
-                  Use the emerald button above to move this task forward. When marking Complete,
-                  you can assign earned points and include review notes.
+                <p className="mt-3 text-xs text-slate-400">
+                  Moving to Complete stamps the review — you can add points and notes at that step.
                 </p>
               </section>
             </div>
+          </div>
+
+          <div className="space-y-6 lg:hidden">
+            {renderSubmission('')}
+            {renderAttachments('')}
           </div>
         </main>
       </div>

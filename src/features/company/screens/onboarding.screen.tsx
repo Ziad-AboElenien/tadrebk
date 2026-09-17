@@ -92,20 +92,20 @@ export default function CompanyOnboardingScreen() {
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
       <div className="mb-8">
-        <span className="text-xs font-bold uppercase tracking-wider text-primary">
+        <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">
           Step 2 of 2
         </span>
-        <h1 className="text-3xl font-black text-dark mt-2 mb-2">
+        <h1 className="text-3xl font-bold text-slate-900 mt-2 mb-2">
           Complete your company profile
         </h1>
-        <p className="text-gray-500 text-sm">
+        <p className="text-slate-500 text-sm">
           Sign in first, then submit your company details for review.
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white border border-gray-100 rounded-3xl p-5 sm:p-8 shadow-sm space-y-4"
+        className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-8 shadow-sm space-y-4"
         noValidate
       >
         {formError && (
@@ -119,11 +119,11 @@ export default function CompanyOnboardingScreen() {
         />
 
         <div>
-          <label className="text-sm font-semibold text-gray-700 block mb-1.5">
+          <label className="text-sm font-semibold text-slate-700 block mb-1.5">
             Description
           </label>
           <textarea
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary min-h-[100px]"
+            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-emerald-500 min-h-[100px]"
             placeholder="Tell students about your company..."
             {...register('description')}
           />
@@ -178,7 +178,7 @@ export default function CompanyOnboardingScreen() {
               setValue('location.lng', ln, { shouldValidate: true });
             }}
           />
-          <p className="text-xs text-gray-400 mt-1">Your company will appear with a Google Maps link on your public profile.</p>
+          <p className="text-xs text-slate-400 mt-1">Your company will appear with a Google Maps link on your public profile.</p>
         </div>
 
         <Input
@@ -197,13 +197,13 @@ export default function CompanyOnboardingScreen() {
         />
 
         <div>
-          <label className="text-sm font-semibold text-gray-700 block mb-1.5">
+          <label className="text-sm font-semibold text-slate-700 block mb-1.5">
             Legal attachment (required)
           </label>
           <input
             type="file"
             accept=".pdf,.jpg,.jpeg,.png"
-            className={`w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:text-primary file:font-semibold ${legalError ? 'border border-red-400 rounded-xl' : ''}`}
+            className={`w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:text-emerald-600 file:font-semibold ${legalError ? 'border border-red-400 rounded-xl' : ''}`}
             onChange={(e) => {
               const file = e.target.files?.[0] ?? null;
               setLegalFile(file);

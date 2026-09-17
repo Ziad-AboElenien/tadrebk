@@ -7,6 +7,9 @@ interface ListParams {
   limit?: number;
 }
 
+const UNREAD_TTL_MS = 30000;
+let unreadCache: { count: number; at: number } | null = null;
+
 export const notificationService = {
   async list(params?: ListParams): Promise<{ notifications: Notification[]; pagination: { page: number; limit: number; total: number; pages: number } }> {
     const queryParams: Record<string, string> = {};
@@ -18,15 +21,21 @@ export const notificationService = {
   },
 
   async getUnreadCount(): Promise<number> {
+    if (unreadCache && Date.now() - unreadCache.at < UNREAD_TTL_MS) {
+      return unreadCache.count;
+    }
     const { data } = await api.get<UnreadCountResponse>('/notifications/unread-count');
+    unreadCache = { count: data.data.count, at: Date.now() };
     return data.data.count;
   },
 
   async markAllAsRead(): Promise<void> {
     await api.patch('/notifications/read-all');
+    unreadCache = { count: 0, at: Date.now() };
   },
 
   async markAsRead(id: string): Promise<void> {
     await api.patch(`/notifications/${id}/read`);
+    unreadCache = null;
   },
 };

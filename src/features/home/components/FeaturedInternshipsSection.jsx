@@ -41,10 +41,10 @@ export default function FeaturedInternshipsSection() {
             viewport={{ once: true, margin: '50px' }}
             variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
           >
-            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
+            <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight">
               Featured Internships
             </motion.h2>
-            <motion.p variants={fadeUp} custom={1} className="text-gray-400 text-sm mt-3 max-w-md mx-auto">
+            <motion.p variants={fadeUp} custom={1} className="text-slate-400 text-sm mt-3 max-w-md mx-auto">
               Fresh opportunities from top companies in Egypt.
             </motion.p>
           </motion.div>
@@ -54,11 +54,11 @@ export default function FeaturedInternshipsSection() {
           <div className="flex justify-center py-20"><Spinner /></div>
         ) : internships.length === 0 ? (
           <div className="text-center py-20 animate-fade-in">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <i className="fas fa-briefcase text-3xl text-gray-300" />
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <i className="fas fa-briefcase text-3xl text-slate-300" />
             </div>
-            <p className="text-gray-400 font-semibold">No internships available yet.</p>
-            <p className="text-gray-300 text-sm mt-1">Check back soon for new opportunities!</p>
+            <p className="text-slate-400 font-semibold">No internships available yet.</p>
+            <p className="text-slate-300 text-sm mt-1">Check back soon for new opportunities!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

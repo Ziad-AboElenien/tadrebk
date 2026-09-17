@@ -19,12 +19,14 @@ import {
   Share2,
   PenLine,
   Save,
+  Users2,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import GroupedBarChart from '@/features/company/components/GroupedBarChart';
 import Select from '@/components/ui/Select';
+import InternAvatar from '@/components/ui/InternAvatar';
 import { evaluationService, Evaluation, EvaluationDashboard, EvaluationAlerts } from '@/features/company/services/evaluation.service';
 import { programService } from '@/features/company/services/program.service';
 import { internService } from '@/features/company/services/intern.service';
@@ -263,7 +265,7 @@ export default function EvaluationsDashboardScreen() {
   const trends = (dashboard?.chart || []).map((c) => ({ label: c.month, values: { attendance: c.rate } }));
 
   return (
-    <div className="flex bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Evaluations" />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
@@ -291,8 +293,10 @@ export default function EvaluationsDashboardScreen() {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-white p-6 lg:col-span-2">
-              <h3 className="font-semibold text-slate-900">Attendance Trend</h3>
-              <p className="text-sm text-slate-400">Monthly attendance rate · last 6 months</p>
+              <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+                <CalendarDays size={18} className="text-emerald-500" /> Attendance Trend
+              </h3>
+              <p className="mt-0.5 text-sm text-slate-400">Monthly attendance rate · last 6 months</p>
               <div className="mt-6">
                 {loading ? (
                   <div className="h-56 animate-pulse rounded-xl bg-slate-100" />
@@ -305,8 +309,10 @@ export default function EvaluationsDashboardScreen() {
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <h3 className="font-semibold text-slate-900">At-Risk Interns</h3>
-              <p className="text-sm text-slate-400">Low attendance + overdue reviews</p>
+              <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+                <AlertTriangle size={18} className="text-amber-500" /> At-Risk Interns
+              </h3>
+              <p className="mt-0.5 text-sm text-slate-400">Low attendance + overdue reviews</p>
               <div className="mt-4 max-h-72 space-y-3 overflow-y-auto">
                 {loading ? (
                   <div className="h-20 animate-pulse rounded-xl bg-slate-100" />
@@ -351,10 +357,11 @@ export default function EvaluationsDashboardScreen() {
           <div className="rounded-2xl border border-slate-200 bg-white p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="font-semibold text-slate-900">
+                <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+                  <ClipboardCheck size={18} className="text-emerald-500" />
                   {program ? `Evaluations · ${program.name}` : 'Intern Evaluations'}
                 </h3>
-                <p className="text-sm text-slate-400">
+                <p className="mt-0.5 text-sm text-slate-400">
                   {program ? `${visible.length} evaluation(s) for this program.` : 'Manage and view performance metrics.'}
                 </p>
               </div>
@@ -394,39 +401,53 @@ export default function EvaluationsDashboardScreen() {
                   No evaluations found. Create the first one with “New Evaluation”.
                 </p>
               ) : (
-                <table className="w-full min-w-[760px] text-left text-sm">
+                <table className="w-full min-w-[680px] text-left text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-400">
                       <th className="py-3 font-medium">Intern</th>
                       <th className="py-3 font-medium">Period</th>
                       <th className="py-3 font-medium">Overall</th>
-                      <th className="py-3 font-medium">Skills</th>
-                      <th className="py-3 font-medium">Teamwork</th>
+                      <th className="py-3 font-medium">Ratings</th>
                       <th className="py-3 font-medium">Shared</th>
                       <th className="py-3 text-right font-medium">Details</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {visible.map((e) => (
+                    {visible.map((e) => {
+                      const ev = internMap.get(e.internId);
+                      return (
                       <tr key={e._id} className="transition-colors hover:bg-slate-50/50">
                         <td className="py-3.5">
-                          <p className="font-medium text-slate-900">{internName(internMap, e.internId)}</p>
-                          <p className="text-xs text-slate-400">{formatDate(e.evaluatedAt)}</p>
+                          <div className="flex items-center gap-2.5">
+                            <InternAvatar
+                              src={ev?.profilePicture?.secure_url}
+                              firstName={ev?.firstName}
+                              lastName={ev?.lastName}
+                              className="h-8 w-8 text-[10px]"
+                            />
+                            <div className="min-w-0">
+                              <Link href={`/company/admin/interns/${e.internId}`} className="block truncate font-medium text-slate-900 hover:text-emerald-600 hover:underline">
+                                {internName(internMap, e.internId)}
+                              </Link>
+                              <p className="text-xs text-slate-400">{formatDate(e.evaluatedAt)}</p>
+                            </div>
+                          </div>
                         </td>
                         <td className="whitespace-nowrap py-3.5 text-slate-600">
                           {formatDate(e.period.start)} → {formatDate(e.period.end)}
                         </td>
                         <td className="py-3.5 font-semibold text-slate-900">{e.overallScore}</td>
                         <td className="py-3.5">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-slate-900">{e.skillRating}</span>
-                            <Stars value={e.skillRating} />
-                          </div>
-                        </td>
-                        <td className="py-3.5">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-slate-900">{e.teamworkRating}</span>
-                            <Stars value={e.teamworkRating} />
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1.5 text-xs text-slate-500" title="Skill rating">
+                              <Trophy size={12} className="text-amber-500" />
+                              <span className="font-semibold text-slate-900">{e.skillRating}</span>
+                            </span>
+                            <span className="flex items-center gap-1.5 text-xs text-slate-500" title="Teamwork rating">
+                              <Users2 size={12} className="text-blue-500" />
+                              <span className="font-semibold text-slate-900">{e.teamworkRating}</span>
+                            </span>
+                            <Stars value={(e.skillRating + e.teamworkRating) / 2} />
                           </div>
                         </td>
                         <td className="py-3.5">
@@ -447,7 +468,8 @@ export default function EvaluationsDashboardScreen() {
                           </button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               )}

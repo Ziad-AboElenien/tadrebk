@@ -17,6 +17,7 @@ import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import GlassFilter from '@/components/ui/GlassFilter';
 import { projectService } from '@/features/company/services/project.service';
 import { programService } from '@/features/company/services/program.service';
 import { Project, Program } from '@/features/company/types/management';
@@ -116,10 +117,10 @@ export default function ProjectsScreen() {
   const internCount = projects.reduce((sum, p) => sum + (p.internIds?.length ?? 0), 0);
 
   return (
-    <div className="flex bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Projects" />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Projects" />
 
         <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
@@ -154,19 +155,12 @@ export default function ProjectsScreen() {
           <div className="rounded-2xl border border-slate-200 bg-white p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-wrap gap-2">
-                {FILTERS.map((f) => (
-                  <button
-                    key={f.key}
-                    onClick={() => setFilter(f.key)}
-                    className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                      filter === f.key
-                        ? 'bg-slate-900 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {f.label}
-                  </button>
-                ))}
+                <GlassFilter
+                  options={FILTERS}
+                  value={filter}
+                  onChange={(key) => setFilter(key)}
+                  ariaLabel="Filter projects by status"
+                />
               </div>
               <div className="relative">
                 <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -182,7 +176,14 @@ export default function ProjectsScreen() {
             {loading ? (
               <div className="mt-8 grid grid-cols-1 gap-5 animate-pulse sm:grid-cols-2 xl:grid-cols-3">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-56 rounded-2xl border border-white/60 bg-slate-100" />
+                  <div key={i} className="h-56 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                    <div className="h-24 bg-slate-200" />
+                    <div className="space-y-2 p-5">
+                      <div className="h-4 w-2/3 rounded-full bg-slate-200" />
+                      <div className="h-3 w-full rounded-full bg-slate-100" />
+                      <div className="h-3 w-1/2 rounded-full bg-slate-100" />
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : filtered.length === 0 ? (
@@ -207,7 +208,8 @@ export default function ProjectsScreen() {
                   return (
                     <div
                       key={p._id}
-                      className="group flex flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/40 shadow-lg shadow-slate-200/60 backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-xl"
+                      style={{ background: `linear-gradient(to bottom, ${color}14, rgba(255,255,255,0.4) 60%)` }}
+                      className="group flex flex-col overflow-hidden rounded-2xl border border-white/60 shadow-lg shadow-slate-200/60 backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-xl"
                     >
                       <div
                         className="relative flex h-24 items-center justify-between p-4"
@@ -258,11 +260,11 @@ export default function ProjectsScreen() {
                         </div>
                       </div>
 
-                      <div className="flex flex-1 flex-col p-5">
-                        <Link href={`/company/admin/projects/${p._id}`} className="block">
-                          <p className="text-lg font-semibold text-slate-900 group-hover:text-slate-700">{p.name}</p>
-                        </Link>
-                        <div className="mt-2">
+<div className="flex flex-1 flex-col p-5">
+<Link href={`/company/admin/projects/${p._id}`} className="block">
+<p className="break-words text-lg font-semibold text-slate-900 group-hover:text-slate-700">{p.name}</p>
+</Link>
+<div className="mt-2">
                           <span
                             className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${
                               STATUS_STYLES[p.status] || 'bg-slate-100 text-slate-500'
@@ -275,12 +277,12 @@ export default function ProjectsScreen() {
                           <p className="mt-3 line-clamp-2 text-sm text-slate-500">{p.description}</p>
                         )}
                         <div className="mt-auto space-y-2 pt-4">
-                          <div className="flex items-center justify-between text-xs text-slate-500">
-                            <span className="flex items-center gap-1.5">
-                              <FolderKanban size={13} className="text-slate-400" />
-                              {program ? program.name : 'No program'}
-                            </span>
-                          </div>
+<div className="flex items-center justify-between gap-2 text-xs text-slate-500">
+<span className="flex min-w-0 items-center gap-1.5">
+<FolderKanban size={13} className="shrink-0 text-slate-400" />
+<span className="truncate">{program ? program.name : 'No program'}</span>
+</span>
+</div>
                           <div className="flex items-center justify-between text-xs text-slate-500">
                             <span className="flex items-center gap-1.5">
                               <Calendar size={13} className="text-slate-400" />

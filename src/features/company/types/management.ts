@@ -48,7 +48,34 @@ export interface Intern {
   bio?: string;
   headline?: string;
   skills?: string[];
+  categories?: string[];
   profilePicture?: { public_id?: string; secure_url?: string } | null;
+  coverPicture?: { public_id?: string; secure_url?: string } | null;
+  resume?: { public_id?: string; secure_url?: string } | null;
+  dateOfBirth?: string;
+  gender?: string;
+  address?: string;
+  education?: {
+    institution?: string;
+    degree?: string;
+    field?: string;
+    grade?: string;
+    startDate?: string;
+    endDate?: string;
+  }[];
+  experience?: {
+    internshipTitle?: string;
+    companyName?: string;
+    completedAt?: string;
+    rating?: number;
+    feedback?: string;
+  }[];
+  courses?: {
+    name?: string;
+    certificate?: { public_id?: string; secure_url?: string };
+  }[];
+  ratingCount?: number;
+  ratingSum?: number;
   [key: string]: unknown;
 }
 
