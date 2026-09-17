@@ -18,7 +18,7 @@ export default function FeaturedInternshipsSection() {
   useEffect(() => {
     (async () => {
       try {
-        const result = await internshipService.listInternships({ limit: 20 });
+        const result = await internshipService.listInternships({ limit: 6 });
         setInternships(result.internships);
       } catch {
         // silently fail

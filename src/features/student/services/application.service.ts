@@ -76,6 +76,7 @@ interface ApplyPayload {
   coverLetter?: string;
   answers?: Answer[];
   resume?: File;
+  track?: string;
 }
 
 interface ReviewPayload {
@@ -105,6 +106,7 @@ export const applicationService = {
     if (payload?.coverLetter) formData.append('coverLetter', payload.coverLetter);
     if (payload?.answers) formData.append('answers', JSON.stringify(payload.answers));
     if (payload?.resume) formData.append('resume', payload.resume);
+    if (payload?.track) formData.append('track', payload.track);
 
     const { data } = await api.post<ApplicationResponse>(
       `/company/${companyId}/internships/${internId}/applications`,

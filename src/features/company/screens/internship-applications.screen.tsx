@@ -51,12 +51,8 @@ export default function InternshipApplicationsScreen() {
   const [showOtherUniversity, setShowOtherUniversity] = useState(false);
   const universityRef = useRef<HTMLDivElement>(null);
   const universityFetchedRef = useRef(false);
-  const [reviewingId, setReviewingId] = useState<string | null>(null);
-  const [ratingModal, setRatingModal] = useState<{ applicationId: string; studentName: string } | null>(null);
-  const [ratingScore, setRatingScore] = useState(5);
-  const [ratingComment, setRatingComment] = useState('');
-  const [submittingRating, setSubmittingRating] = useState(false);
-  const [ratings, setRatings] = useState<Record<string, RatingData | null>>({});
+const [reviewingId, setReviewingId] = useState<string | null>(null);
+const [ratings, setRatings] = useState<Record<string, RatingData | null>>({});
 
   const fetchApplications = useCallback(async () => {
     if (!company || !internId) return;
@@ -140,26 +136,6 @@ export default function InternshipApplicationsScreen() {
       }
     });
   }, [applications]);
-
-  async function submitRating() {
-    if (!ratingModal) return;
-    setSubmittingRating(true);
-    try {
-      await applicationService.rateApplication(ratingModal.applicationId, {
-        score: ratingScore,
-        comment: ratingComment || undefined,
-      });
-      setRatings((prev) => ({ ...prev, [ratingModal.applicationId]: { submitted: true, score: ratingScore, comment: ratingComment } }));
-      setRatingModal(null);
-      setRatingScore(5);
-      setRatingComment('');
-      toastHelper.success('Rating submitted!');
-    } catch (err) {
-      toastHelper.error(getErrorMessage(err));
-    } finally {
-      setSubmittingRating(false);
-    }
-  }
 
   async function handleReview(applicationId: string, status: 'accepted' | 'rejected') {
     if (!company) return;
@@ -453,18 +429,13 @@ export default function InternshipApplicationsScreen() {
                               </span>
                             )}
                             {ratings[app._id] == null && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  const stuName = s ? `${s.firstName} ${s.lastName}` : 'Student';
-                                  setRatingModal({ applicationId: app._id, studentName: stuName });
-                                }}
-                                className="border-emerald-200 text-emerald-600 hover:bg-emerald-50"
-                              >
-                                <i className="fas fa-star text-xs mr-1" /> Rate Student
-                              </Button>
-                            )}
+<Link
+href={`/company/ratings/${app._id}/rate?name=${encodeURIComponent(s ? `${s.firstName} ${s.lastName}` : 'Student')}`}
+className="rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-600 transition"
+>
+<i className="fas fa-star text-xs mr-1" /> Rate Student
+</Link>
+)}
                             {ratings[app._id] != null && (
                               <div className="flex items-center gap-1">
                                 {Array.from({ length: 5 }, (_, s) => (
@@ -544,56 +515,6 @@ export default function InternshipApplicationsScreen() {
         )}
       </div>
 
-      {/* Rating Modal */}
-      {ratingModal && (
-        <>
-          <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm" onClick={() => setRatingModal(null)} />
-          <div className="fixed inset-0 z-[101] flex items-center justify-center overflow-y-auto p-4">
-            <div className="bg-white rounded-3xl shadow-2xl p-5 sm:p-8 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-bold text-slate-900 mb-1">Rate {ratingModal.studentName}</h3>
-              <p className="text-sm text-slate-400 mb-5">How was this student's performance?</p>
-
-              <div className="flex items-center gap-2 mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setRatingScore(star)}
-                    className="text-2xl transition-transform hover:scale-110"
-                  >
-                    <i className={`fas fa-star ${star <= ratingScore ? 'text-amber-400' : 'text-gray-200'}`} />
-                  </button>
-                ))}
-                <span className="text-sm text-slate-500 ml-2">{ratingScore}/5</span>
-              </div>
-
-              <textarea
-                value={ratingComment}
-                onChange={(e) => setRatingComment(e.target.value)}
-                rows={3}
-                placeholder="Leave a comment (optional)..."
-                className="w-full border border-slate-200 rounded-xl bg-white text-slate-800 placeholder:text-slate-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-emerald-500 resize-none mb-5"
-              />
-
-              <div className="flex gap-3">
-                <button
-                  onClick={submitRating}
-                  disabled={submittingRating}
-                  className="flex-1 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-600 transition disabled:opacity-50"
-                >
-                  {submittingRating ? 'Submitting...' : 'Submit Rating'}
-                </button>
-                <button
-                  onClick={() => setRatingModal(null)}
-                  className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }

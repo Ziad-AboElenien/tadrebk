@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import {
@@ -137,6 +137,7 @@ export default function TaskDetailScreen() {
   const [actionsOpen, setActionsOpen] = useState(false);
 
   const [bulkOpen, setBulkOpen] = useState(false);
+  const bulkPanelRef = useRef<HTMLElement>(null);
   const [bulkTitle, setBulkTitle] = useState('');
   const [bulkDescription, setBulkDescription] = useState('');
   const [bulkPriority, setBulkPriority] = useState<TaskPriority | ''>('');
@@ -195,6 +196,13 @@ export default function TaskDetailScreen() {
     const t = setTimeout(fetchTask, 0);
     return () => clearTimeout(t);
   }, [fetchTask]);
+
+  useEffect(() => {
+    if (bulkOpen) {
+      const t = setTimeout(() => bulkPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+      return () => clearTimeout(t);
+    }
+  }, [bulkOpen]);
 
   if (loading) {
     return (
@@ -789,6 +797,87 @@ export default function TaskDetailScreen() {
               </section>
             )}
 
+            {bulkOpen && task?.taskGroupId && (
+              <section ref={bulkPanelRef} className="scroll-mt-4 rounded-2xl border border-indigo-200 bg-indigo-50/40 p-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+                    <Layers size={18} className="text-indigo-500" /> Update Task Group
+                  </h3>
+                  <button onClick={() => setBulkOpen(false)} className="text-sm text-slate-400 hover:text-slate-600" aria-label="Close">
+                    <X size={16} />
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  Changes apply to every task in this broadcast group. Leave a field empty to keep it unchanged.
+                </p>
+
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-slate-700">Title</label>
+                    <input
+                      type="text"
+                      value={bulkTitle}
+                      onChange={(e) => setBulkTitle(e.target.value)}
+                      placeholder={task.title}
+                      className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700">Description</label>
+                    <textarea
+                      rows={3}
+                      value={bulkDescription}
+                      onChange={(e) => setBulkDescription(e.target.value)}
+                      placeholder={task.description ?? 'No description'}
+                      className="mt-1.5 w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">Priority</label>
+                      <Select
+                        value={bulkPriority}
+                        onChange={(e) => setBulkPriority(e.target.value as TaskPriority | '')}
+                        placeholder="Keep current"
+                        className="mt-1.5"
+                      >
+                        <option value="">Keep current</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">Due Date</label>
+                      <input
+                        type="date"
+                        value={bulkDueDate}
+                        onChange={(e) => setBulkDueDate(e.target.value)}
+                        className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {bulkErrors.bulk && (
+                  <p className="mt-3 text-xs font-medium text-rose-500">{bulkErrors.bulk}</p>
+                )}
+
+                <div className="mt-5 flex items-center justify-end gap-3">
+                  <button onClick={() => setBulkOpen(false)} disabled={savingBulk} className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleBulkUpdate}
+                    disabled={savingBulk}
+                    className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60"
+                  >
+                    <Layers size={15} /> {savingBulk ? 'Updating...' : 'Update Group'}
+                  </button>
+                </div>
+              </section>
+            )}
+
             {renderSubmission('hidden lg:block')}
 
             {renderAttachments('hidden lg:block')}
@@ -879,87 +968,6 @@ export default function TaskDetailScreen() {
         onConfirm={handleArchive}
         onCancel={() => setConfirmArchive(false)}
       />
-
-      {bulkOpen && task?.taskGroupId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" onClick={() => !savingBulk && setBulkOpen(false)}>
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-slate-900">Update Task Group</h3>
-              <button onClick={() => setBulkOpen(false)} className="text-slate-400 hover:text-slate-600" aria-label="Close">
-                <X size={18} />
-              </button>
-            </div>
-            <p className="mt-1 text-xs text-slate-400">
-              Changes apply to every task in this broadcast group. Leave a field empty to keep it unchanged.
-            </p>
-
-            <div className="mt-4 space-y-4">
-              <div>
-                <label className="text-sm font-medium text-slate-700">Title</label>
-                <input
-                  type="text"
-                  value={bulkTitle}
-                  onChange={(e) => setBulkTitle(e.target.value)}
-                  placeholder={task.title}
-                  className="mt-1.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-700">Description</label>
-                <textarea
-                  rows={3}
-                  value={bulkDescription}
-                  onChange={(e) => setBulkDescription(e.target.value)}
-                  placeholder={task.description ?? 'No description'}
-                  className="mt-1.5 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                />
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Priority</label>
-                  <Select
-                    value={bulkPriority}
-                    onChange={(e) => setBulkPriority(e.target.value as TaskPriority | '')}
-                    placeholder="Keep current"
-                    className="mt-1.5"
-                  >
-                    <option value="">Keep current</option>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Due Date</label>
-                  <input
-                    type="date"
-                    value={bulkDueDate}
-                    onChange={(e) => setBulkDueDate(e.target.value)}
-                    className="mt-1.5 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {bulkErrors.bulk && (
-              <p className="mt-3 text-xs font-medium text-rose-500">{bulkErrors.bulk}</p>
-            )}
-
-            <div className="mt-5 flex items-center justify-end gap-3">
-              <button onClick={() => setBulkOpen(false)} disabled={savingBulk} className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
-                Cancel
-              </button>
-              <button
-                onClick={handleBulkUpdate}
-                disabled={savingBulk}
-                className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60"
-              >
-                <Layers size={15} /> {savingBulk ? 'Updating...' : 'Update Group'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

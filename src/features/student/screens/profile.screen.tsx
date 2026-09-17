@@ -19,7 +19,6 @@ import Select from '@/components/ui/Select';
 import ImageMenu from '@/components/ui/ImageMenu';
 import dynamic from 'next/dynamic';
 const ImageCropperModal = dynamic(() => import('@/components/ui/ImageCropperModal'), { ssr: false });
-import CourseModal from '@/components/ui/CourseModal';
 import { userService } from '@/features/student/services/user.service';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
@@ -51,9 +50,15 @@ export default function StudentProfileScreen() {
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [otherText, setOtherText] = useState('');
   const [showOtherInput, setShowOtherInput] = useState(false);
-  const [courseModalOpen, setCourseModalOpen] = useState(false);
+  const [courseFormOpen, setCourseFormOpen] = useState(false);
+  const [courseName, setCourseName] = useState('');
+  const [courseFile, setCourseFile] = useState<File | null>(null);
+  const [courseError, setCourseError] = useState('');
   const [courseAdding, setCourseAdding] = useState(false);
   const [editCourseIndex, setEditCourseIndex] = useState<number | null>(null);
+  const [editCourseName, setEditCourseName] = useState('');
+  const [editCourseFile, setEditCourseFile] = useState<File | null>(null);
+  const [editCourseError, setEditCourseError] = useState('');
   const [editCourseUpdating, setEditCourseUpdating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const profileRef = useRef<HTMLInputElement>(null);
@@ -131,26 +136,50 @@ export default function StudentProfileScreen() {
     } finally { setSaving(false); }
   }
 
-  async function handleAddCourse(name: string, file?: File) {
+  async function submitAddCourse() {
     if (!userId) return;
+    const name = courseName.trim();
+    if (!name) {
+      setCourseError('Enter a course name.');
+      return;
+    }
     setCourseAdding(true);
     try {
-      await userService.addCourse(name, file);
+      await userService.addCourse(name, courseFile ?? undefined);
       const fresh = await userService.getUserProfile(userId);
       dispatch(setUser(fresh));
-      setCourseModalOpen(false);
+      setCourseFormOpen(false);
+      setCourseName('');
+      setCourseFile(null);
+      setCourseError('');
       toastHelper.success('Course added!');
     } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setCourseAdding(false); }
   }
 
-  async function handleUpdateCourse(name?: string, file?: File) {
+  function openEditCourse(i: number, currentName: string) {
+    setEditCourseIndex(i);
+    setEditCourseName(currentName);
+    setEditCourseFile(null);
+    setEditCourseError('');
+  }
+
+  async function submitUpdateCourse() {
     if (!userId || editCourseIndex === null) return;
+    const original = user?.courses?.[editCourseIndex]?.name ?? '';
+    const name = editCourseName.trim();
+    if (!name) {
+      setEditCourseError('Enter a course name.');
+      return;
+    }
     setEditCourseUpdating(true);
     try {
-      await userService.updateCourse(editCourseIndex, name, file);
+      await userService.updateCourse(editCourseIndex, name !== original ? name : undefined, editCourseFile ?? undefined);
       const fresh = await userService.getUserProfile(userId);
       dispatch(setUser(fresh));
       setEditCourseIndex(null);
+      setEditCourseName('');
+      setEditCourseFile(null);
+      setEditCourseError('');
       toastHelper.success('Course updated!');
     } catch (err) { toastHelper.error(getErrorMessage(err)); } finally { setEditCourseUpdating(false); }
   }
@@ -636,37 +665,102 @@ export default function StudentProfileScreen() {
             <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-bold text-slate-900 text-lg flex items-center gap-2"><i className="fas fa-certificate text-emerald-600 text-base" />Courses</h2>
-                <Button size="sm" onClick={() => setCourseModalOpen(true)}><i className="fas fa-plus text-xs" /> Add course</Button>
+                <Button size="sm" onClick={() => { setCourseFormOpen((v) => !v); setCourseError(''); }}><i className="fas fa-plus text-xs" /> Add course</Button>
               </div>
+              {courseFormOpen && (
+                <div className="mb-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
+                  <label className="text-sm font-medium text-slate-700">
+                    Course name <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={courseName}
+                    onChange={(e) => { setCourseName(e.target.value); setCourseError(''); }}
+                    placeholder="e.g. React — The Complete Guide"
+                    className={`mt-2 w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 ${courseError ? 'border-rose-400' : 'border-slate-200'}`}
+                  />
+                  {courseError && <p className="mt-1 text-xs font-medium text-rose-500">{courseError}</p>}
+                  <label className="mt-3 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-500 transition hover:border-emerald-400">
+                    <i className="fas fa-cloud-upload-alt text-emerald-500" />
+                    <span className="truncate">{courseFile ? courseFile.name : 'Certificate file (optional)'}</span>
+                    <input type="file" className="hidden" onChange={(e) => setCourseFile(e.target.files?.[0] ?? null)} />
+                  </label>
+                  <div className="mt-3 flex justify-end gap-2">
+                    <button onClick={() => { setCourseFormOpen(false); setCourseName(''); setCourseFile(null); setCourseError(''); }} className="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700">
+                      Cancel
+                    </button>
+                    <button
+                      onClick={submitAddCourse}
+                      disabled={courseAdding}
+                      className="rounded-lg bg-emerald-500 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-60"
+                    >
+                      {courseAdding ? 'Adding...' : 'Add Course'}
+                    </button>
+                  </div>
+                </div>
+              )}
               {user.courses && user.courses.length > 0 ? (
                 <div className="space-y-3">{user.courses.map((course: any, i: number) => (
-                  <div key={i} className="flex items-center gap-3 justify-between">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-400 to-rose-600 flex items-center justify-center text-white shrink-0">
-                        <i className="fas fa-graduation-cap text-xs" />
+                  <div key={i}>
+                    <div className="flex items-center gap-3 justify-between">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-400 to-rose-600 flex items-center justify-center text-white shrink-0">
+                          <i className="fas fa-graduation-cap text-xs" />
+                        </div>
+                        <p className="font-medium text-slate-900 text-sm truncate">{course.name}</p>
                       </div>
-                      <p className="font-medium text-slate-900 text-sm truncate">{course.name}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => setEditCourseIndex(i)}
-                        className="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center hover:bg-blue-100 transition-colors"
-                        title="Edit course"
-                      >
-                        <i className="fas fa-pen text-xs" />
-                      </button>
-                      {course.certificate?.secure_url && (
-                        <button onClick={() => {
-                          const url = course.certificate?.certificateUrl || course.certificate?.secure_url;
-                          if (!url) return;
-                          const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(url);
-                          if (isImage) { window.open(url, '_blank'); return; }
-                          openFileProxy(url);
-                        }} className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 shrink-0 cursor-pointer">
-                          <i className="fas fa-eye text-xs" /> View certificate
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => (editCourseIndex === i ? setEditCourseIndex(null) : openEditCourse(i, course.name))}
+                          className="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center hover:bg-blue-100 transition-colors"
+                          title="Edit course"
+                        >
+                          <i className={`fas ${editCourseIndex === i ? 'fa-times' : 'fa-pen'} text-xs`} />
                         </button>
-                      )}
+                        {course.certificate?.secure_url && (
+                          <button onClick={() => {
+                            const url = course.certificate?.certificateUrl || course.certificate?.secure_url;
+                            if (!url) return;
+                            const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(url);
+                            if (isImage) { window.open(url, '_blank'); return; }
+                            openFileProxy(url);
+                          }} className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 shrink-0 cursor-pointer">
+                            <i className="fas fa-eye text-xs" /> View certificate
+                          </button>
+                        )}
+                      </div>
                     </div>
+                    {editCourseIndex === i && (
+                      <div className="ml-11 mt-2 rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
+                        <label className="text-sm font-medium text-slate-700">
+                          Course name <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={editCourseName}
+                          onChange={(e) => { setEditCourseName(e.target.value); setEditCourseError(''); }}
+                          className={`mt-2 w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 ${editCourseError ? 'border-rose-400' : 'border-slate-200'}`}
+                        />
+                        {editCourseError && <p className="mt-1 text-xs font-medium text-rose-500">{editCourseError}</p>}
+                        <label className="mt-3 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-500 transition hover:border-emerald-400">
+                          <i className="fas fa-cloud-upload-alt text-emerald-500" />
+                          <span className="truncate">{editCourseFile ? editCourseFile.name : 'Replace certificate (optional)'}</span>
+                          <input type="file" className="hidden" onChange={(e) => setEditCourseFile(e.target.files?.[0] ?? null)} />
+                        </label>
+                        <div className="mt-3 flex justify-end gap-2">
+                          <button onClick={() => setEditCourseIndex(null)} className="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700">
+                            Cancel
+                          </button>
+                          <button
+                            onClick={submitUpdateCourse}
+                            disabled={editCourseUpdating}
+                            className="rounded-lg bg-emerald-500 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-60"
+                          >
+                            {editCourseUpdating ? 'Saving...' : 'Save'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}</div>
               ) : (
@@ -688,28 +782,6 @@ export default function StudentProfileScreen() {
         )}
 
         {lightbox && <ImageLightbox src={lightbox} alt="Profile image" onClose={() => setLightbox(null)} />}
-
-        {courseModalOpen && (
-          <CourseModal
-            open={courseModalOpen}
-            adding={courseAdding}
-            onAdd={handleAddCourse}
-            onClose={() => setCourseModalOpen(false)}
-          />
-        )}
-
-        {editCourseIndex !== null && user?.courses?.[editCourseIndex] && (
-          <CourseModal
-            open
-            adding={editCourseUpdating}
-            editMode
-            initialName={user.courses[editCourseIndex].name}
-            hasCertificate={!!user.courses[editCourseIndex].certificate?.secure_url}
-            onAdd={handleAddCourse}
-            onUpdate={handleUpdateCourse}
-            onClose={() => setEditCourseIndex(null)}
-          />
-        )}
 
         {/* Settings button */}
         <div className="mt-8 text-center">

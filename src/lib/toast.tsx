@@ -51,14 +51,14 @@ function toastWith(
   const fn = type === 'error' ? toast.error : type === 'info' ? toast.info : type === 'warning' ? toast.warning : toast.success;
 
   fn(
-    <div className="flex items-center gap-3 pl-1">
+    <div className="flex items-center gap-3 py-1 pl-1 pr-2">
       {icon}
-      <span className="text-sm font-medium text-dark max-w-[260px] sm:max-w-xs line-clamp-3">{message}</span>
+      <span className="max-w-[260px] text-sm font-medium text-slate-900 line-clamp-3 sm:max-w-xs">{message}</span>
     </div>,
     {
       ...baseOpts,
       toastId: `toast-${type}-${message}`,
-      className: `!bg-white !border ${border} !rounded-2xl !shadow-xl !overflow-hidden`,
+      className: `!bg-white !border ${border} !rounded-2xl !p-4 !shadow-xl !overflow-hidden`,
     },
   );
 }

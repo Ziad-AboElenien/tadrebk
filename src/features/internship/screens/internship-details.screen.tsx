@@ -8,12 +8,11 @@ import { Company, getCompanyImgUrl } from '@/features/company/types';
 import MediaImage from '@/components/ui/MediaImage';
 import EmptyState from '@/components/ui/EmptyState';
 import Button from '@/components/ui/Button';
-import ApplyModal from '@/features/internship/components/ApplyModal';
 import { internshipService } from '@/features/internship/services/internship.service';
-import { applicationService, Answer } from '@/features/student/services/application.service';
+import { applicationService } from '@/features/student/services/application.service';
 import { useAppSelector } from '@/store/store';
 import { CATEGORY_LABELS } from '@/features/student/types';
-import { getErrorMessage, getErrorUrl } from '@/lib/axios';
+import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
 const locationLabels: Record<string, string> = { 'on-site': 'On-site', remote: 'Remote', hybrid: 'Hybrid' };
@@ -30,10 +29,7 @@ export default function InternshipDetailsScreen() {
   const [company, setCompany] = useState<Company | null>(null);
   const [moreInternships, setMoreInternships] = useState<Internship[]>([]);
   const [loading, setLoading] = useState(true);
-  const [applying, setApplying] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [showApplyModal, setShowApplyModal] = useState(false);
-  const [showApplySuccess, setShowApplySuccess] = useState(false);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
 
   useEffect(() => {
@@ -96,7 +92,7 @@ export default function InternshipDetailsScreen() {
 
   const handleApply = useCallback(() => {
     if (!isAuthenticated) {
-      router.push(`/login/student?next=/internships/${internId}`);
+      router.push(`/login/student?next=/internships/${internId}/apply`);
       return;
     }
     if (!internship || internship.closed) {
@@ -107,71 +103,8 @@ export default function InternshipDetailsScreen() {
       toastHelper.info('You already applied to this internship');
       return;
     }
-    if (!user?.resume) {
-      toastHelper.warning('You haven\'t uploaded your CV/resume yet. Please upload one in your profile before applying.');
-    }
-    setShowApplyModal(true);
-  }, [isAuthenticated, internship, internId, alreadyApplied, user, router]);
-
-  const handleApplySubmit = useCallback(async (coverLetter: string, answers: Answer[], resume?: File) => {
-    if (!internship) return;
-    setApplying(true);
-    try {
-      const cid = getCompanyIdFromInternship(internship);
-      if (!cid) {
-        toastHelper.error('Company information not available for this internship');
-        setApplying(false);
-        setShowApplyModal(false);
-        return;
-      }
-      const payload: any = {};
-      if (coverLetter) payload.coverLetter = coverLetter;
-      const hasAnswers = answers?.some((a) =>
-        a.type === 'mcq' ? a.selectedOption : a.text?.trim(),
-      );
-      if (hasAnswers) {
-        // Don't silently send partially-answered questions — the server rejects them.
-        const incomplete = answers.some((a) =>
-          a.type === 'mcq' ? !a.selectedOption : !a.text?.trim(),
-        );
-        if (incomplete) {
-          toastHelper.error('Please answer all application questions');
-          return;
-        }
-        payload.answers = answers;
-      }
-      if (resume) payload.resume = resume;
-      await applicationService.apply(cid, internId, Object.keys(payload).length > 0 ? payload : undefined);
-      setShowApplyModal(false);
-      setShowApplySuccess(true);
-    } catch (err: any) {
-      const msg = getErrorMessage(err);
-      // Terminal states — close the modal.
-      const terminal =
-        msg.includes('already applied') ||
-        msg.includes('closed') ||
-        msg.includes('Invalid internship id');
-      if (msg.includes('already applied')) {
-        toastHelper.info('You already applied to this internship');
-      } else if (msg.includes('resume') || msg.includes('CV')) {
-        toastHelper.warning('Please upload your CV/resume in your profile settings first');
-      } else if (msg.includes('closed')) {
-        toastHelper.error('This internship is no longer accepting applications');
-      } else if (msg.includes('Invalid internship id')) {
-        const idUrl = getErrorUrl(err);
-        toastHelper.warning(`Unable to apply. Make sure you have uploaded your CV/resume in your profile, and that you haven't already applied.${idUrl ? ` (${idUrl})` : ''}`);
-      } else if (msg.includes('answers') || msg.includes('questions')) {
-        toastHelper.error('Please answer all required questions');
-      } else {
-        toastHelper.error(msg);
-      }
-      // Keep the modal open on fixable errors (resume/questions/server) so the
-      // user doesn't lose their typed cover letter and answers.
-      if (terminal) setShowApplyModal(false);
-    } finally {
-      setApplying(false);
-    }
-  }, [internship, internId]);
+    router.push(`/internships/${internId}/apply`);
+  }, [isAuthenticated, internship, internId, alreadyApplied, router]);
 
   const handleSave = useCallback(async () => {
     const wasSaved = saved;
@@ -336,10 +269,9 @@ export default function InternshipDetailsScreen() {
                   {canApply && !alreadyApplied && (
                     <button
                       onClick={handleApply}
-                      disabled={applying}
-                      className="flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-emerald-700 shadow-lg transition hover:bg-emerald-50 disabled:opacity-50"
+                      className="flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-emerald-700 shadow-lg transition hover:bg-emerald-50"
                     >
-                      {applying ? 'Applying...' : 'Apply Now'}
+                      Apply Now
                       <i className="fas fa-arrow-right text-xs" />
                     </button>
                   )}
@@ -473,10 +405,9 @@ export default function InternshipDetailsScreen() {
                   <p className="mb-3 text-sm text-slate-500">Ready to kickstart your career?</p>
                   <button
                     onClick={handleApply}
-                    disabled={applying}
-                    className="w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-600 disabled:opacity-50"
+                    className="w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-600"
                   >
-                    {applying ? 'Applying...' : 'Apply for this role'}
+                    Apply for this role
                   </button>
                 </div>
               )}
@@ -591,63 +522,16 @@ export default function InternshipDetailsScreen() {
         )}
       </main>
 
-      <ApplyModal
-        open={showApplyModal}
-        internshipTitle={internship.title}
-        companyName={company?.name}
-        questions={internship.questions}
-        loading={applying}
-        onSubmit={handleApplySubmit}
-        onCancel={() => setShowApplyModal(false)}
-      />
-
       {!internship.closed && canApply && !alreadyApplied && (
         <div className="sticky bottom-0 z-30 -mx-4 border-t border-slate-200 bg-white/90 px-4 py-3 backdrop-blur-xl sm:hidden">
           <button
             onClick={handleApply}
-            disabled={applying}
-            className="w-full rounded-xl bg-emerald-500 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-600 disabled:opacity-50"
+            className="w-full rounded-xl bg-emerald-500 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-600"
           >
-            {applying ? 'Applying...' : 'Apply Now'}
+            Apply Now
           </button>
         </div>
       )}
-
-      {/* Apply success modal */}
-      {showApplySuccess && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowApplySuccess(false)} />
-          <div className="relative bg-white rounded-[2rem] p-6 sm:p-10 sm:p-12 shadow-2xl max-w-md w-full text-center animate-fade-in-up">
-            <div className="w-20 h-20 rounded-[1.25rem] bg-emerald-50 flex items-center justify-center mx-auto mb-6">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
-                <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </div>
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-3">Application Submitted!</h2>
-            <p className="text-slate-500 mb-8">Your application has been sent successfully. The company will review it and get back to you.</p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button onClick={() => router.push('/my-applications')} className="!bg-gradient-to-r !from-emerald-500 !to-emerald-600 !shadow-lg !shadow-emerald-200 !font-bold !px-8 !py-3.5">
-                <i className="fas fa-paper-plane mr-2" />
-                My Applications
-              </Button>
-              <Button variant="outline" onClick={() => { setShowApplySuccess(false); window.scrollTo(0, 0); }} className="!px-8 !py-3.5">
-                Continue Browsing
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Global modal animation */}
-      <style>{`
-        @keyframes fade-in-up {
-          from { opacity: 0; transform: translateY(20px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .animate-fade-in-up { animation: fade-in-up 0.35s ease-out both; }
-      `}</style>
     </div>
   );
 }

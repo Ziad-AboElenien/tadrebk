@@ -2,30 +2,24 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
-  ClipboardCheck,
-  CalendarDays,
-  Trophy,
-  TrendingUp,
-  Search,
-  Plus,
-  Star,
-  AlertTriangle,
-  CheckCircle2,
-  Clock3,
-  X,
-  Loader2,
-  Share2,
-  PenLine,
-  Save,
-  Users2,
+ClipboardCheck,
+CalendarDays,
+TrendingUp,
+Search,
+Plus,
+Star,
+AlertTriangle,
+CheckCircle2,
+Clock3,
+Trophy,
+Users2,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import GroupedBarChart from '@/features/company/components/GroupedBarChart';
-import Select from '@/components/ui/Select';
 import InternAvatar from '@/components/ui/InternAvatar';
 import { evaluationService, Evaluation, EvaluationDashboard, EvaluationAlerts } from '@/features/company/services/evaluation.service';
 import { programService } from '@/features/company/services/program.service';
@@ -65,6 +59,7 @@ const PAGE_SIZE = 20;
 
 export default function EvaluationsDashboardScreen() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const programId = searchParams.get('programId') || '';
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
@@ -80,28 +75,6 @@ export default function EvaluationsDashboardScreen() {
   const [program, setProgram] = useState<Program | null>(null);
   const [internMap, setInternMap] = useState<Map<string, Intern>>(new Map());
   const [notDeployed, setNotDeployed] = useState(false);
-
-  const [showCreate, setShowCreate] = useState(false);
-  const [createInternId, setCreateInternId] = useState('');
-  const [periodStart, setPeriodStart] = useState('');
-  const [periodEnd, setPeriodEnd] = useState('');
-  const [skill, setSkill] = useState('4');
-  const [teamwork, setTeamwork] = useState('4');
-  const [strengths, setStrengths] = useState('');
-  const [improvements, setImprovements] = useState('');
-  const [privateNotes, setPrivateNotes] = useState('');
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState('');
-
-  const [detail, setDetail] = useState<Evaluation | null>(null);
-  const [editing, setEditing] = useState(false);
-  const [editSkill, setEditSkill] = useState('');
-  const [editTeamwork, setEditTeamwork] = useState('');
-  const [editStrengths, setEditStrengths] = useState('');
-  const [editImprovements, setEditImprovements] = useState('');
-  const [editNotes, setEditNotes] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [sharing, setSharing] = useState(false);
 
   const fetchAll = useCallback(async () => {
     if (!companyId) return;
@@ -155,104 +128,6 @@ export default function EvaluationsDashboardScreen() {
     if (!q) return evaluations;
     return evaluations.filter((e) => internName(internMap, e.internId).toLowerCase().includes(q));
   }, [evaluations, search, internMap]);
-
-  const programInterns = useMemo(() => {
-    if (!program) return Array.from(internMap.values());
-    return program.internIds
-      .map((id) => internMap.get(id))
-      .filter((i): i is Intern => !!i);
-  }, [program, internMap]);
-
-  const openDetail = (e: Evaluation) => {
-    setDetail(e);
-    setEditing(false);
-    setEditSkill(String(e.skillRating));
-    setEditTeamwork(String(e.teamworkRating));
-    setEditStrengths(e.strengths || '');
-    setEditImprovements(e.improvements || '');
-    setEditNotes(e.privateNotes || '');
-  };
-
-  const handleCreate = async () => {
-    if (!companyId) return;
-    setCreateError('');
-    if (!createInternId) {
-      setCreateError('Choose an intern.');
-      return;
-    }
-    if (!periodStart || !periodEnd) {
-      setCreateError('Period start and end are required.');
-      return;
-    }
-    if (new Date(periodEnd) < new Date(periodStart)) {
-      setCreateError('Period end must be after start.');
-      return;
-    }
-    setCreating(true);
-    try {
-      await evaluationService.createEvaluation(companyId, createInternId, {
-        internId: createInternId,
-        period: { start: new Date(periodStart).toISOString(), end: new Date(periodEnd).toISOString() },
-        skillRating: Number(skill),
-        teamworkRating: Number(teamwork),
-        strengths: strengths.trim() || undefined,
-        improvements: improvements.trim() || undefined,
-        privateNotes: privateNotes.trim() || undefined,
-      });
-      toastHelper.success('Evaluation created');
-      setShowCreate(false);
-      setCreateInternId('');
-      setStrengths('');
-      setImprovements('');
-      setPrivateNotes('');
-      fetchAll();
-    } catch (err) {
-      if (getErrorStatus(err) === 404) {
-        setCreateError('Creating evaluations is not available on the server yet.');
-      } else {
-        setCreateError(getErrorMessage(err));
-      }
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const handleUpdate = async () => {
-    if (!companyId || !detail) return;
-    setSaving(true);
-    try {
-      const updated = await evaluationService.updateEvaluation(companyId, detail._id, {
-        skillRating: Number(editSkill),
-        teamworkRating: Number(editTeamwork),
-        strengths: editStrengths.trim() || undefined,
-        improvements: editImprovements.trim() || undefined,
-        privateNotes: editNotes.trim() || undefined,
-      });
-      setDetail(updated);
-      setEvaluations((prev) => prev.map((e) => (e._id === updated._id ? updated : e)));
-      setEditing(false);
-      toastHelper.success('Evaluation updated');
-    } catch (err) {
-      toastHelper.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleShare = async () => {
-    if (!companyId || !detail) return;
-    setSharing(true);
-    try {
-      const updated = await evaluationService.shareEvaluation(companyId, detail._id);
-      setDetail(updated);
-      setEvaluations((prev) => prev.map((e) => (e._id === updated._id ? updated : e)));
-      toastHelper.success('Evaluation shared with intern');
-    } catch (err) {
-      toastHelper.error(getErrorMessage(err));
-    } finally {
-      setSharing(false);
-    }
-  };
 
   const k = dashboard?.kpis;
   const stats = [
@@ -376,7 +251,7 @@ export default function EvaluationsDashboardScreen() {
                   />
                 </div>
                 <button
-                  onClick={() => setShowCreate(true)}
+                  onClick={() => router.push(`/company/admin/evaluations/new${programId ? `?programId=${programId}` : ''}`)}
                   disabled={loading}
                   className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60"
                 >
@@ -461,7 +336,7 @@ export default function EvaluationsDashboardScreen() {
                         </td>
                         <td className="py-3.5 text-right">
                           <button
-                            onClick={() => openDetail(e)}
+                            onClick={() => router.push(`/company/admin/evaluations/${e._id}${programId ? `?programId=${programId}` : ''}`)}
                             className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
                           >
                             View
@@ -497,198 +372,6 @@ export default function EvaluationsDashboardScreen() {
           </div>
         </main>
       </div>
-
-      {showCreate && (
-        <>
-          <div className="fixed inset-0 z-30 bg-slate-900/40" onClick={() => setShowCreate(false)} />
-          <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto p-4">
-            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-slate-900">New Evaluation</h3>
-                <button onClick={() => setShowCreate(false)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
-                  <X size={16} />
-                </button>
-              </div>
-              <div className="mt-4 space-y-3">
-                {program && (
-                  <p className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-2.5 text-sm text-emerald-700">
-                    For interns of <span className="font-semibold">{program.name}</span> ({programInterns.length})
-                  </p>
-                )}
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Intern</label>
-                  <Select value={createInternId} onChange={(e) => setCreateInternId(e.target.value)} placeholder="Select intern..." className="mt-2">
-                    {programInterns.map((i) => (
-                      <option key={i._id} value={i._id}>{`${i.firstName} ${i.lastName}`.trim() || i.email}</option>
-                    ))}
-                  </Select>
-                  {program && programInterns.length === 0 && (
-                    <p className="mt-1 text-xs text-slate-400">No interns enrolled in this program yet.</p>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium text-slate-700">Period start</label>
-                    <input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm" />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-700">Period end</label>
-                    <input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium text-slate-700">Skill (0–5, step 0.5)</label>
-                    <input type="number" min={0} max={5} step={0.5} value={skill} onChange={(e) => setSkill(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm" />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-700">Teamwork (0–5, step 0.5)</label>
-                    <input type="number" min={0} max={5} step={0.5} value={teamwork} onChange={(e) => setTeamwork(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Strengths</label>
-                  <textarea rows={2} value={strengths} onChange={(e) => setStrengths(e.target.value)} className="mt-2 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Areas to improve</label>
-                  <textarea rows={2} value={improvements} onChange={(e) => setImprovements(e.target.value)} className="mt-2 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Private notes (admin only)</label>
-                  <textarea rows={2} value={privateNotes} onChange={(e) => setPrivateNotes(e.target.value)} className="mt-2 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm" />
-                </div>
-                {createError && <p className="text-xs font-medium text-rose-500">{createError}</p>}
-                <button
-                  onClick={handleCreate}
-                  disabled={creating}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60"
-                >
-                  {creating ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}
-                  {creating ? 'Creating...' : 'Create Evaluation'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      {detail && (
-        <>
-          <div className="fixed inset-0 z-30 bg-slate-900/40" onClick={() => setDetail(null)} />
-          <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto p-4">
-            <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-slate-900">Evaluation · {internName(internMap, detail.internId)}</h3>
-                <button onClick={() => setDetail(null)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
-                  <X size={16} />
-                </button>
-              </div>
-              <dl className="mt-4 space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <dt className="text-slate-500">Period</dt>
-                  <dd className="font-medium text-slate-900">{formatDate(detail.period.start)} → {formatDate(detail.period.end)}</dd>
-                </div>
-                <div className="flex items-center justify-between">
-                  <dt className="text-slate-500">Attendance rate</dt>
-                  <dd className="font-medium text-slate-900">{detail.attendanceRate}%</dd>
-                </div>
-                <div className="flex items-center justify-between">
-                  <dt className="text-slate-500">Overall score</dt>
-                  <dd className="font-semibold text-slate-900">{detail.overallScore}</dd>
-                </div>
-                <div className="flex items-center justify-between">
-                  <dt className="text-slate-500">Status</dt>
-                  <dd>
-                    {detail.sharedWithIntern ? (
-                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">
-                        Shared{detail.sharedAt ? ` · ${formatDate(detail.sharedAt)}` : ''}
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">Draft</span>
-                    )}
-                  </dd>
-                </div>
-                {editing ? (
-                  <>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-sm font-medium text-slate-700">Skill</label>
-                        <input type="number" min={0} max={5} step={0.5} value={editSkill} onChange={(e) => setEditSkill(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm" />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-slate-700">Teamwork</label>
-                        <input type="number" min={0} max={5} step={0.5} value={editTeamwork} onChange={(e) => setEditTeamwork(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Strengths</label>
-                      <textarea rows={2} value={editStrengths} onChange={(e) => setEditStrengths(e.target.value)} className="mt-1 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Areas to improve</label>
-                      <textarea rows={2} value={editImprovements} onChange={(e) => setEditImprovements(e.target.value)} className="mt-1 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700">Private notes</label>
-                      <textarea rows={2} value={editNotes} onChange={(e) => setEditNotes(e.target.value)} className="mt-1 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm" />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {detail.strengths && (
-                      <div>
-                        <dt className="text-slate-500">Strengths</dt>
-                        <dd className="mt-1 whitespace-pre-wrap break-words text-slate-700">{detail.strengths}</dd>
-                      </div>
-                    )}
-                    {detail.improvements && (
-                      <div>
-                        <dt className="text-slate-500">Areas to improve</dt>
-                        <dd className="mt-1 whitespace-pre-wrap break-words text-slate-700">{detail.improvements}</dd>
-                      </div>
-                    )}
-                    {detail.privateNotes && (
-                      <div>
-                        <dt className="text-slate-500">Private notes (admin only)</dt>
-                        <dd className="mt-1 whitespace-pre-wrap break-words text-slate-700">{detail.privateNotes}</dd>
-                      </div>
-                    )}
-                  </>
-                )}
-              </dl>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {!detail.sharedWithIntern && !editing && (
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-                  >
-                    <PenLine size={14} /> Edit
-                  </button>
-                )}
-                {editing && (
-                  <button
-                    onClick={handleUpdate}
-                    disabled={saving}
-                    className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60"
-                  >
-                    {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save
-                  </button>
-                )}
-                {!detail.sharedWithIntern && (
-                  <button
-                    onClick={handleShare}
-                    disabled={sharing}
-                    className="flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
-                  >
-                    {sharing ? <Loader2 size={14} className="animate-spin" /> : <Share2 size={14} />} Share with intern
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }

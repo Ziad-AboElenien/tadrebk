@@ -35,19 +35,21 @@ export default function ConfirmModal({
 
   if (!open) return null;
 
+  const danger = confirmVariant !== 'primary';
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative bg-white rounded-3xl shadow-2xl p-5 sm:p-8 w-full max-w-sm max-h-[85vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex flex-col items-center text-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
-            <i className="fas fa-exclamation-triangle text-2xl text-red-500" />
+      <div className="absolute inset-0 animate-fade-in bg-black/40 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative w-full max-w-sm animate-scale-in rounded-3xl bg-white p-5 shadow-2xl sm:p-8">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className={`flex h-14 w-14 items-center justify-center rounded-full ${danger ? 'bg-red-50' : 'bg-emerald-50'}`}>
+            <i className={`fas fa-exclamation-triangle text-2xl ${danger ? 'text-red-500' : 'text-emerald-500'}`} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-dark">{title}</h3>
-            <p className="text-sm text-gray-500 mt-1">{message}</p>
+            <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+            <p className="mt-1 break-words text-sm text-slate-500">{message}</p>
           </div>
-          <div className="flex gap-3 w-full mt-2">
+          <div className="flex w-full gap-3">
             <Button variant="outline" fullWidth onClick={onCancel} disabled={loading}>
               Cancel
             </Button>
