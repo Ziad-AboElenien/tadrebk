@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   X,
   Save,
@@ -31,12 +31,15 @@ const SUGGESTED_TAGS = ['Programming', 'Design', 'Documentation', 'Research', 'Q
 export default function AddNewTaskScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
   const [interns, setInterns] = useState<Intern[]>([]);
-  const [target, setTarget] = useState<TaskTarget>('intern');
+  const [target, setTarget] = useState<TaskTarget>(() =>
+    searchParams.get('target') === 'program' ? 'program' : 'intern',
+  );
   const [projectId, setProjectId] = useState('');
-  const [programId, setProgramId] = useState('');
+  const [programId, setProgramId] = useState(() => searchParams.get('programId') || '');
   const [internId, setInternId] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -135,6 +138,11 @@ export default function AddNewTaskScreen() {
               </button>
             </div>
           </div>
+          {target === 'program' && programId && (
+            <p className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-2.5 text-sm text-emerald-700">
+              Broadcasting to program: <span className="font-semibold">{programs.find((p) => p._id === programId)?.name || 'Selected program'}</span>
+            </p>
+          )}
 
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">

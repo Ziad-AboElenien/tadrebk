@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
   Calendar,
@@ -95,7 +95,9 @@ const SUGGESTED_TAGS = ['Programming', 'Design', 'Documentation', 'Research', 'Q
 
 export default function TaskDetailScreen() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const taskId = params.taskId as string;
+  const focusedInternId = searchParams.get('internId') || '';
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
 
@@ -360,6 +362,14 @@ export default function TaskDetailScreen() {
               <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${PRIORITY_STYLES[task.priority] || 'bg-slate-100 text-slate-500'}`}>
                 {task.priority?.toUpperCase()}
               </span>
+              {focusedInternId && (
+                <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600">
+                  {(() => {
+                    const f = interns.find((i) => i._id === focusedInternId);
+                    return f ? `Submission · ${f.firstName} ${f.lastName}`.trim() : 'Student submission';
+                  })()}
+                </span>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <button

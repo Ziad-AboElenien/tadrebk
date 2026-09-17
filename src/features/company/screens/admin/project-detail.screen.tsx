@@ -356,28 +356,46 @@ export default function ProjectDetailScreen() {
                 {project.status}
               </span>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => setConfirmArchive(true)}
-                className="flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm text-rose-500 hover:bg-rose-50"
-              >
-                <Trash2 size={15} /> Archive
-              </button>
-              {mode === 'view' ? (
+            <div className="relative flex flex-wrap items-center gap-3">
+              <div className="relative">
                 <button
-                  onClick={() => setMode('edit')}
+                  onClick={() => setMenuOpen((v) => !v)}
+                  aria-label="Actions"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
                   className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
                 >
-                  <PenLine size={15} /> Edit
+                  <MoreHorizontal size={16} />
                 </button>
-              ) : (
-                <button
-                  onClick={() => setMode('view')}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
-                >
-                  <X size={15} /> Cancel
-                </button>
-              )}
+                {menuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                    <div className="absolute right-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
+                      {mode === 'view' ? (
+                        <button
+                          onClick={() => { setMenuOpen(false); setMode('edit'); }}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                        >
+                          <PenLine size={14} /> Edit
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => { setMenuOpen(false); setMode('view'); }}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                        >
+                          <X size={14} /> Cancel
+                        </button>
+                      )}
+                      <button
+                        onClick={() => { setMenuOpen(false); setConfirmArchive(true); }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-rose-500 hover:bg-rose-50"
+                      >
+                        <Trash2 size={14} /> Archive
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
@@ -557,9 +575,14 @@ export default function ProjectDetailScreen() {
                         setProgramAssignInterns([]);
                         setSelected([]);
                       }}
-                      className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-600"
+                      className={`group flex items-center overflow-hidden rounded-lg px-2 py-1.5 text-xs font-medium transition-colors ${
+                        showAssign ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                      }`}
                     >
-                      <Plus size={14} /> Assign Interns
+                      <Plus size={14} />
+                      <span className="ml-0 max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 ease-out group-hover:ml-1.5 group-hover:max-w-[120px] group-hover:opacity-100">
+                        Assign Interns
+                      </span>
                     </button>
                   </div>
                 </div>

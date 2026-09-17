@@ -82,11 +82,11 @@ export default function AttendanceScreen() {
     setLoading(true);
     try {
       const [attRes, internRes, progRes] = await Promise.all([
-        attendanceService.listAttendance(companyId, { date, programId: programId || undefined, limit: 200 }),
-        internService.listInterns(companyId, { status: 'active', limit: 500 }),
+        attendanceService.listAttendance(companyId, { date, programId: programId || undefined, limit: 100 }),
+        internService.listAllInterns(companyId, { status: 'active' }),
         programService.listPrograms(companyId, { limit: 100 }),
       ]);
-      setInterns(internRes.data);
+      setInterns(internRes);
       setPrograms(progRes.data);
       const map: Record<string, AttendanceStatus> = {};
       attRes.data.forEach((r) => {
@@ -192,18 +192,17 @@ export default function AttendanceScreen() {
     setBulking(true);
     try {
       const res = await attendanceService.bulkMark(companyId, {
-        date,
-        programId: programId || undefined,
-        records: Array.from(selected).map((internId) => ({ internId, status: bulkStatus as AttendanceStatus })),
+        rows: Array.from(selected).map((internId) => ({ internId, date, status: bulkStatus as AttendanceStatus })),
       });
       selected.forEach((internId) => {
         if (!res.skipped.some((s) => s.internId === internId)) {
           setRecords((prev) => ({ ...prev, [internId]: bulkStatus as AttendanceStatus }));
         }
       });
+      const done = res.modified;
       toastHelper.success(res.skipped.length
-        ? `${res.modified} updated · ${res.skipped.length} skipped`
-        : `Marked ${res.modified} intern(s)`);
+        ? `${done} updated · ${res.skipped.length} skipped`
+        : `Marked ${done} intern(s)`);
       setSelected(new Set());
       setBulkStatus('');
     } catch (err) {

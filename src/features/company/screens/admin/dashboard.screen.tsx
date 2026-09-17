@@ -68,15 +68,14 @@ export default function AdminDashboardScreen() {
     if (!company?._id) return;
     (async () => {
       try {
-        const [postingsRes, inProgress, completed, progRes] = await Promise.all([
+        const [postingsRes, tasksRes, progRes] = await Promise.all([
           internshipService.listInternships({ companyId: company._id, limit: 50 }),
-          taskService.listTasks(company._id, { status: 'in_progress', limit: 1 }),
-          taskService.listTasks(company._id, { status: 'complete', limit: 1 }),
+          taskService.listTasks(company._id, { limit: 100 }),
           programService.listPrograms(company._id, { limit: 100 }),
         ]);
         setInternsCount(syncInternshipsClosedState(postingsRes.internships).filter((i) => !i.closed).length);
-        setInProgressCount(inProgress.pagination.total);
-        setCompletedCount(completed.pagination.total);
+        setInProgressCount(tasksRes.tasks.filter((t) => t.status === 'in_progress').length);
+        setCompletedCount(tasksRes.tasks.filter((t) => t.status === 'complete').length);
         setPrograms(progRes.data);
       } catch (err) {
         toastHelper.error(getErrorMessage(err));

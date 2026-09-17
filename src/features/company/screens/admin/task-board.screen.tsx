@@ -20,7 +20,8 @@ import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import { taskService } from '@/features/company/services/task.service';
-import { Task, TaskStatus } from '@/features/company/types/management';
+import { internService } from '@/features/company/services/intern.service';
+import { Task, TaskStatus, Intern } from '@/features/company/types/management';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
@@ -41,12 +42,12 @@ function formatDue(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function TaskCard({ task }: { task: Task }) {
+function TaskCard({ task, internId }: { task: Task; internId?: string }) {
   const priority = task.priority ? task.priority.toUpperCase() : '';
   const points = task.pointsAwarded != null ? `${task.pointsAwarded} pts` : null;
   const isBroadcast = Boolean(task.taskGroupId);
   return (
-    <Link href={`/company/admin/tasks/${task._id}`} className="block rounded-xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-sm">
+    <Link href={internId ? `/company/admin/tasks/${task._id}?internId=${internId}` : `/company/admin/tasks/${task._id}`} className="block rounded-xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-sm">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-400">{task._id.slice(-8).toUpperCase()}</span>
         <div className="flex items-center gap-1.5">
@@ -91,15 +92,21 @@ export default function TaskBoardScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
   const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [interns, setInterns] = useState<Intern[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [internFilter, setInternFilter] = useState('');
 
   const fetchTasks = useCallback(async () => {
     if (!companyId) return;
     setLoading(true);
     try {
-      const res = await taskService.listTasks(companyId, { limit: 100 });
-      setAllTasks(res.tasks);
+      const [taskRes, internRes] = await Promise.all([
+        taskService.listTasks(companyId, { limit: 100 }),
+        internService.listAllInterns(companyId),
+      ]);
+      setAllTasks(taskRes.tasks);
+      setInterns(internRes);
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     } finally {
@@ -114,12 +121,12 @@ export default function TaskBoardScreen() {
 
   const columns = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const visible = !q
-      ? allTasks
-      : allTasks.filter((t) => {
-          const haystack = [t.title, t.description, (t.tags || []).join(' ')].join(' ').toLowerCase();
-          return haystack.includes(q);
-        });
+    const visible = allTasks.filter((t) => {
+      if (internFilter && t.internId !== internFilter) return false;
+      if (!q) return true;
+      const haystack = [t.title, t.description, (t.tags || []).join(' ')].join(' ').toLowerCase();
+      return haystack.includes(q);
+    });
     const grouped: Record<TaskStatus, Task[]> = {
       todo: [],
       in_progress: [],
@@ -132,7 +139,7 @@ export default function TaskBoardScreen() {
       else grouped.todo.push({ ...t, status: 'todo' });
     });
     return grouped;
-  }, [allTasks, search]);
+  }, [allTasks, search, internFilter]);
 
   return (
     <div className="flex bg-slate-50">
@@ -144,7 +151,14 @@ export default function TaskBoardScreen() {
         <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-2xl font-semibold text-slate-900">Project Sprint: Oct 2024</h2>
+              <h2 className="text-2xl font-semibold text-slate-900">
+                {internFilter
+                  ? `Tasks · ${(() => {
+                      const f = interns.find((i) => i._id === internFilter);
+                      return f ? `${f.firstName} ${f.lastName}`.trim() : 'Student';
+                    })()}`
+                  : 'Project Sprint: Oct 2024'}
+              </h2>
               <p className="text-sm text-slate-500">Track intern contributions and project milestones in real-time.</p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -157,6 +171,19 @@ export default function TaskBoardScreen() {
                   className="rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                 />
               </div>
+              <select
+                value={internFilter}
+                onChange={(e) => setInternFilter(e.target.value)}
+                className="max-w-[200px] cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-emerald-400"
+                aria-label="Filter by intern"
+              >
+                <option value="">All interns</option>
+                {interns.map((i) => (
+                  <option key={i._id} value={i._id}>
+                    {`${i.firstName} ${i.lastName}`.trim() || i.email}
+                  </option>
+                ))}
+              </select>
               <div className="flex rounded-lg border border-slate-200 bg-white p-1 text-sm">
                 <button className="rounded-md bg-slate-100 px-3 py-1.5 font-medium text-slate-900">Board View</button>
                 <button className="rounded-md px-3 py-1.5 text-slate-500">List View</button>
@@ -229,7 +256,7 @@ export default function TaskBoardScreen() {
 
                   <div className="space-y-3">
                     {columns[col.key].map((t) => (
-                      <TaskCard key={t._id} task={t} />
+                      <TaskCard key={t._id} task={t} internId={internFilter || undefined} />
                     ))}
                     <Link
                       href="/company/admin/tasks/new"

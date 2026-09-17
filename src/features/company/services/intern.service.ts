@@ -49,6 +49,28 @@ export const internService = {
     };
   },
 
+  async listAllInterns(
+    companyId: string,
+    params?: {
+      programId?: string;
+      projectId?: string;
+      status?: InternStatus;
+      search?: string;
+      sort?: InternSort;
+    },
+  ): Promise<Intern[]> {
+    // Backend caps limit at 100 — walk pages to get the full roster.
+    const all: Intern[] = [];
+    let page = 1;
+    for (;;) {
+      const res = await internService.listInterns(companyId, { ...params, page, limit: 100 });
+      all.push(...res.data);
+      if (page >= (res.pagination.pages || 1)) break;
+      page += 1;
+    }
+    return all;
+  },
+
   async getIntern(companyId: string, internId: string): Promise<Intern> {
     const { data } = await api.get<InternRawResponse>(`/company/${companyId}/interns/${internId}`);
     if (Array.isArray(data?.data)) return (data.data as Intern[])[0];

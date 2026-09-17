@@ -17,8 +17,11 @@ import {
   ArrowLeft,
   Users,
   XCircle,
+  X,
   Mail,
   GraduationCap,
+  Eye,
+  FileText,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import { useRouter } from 'next/navigation';
@@ -77,7 +80,10 @@ export default function InternshipManagementScreen() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<AppStatus>('all');
+  const [deptFilter, setDeptFilter] = useState('all');
+  const [uniFilter, setUniFilter] = useState('all');
   const [filterOpen, setFilterOpen] = useState(false);
+  const [detailApp, setDetailApp] = useState<Application | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [menuRect, setMenuRect] = useState<{ top: number; left: number; openUp: boolean } | null>(null);
   const [page, setPage] = useState(1);
@@ -113,25 +119,49 @@ export default function InternshipManagementScreen() {
     return { accepted, pending, total: applications.length };
   }, [applications]);
 
+  const departments = useMemo(() => {
+    const set = new Set<string>();
+    applications.forEach((a) => {
+      const d = getStudentLabel(a).dept;
+      if (d && d !== '—') set.add(d);
+    });
+    return Array.from(set).sort();
+  }, [applications]);
+
+  const universities = useMemo(() => {
+    const set = new Set<string>();
+    applications.forEach((a) => {
+      const u = getStudentLabel(a).uni;
+      if (u && u !== '—') set.add(u);
+    });
+    return Array.from(set).sort();
+  }, [applications]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return applications.filter((a) => {
       if (filter !== 'all' && a.status !== filter) return false;
+      const { dept, uni } = getStudentLabel(a);
+      if (deptFilter !== 'all' && dept !== deptFilter) return false;
+      if (uniFilter !== 'all' && uni !== uniFilter) return false;
       if (!q) return true;
-      const { name, email, dept, uni } = getStudentLabel(a);
+      const { name, email } = getStudentLabel(a);
       return [name, email, dept, uni].some((v) => v.toLowerCase().includes(q));
     });
-  }, [applications, filter, search]);
+  }, [applications, filter, deptFilter, uniFilter, search]);
 
   const roster = useMemo(() => {
     const q = search.trim().toLowerCase();
     return applications.filter((a) => {
       if (a.status !== 'accepted') return false;
+      const { dept, uni } = getStudentLabel(a);
+      if (deptFilter !== 'all' && dept !== deptFilter) return false;
+      if (uniFilter !== 'all' && uni !== uniFilter) return false;
       if (!q) return true;
-      const { name, email, dept, uni } = getStudentLabel(a);
+      const { name, email } = getStudentLabel(a);
       return [name, email, dept, uni].some((v) => v.toLowerCase().includes(q));
     });
-  }, [applications, search]);
+  }, [applications, deptFilter, uniFilter, search]);
 
   const paged = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
@@ -300,6 +330,52 @@ export default function InternshipManagementScreen() {
                 >
                   <Filter size={14} /> {FILTERS.find((f) => f.key === filter)?.label}
                 </button>
+                <select
+                  value={deptFilter}
+                  onChange={(e) => {
+                    setDeptFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  aria-label="Filter by department"
+                  className={`max-w-[180px] cursor-pointer rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-emerald-400 ${
+                    deptFilter !== 'all' ? 'border-emerald-300 text-emerald-600' : 'border-slate-200 text-slate-600'
+                  }`}
+                >
+                  <option value="all">All Departments</option>
+                  {departments.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+                <select
+                  value={uniFilter}
+                  onChange={(e) => {
+                    setUniFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  aria-label="Filter by university"
+                  className={`max-w-[180px] cursor-pointer rounded-lg border bg-white px-3 py-2 text-sm outline-none focus:border-emerald-400 ${
+                    uniFilter !== 'all' ? 'border-emerald-300 text-emerald-600' : 'border-slate-200 text-slate-600'
+                  }`}
+                >
+                  <option value="all">All Universities</option>
+                  {universities.map((u) => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
+                {(deptFilter !== 'all' || uniFilter !== 'all' || filter !== 'all' || search.trim()) && (
+                  <button
+                    onClick={() => {
+                      setDeptFilter('all');
+                      setUniFilter('all');
+                      setFilter('all');
+                      setSearch('');
+                      setPage(1);
+                    }}
+                    className="rounded-lg px-2 py-2 text-xs font-medium text-slate-400 hover:text-slate-600"
+                  >
+                    Clear
+                  </button>
+                )}
 
                 {filterOuterOpen && (
                   <>
@@ -363,7 +439,7 @@ export default function InternshipManagementScreen() {
                       <th className="py-3 pr-4 font-medium">Department &amp; University</th>
                       <th className="py-3 pr-4 font-medium">Enrollment Status</th>
                       <th className="py-3 pr-4 font-medium">Start Date</th>
-                      <th className="py-3 pr-4 font-medium">Score</th>
+                      <th className="py-3 pr-4 font-medium">Application</th>
                       <th className="py-3 text-right font-medium">Actions</th>
                     </tr>
                   </thead>
@@ -411,7 +487,12 @@ export default function InternshipManagementScreen() {
                               </span>
                             </td>
                             <td className="py-3.5 pr-4">
-                              <span className="text-xs text-slate-300">N/A</span>
+                              <button
+                                onClick={() => setDetailApp(app)}
+                                className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                              >
+                                <Eye size={13} /> View Application
+                              </button>
                             </td>
                             <td className="relative py-3.5 text-right">
                               <button
@@ -667,6 +748,143 @@ export default function InternshipManagementScreen() {
           </div>
         </main>
       </div>
+
+      {detailApp && (() => {
+        const s = detailApp.studentId as unknown as {
+          _id?: string;
+          firstName?: string;
+          lastName?: string;
+          email?: string;
+          phoneNumber?: string;
+          bio?: string;
+          headline?: string;
+          skills?: string[];
+          education?: { institution?: string; degree?: string; field?: string; grade?: string; startDate?: string; endDate?: string }[];
+          experience?: { internshipTitle?: string; companyName?: string; completedAt?: string }[];
+        };
+        const { name, email, dept, uni, initials } = getStudentLabel(detailApp);
+        const meta = STATUS_META[detailApp.status];
+        const cv = detailApp.resume?.secure_url;
+        return (
+          <>
+            <div className="fixed inset-0 z-30 bg-slate-900/40" onClick={() => setDetailApp(null)} />
+            <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto p-4">
+              <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-700 text-sm font-semibold text-white">
+                      {initials}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="break-words text-lg font-semibold text-slate-900">{name}</p>
+                      <p className="break-all text-sm text-slate-400">{email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${meta.className}`}>{meta.label}</span>
+                    <button onClick={() => setDetailApp(null)} aria-label="Close details" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+                      <X size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-5 space-y-5 text-sm">
+                  <div className="rounded-xl bg-slate-50 p-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Student Information</p>
+                    <dl className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div><dt className="text-xs text-slate-400">Phone</dt><dd className="break-words font-medium text-slate-800">{s?.phoneNumber || '—'}</dd></div>
+                      <div><dt className="text-xs text-slate-400">Department</dt><dd className="break-words font-medium text-slate-800">{dept}</dd></div>
+                      <div><dt className="text-xs text-slate-400">University</dt><dd className="break-words font-medium text-slate-800">{uni}</dd></div>
+                      <div><dt className="text-xs text-slate-400">Headline</dt><dd className="break-words font-medium text-slate-800">{s?.headline || '—'}</dd></div>
+                    </dl>
+                    {s?.bio && (
+                      <div className="mt-2">
+                        <p className="text-xs text-slate-400">Bio</p>
+                        <p className="mt-0.5 whitespace-pre-wrap break-words text-slate-700">{s.bio}</p>
+                      </div>
+                    )}
+                    {Array.isArray(s?.skills) && s.skills.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs text-slate-400">Skills</p>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {s.skills.map((sk) => (
+                            <span key={sk} className="break-words rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">{sk}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {(s?.education?.length || s?.experience?.length) ? (
+                    <div className="rounded-xl bg-slate-50 p-4">
+                      <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Background</p>
+                      {(s.education || []).map((e, i) => (
+                        <p key={i} className="mt-1 break-words text-slate-700">
+                          {[e.degree, e.field].filter(Boolean).join(' · ') || 'Education'}
+                          {e.institution ? ` — ${e.institution}` : ''}
+                          {e.grade ? ` (${e.grade})` : ''}
+                        </p>
+                      ))}
+                      {(s.experience || []).map((e, i) => (
+                        <p key={`x${i}`} className="mt-1 break-words text-slate-700">
+                          {[e.internshipTitle, e.companyName].filter(Boolean).join(' @ ') || 'Experience'}
+                        </p>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <div className="rounded-xl bg-slate-50 p-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Application</p>
+                    <dl className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div><dt className="text-xs text-slate-400">Submitted</dt><dd className="font-medium text-slate-800">{formatDate(detailApp.createdAt)}</dd></div>
+                      <div><dt className="text-xs text-slate-400">Status</dt><dd className="font-medium text-slate-800">{meta.label}</dd></div>
+                    </dl>
+                    {detailApp.coverLetter && (
+                      <div className="mt-2">
+                        <p className="text-xs text-slate-400">Cover letter</p>
+                        <p className="mt-0.5 whitespace-pre-wrap break-words text-slate-700">{detailApp.coverLetter}</p>
+                      </div>
+                    )}
+                    {Array.isArray(detailApp.answers) && detailApp.answers.length > 0 && (
+                      <div className="mt-2 space-y-2">
+                        <p className="text-xs text-slate-400">Answers</p>
+                        {detailApp.answers.map((a, i) => (
+                          <p key={i} className="whitespace-pre-wrap break-words rounded-lg bg-white p-2.5 text-slate-700">
+                            {a.type === 'mcq' ? a.selectedOption : a.text}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {cv && (
+                        <a href={cv} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                          <FileText size={13} /> View CV
+                        </a>
+                      )}
+                      {detailApp.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => { handleReview(detailApp, 'accepted'); setDetailApp(null); }}
+                            className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-600"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => { handleReview(detailApp, 'rejected'); setDetailApp(null); }}
+                            className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-500 hover:bg-rose-50"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }

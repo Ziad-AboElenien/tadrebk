@@ -1,4 +1,4 @@
-import api from '@/lib/axios';
+import api, { getErrorStatus } from '@/lib/axios';
 import {
   AttendanceRecord,
   AttendanceStatus,
@@ -15,25 +15,79 @@ export interface AttendanceListEnvelope {
 }
 
 export interface BulkMarkResult {
-  matched: number;
-  modified: number;
+  marked: { internId: string; status: AttendanceStatus }[];
   skipped: { internId: string; reason: string }[];
+  modified: number;
 }
 
 export interface BulkMarkEnvelope {
-  data?: BulkMarkResult & { results?: { internId: string; status: AttendanceStatus; skipped?: boolean; reason?: string }[] };
+  data?: {
+    marked?: { internId: string; status: AttendanceStatus }[];
+    skipped?: { internId: string; reason: string }[];
+    matched?: number;
+    modified?: number;
+    results?: { internId: string; status: AttendanceStatus; skipped?: boolean; reason?: string }[];
+  };
+  marked?: { internId: string; status: AttendanceStatus }[];
+  skipped?: { internId: string; reason: string }[];
+  matched?: number;
+  modified?: number;
   msg?: string;
 }
 
 export interface AttendanceScheduleResponse {
   data?: {
-    rules: AttendanceDayRule[];
-    timezone: string;
+    schedule?: {
+      weeklyPattern?: Record<string, boolean | { workday: boolean; startTime: string; endTime: string | null }>;
+      timezone?: string;
+      programId?: string;
+      effectiveFrom?: string | null;
+      effectiveTo?: string | null;
+    };
+    rules?: AttendanceDayRule[];
+    weeklyPattern?: Record<string, boolean | { workday: boolean; startTime: string; endTime: string | null }>;
+    timezone?: string;
+    startTime?: string;
+    endTime?: string | null;
     programId?: string;
   };
   rules?: AttendanceDayRule[];
+  weeklyPattern?: Record<string, boolean | { workday: boolean; startTime: string; endTime: string | null }>;
   timezone?: string;
+  startTime?: string;
+  endTime?: string | null;
   msg?: string;
+}
+
+function weeklyPatternToRules(
+  weeklyPattern: Record<string, boolean | { workday: boolean; startTime: string; endTime: string | null }> | undefined,
+  fallbackStart = '09:00',
+  fallbackEnd: string | null = '17:00',
+): AttendanceDayRule[] {
+  if (!weeklyPattern || typeof weeklyPattern !== 'object') return [];
+  const days: AttendanceDayRule['day'][] = [
+    'saturday',
+    'sunday',
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+  ];
+  return days
+    .filter((d) => weeklyPattern[d] !== undefined)
+    .map((d) => {
+      const v = weeklyPattern[d];
+      if (typeof v === 'boolean') {
+        return { day: d, workday: v, startTime: fallbackStart, endTime: v ? fallbackEnd : null };
+      }
+      return {
+        day: d,
+        workday: !!v.workday,
+        startTime: v.startTime ?? fallbackStart,
+        endTime: v.endTime ?? (v.workday ? fallbackEnd : null),
+      };
+    });
 }
 
 export const attendanceService = {
@@ -52,8 +106,15 @@ export const attendanceService = {
     });
     const nested = Array.isArray(data?.data)
       ? { results: data.data as AttendanceRecord[], pagination: data.pagination }
-      : (data?.data as { results?: AttendanceRecord[]; pagination?: Pagination } | undefined);
-    const list = nested?.results ?? data?.results ?? data?.records ?? [];
+      : (data?.data as
+          | {
+              results?: AttendanceRecord[];
+              attendance?: AttendanceRecord[];
+              pagination?: Pagination;
+            }
+          | undefined);
+    const list =
+      nested?.results ?? nested?.attendance ?? data?.results ?? data?.records ?? [];
     const pagination = nested?.pagination ?? data?.pagination;
     return {
       data: list,
@@ -67,30 +128,60 @@ export const attendanceService = {
     companyId: string,
     payload: { internId: string; date: string; status: AttendanceStatus; note?: string },
   ): Promise<AttendanceRecord> {
-    const { data } = await api.post<{ data: AttendanceRecord; msg?: string }>(
-      `/company/${companyId}/attendance/mark`,
-      payload,
-    );
-    return data.data;
+    const { internId, ...body } = payload;
+    // NOTE: single-mark route (POST /interns/{id}/attendance) is documented but
+    // not deployed (404) — go through bulk-mark with one row, which works.
+    const res = await attendanceService.bulkMark(companyId, {
+      rows: [{ internId, date: body.date, status: body.status, note: body.note }],
+    });
+    const skip = res.skipped.find((s) => s.internId === internId);
+    if (skip) {
+      throw new Error(skip.reason || 'Row skipped by server');
+    }
+    const marked = res.marked.find((m) => m.internId === internId);
+    if (!marked && res.modified === 0) {
+      throw new Error('Server did not confirm the saved row');
+    }
+    return {
+      _id: '',
+      internId,
+      companyId,
+      date: body.date,
+      status: marked?.status ?? body.status,
+    };
   },
 
   async bulkMark(
     companyId: string,
     payload: {
-      date: string;
-      programId?: string;
-      records: { internId: string; status: AttendanceStatus }[];
+      rows: { internId: string; date: string; status: AttendanceStatus; note?: string }[];
     },
   ): Promise<BulkMarkResult> {
     const { data } = await api.post<BulkMarkEnvelope>(
       `/company/${companyId}/attendance/bulk-mark`,
-      payload,
+      { rows: payload.rows },
     );
-    return {
-      matched: data?.data?.matched ?? 0,
-      modified: data?.data?.modified ?? 0,
-      skipped: data?.data?.skipped ?? [],
-    };
+    const nested = data?.data;
+    const rawResults = nested?.results ?? [];
+    const fromResults = rawResults.filter((r) => !r.skipped);
+    const marked = nested?.marked ?? data?.marked ?? fromResults;
+    const skipped: { internId: string; reason: string }[] = [
+      ...(nested?.skipped ?? data?.skipped ?? []),
+      ...(nested?.results ?? [])
+        .filter((r) => r.skipped)
+        .map((r) => ({ internId: r.internId, reason: r.reason || 'Skipped' })),
+    ];
+    const modified =
+      marked.length ||
+      nested?.modified ||
+      nested?.matched ||
+      data?.modified ||
+      data?.matched ||
+      0;
+    if (modified === 0 && skipped.length === 0 && payload.rows.length > 0) {
+      throw new Error('Server did not confirm any saved row');
+    }
+    return { marked, skipped, modified };
   },
 
   async getSchedule(
@@ -102,10 +193,14 @@ export const attendanceService = {
       { params },
     );
     const nested = data?.data;
+    const sched = nested?.schedule;
+    const rawPattern = sched?.weeklyPattern ?? nested?.weeklyPattern ?? data?.weeklyPattern;
+    const fromPattern = weeklyPatternToRules(rawPattern);
+    const rules = nested?.rules ?? data?.rules ?? fromPattern;
     return {
-      rules: nested?.rules ?? data?.rules ?? [],
-      timezone: nested?.timezone ?? data?.timezone ?? 'Africa/Cairo',
-      programId: nested?.programId,
+      rules,
+      timezone: sched?.timezone ?? nested?.timezone ?? data?.timezone ?? 'Africa/Cairo',
+      programId: sched?.programId ?? nested?.programId,
     };
   },
 
@@ -113,14 +208,25 @@ export const attendanceService = {
     companyId: string,
     payload: { programId?: string; rules: AttendanceDayRule[]; timezone?: string },
   ): Promise<{ rules: AttendanceDayRule[]; timezone: string }> {
+    const weeklyPattern: Record<string, boolean> = {};
+    payload.rules.forEach((r) => {
+      weeklyPattern[r.day] = !!r.workday;
+    });
     const { data } = await api.put<AttendanceScheduleResponse>(
       `/company/${companyId}/attendance/schedule`,
-      payload,
+      {
+        programId: payload.programId,
+        weeklyPattern,
+      },
     );
     const nested = data?.data;
+    const sched = nested?.schedule;
+    const rawPattern = sched?.weeklyPattern ?? nested?.weeklyPattern ?? data?.weeklyPattern;
+    const fromPattern = weeklyPatternToRules(rawPattern);
+    const rules = nested?.rules ?? data?.rules ?? fromPattern;
     return {
-      rules: nested?.rules ?? data?.rules ?? [],
-      timezone: nested?.timezone ?? data?.timezone ?? 'Africa/Cairo',
+      rules,
+      timezone: sched?.timezone ?? nested?.timezone ?? data?.timezone ?? payload.timezone ?? 'Africa/Cairo',
     };
   },
 };

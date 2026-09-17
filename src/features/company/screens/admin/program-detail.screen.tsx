@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -14,6 +14,10 @@ import {
   Plus,
   Check,
   PenLine,
+  MoreHorizontal,
+  ClipboardCheck,
+  FolderKanban,
+  ListTodo,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
@@ -21,11 +25,14 @@ import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Select from '@/components/ui/Select';
 import { programService } from '@/features/company/services/program.service';
+import { projectService } from '@/features/company/services/project.service';
+import { taskService } from '@/features/company/services/task.service';
 import { internService } from '@/features/company/services/intern.service';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { applicationService } from '@/features/student/services/application.service';
 import { Internship } from '@/features/internship/types';
-import { Program, Intern } from '@/features/company/types/management';
+import { Program, Intern, Project, Task, TaskStatus } from '@/features/company/types/management';
+import ProgramAttendanceSection from './program-attendance.section';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
@@ -78,6 +85,7 @@ export default function ProgramDetailScreen() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [showEnroll, setShowEnroll] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [enrolling, setEnrolling] = useState(false);
   const [unenrollingId, setUnenrollingId] = useState('');
@@ -89,6 +97,46 @@ export default function ProgramDetailScreen() {
 
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [archiving, setArchiving] = useState(false);
+
+  const [programProjects, setProgramProjects] = useState<Project[]>([]);
+  const [programTasks, setProgramTasks] = useState<Task[]>([]);
+  const [loadingExtras, setLoadingExtras] = useState(true);
+
+  const fetchProgramExtras = useCallback(async () => {
+    if (!companyId || !programId) return;
+    setLoadingExtras(true);
+    try {
+      const [projRes, taskRes] = await Promise.all([
+        projectService.listProjects(companyId, { programId, limit: 100 }),
+        taskService.listTasks(companyId, { limit: 100 }),
+      ]);
+      setProgramProjects(projRes.data);
+      setProgramTasks(taskRes.tasks);
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setLoadingExtras(false);
+    }
+  }, [companyId, programId]);
+
+  useEffect(() => {
+    const t = setTimeout(fetchProgramExtras, 0);
+    return () => clearTimeout(t);
+  }, [fetchProgramExtras]);
+
+  const tasksByProject = useMemo(() => {
+    const map: Record<string, Task[]> = {};
+    programTasks.forEach((t) => {
+      if (!t.projectId) return;
+      (map[t.projectId] = map[t.projectId] || []).push(t);
+    });
+    return map;
+  }, [programTasks]);
+
+  const programDirectTasks = useMemo(
+    () => programTasks.filter((t) => t.programId === programId && !t.projectId),
+    [programTasks, programId],
+  );
 
   const fetchProgram = useCallback(async () => {
     if (!companyId || !programId) return;
@@ -348,30 +396,52 @@ export default function ProgramDetailScreen() {
                 {program.status}
               </span>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => setConfirmArchive(true)}
-                className="flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm text-rose-500 hover:bg-rose-50"
+            <div className="relative flex flex-wrap items-center gap-3">
+              <Link
+                href={`/company/admin/evaluations?programId=${programId}`}
+                className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
               >
-                <Trash2 size={15} /> Archive
-              </button>
-              {mode === 'view' ? (
-                <>
-                  <button
-                    onClick={() => setMode('edit')}
-                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
-                  >
-                    <PenLine size={15} /> Edit
-                  </button>
-                </>
-              ) : (
+                <ClipboardCheck size={15} /> Evaluation
+              </Link>
+              <div className="relative">
                 <button
-                  onClick={() => setMode('view')}
+                  onClick={() => setMenuOpen((v) => !v)}
+                  aria-label="Actions"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
                   className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
                 >
-                  <X size={15} /> Cancel
+                  <MoreHorizontal size={16} />
                 </button>
-              )}
+                {menuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                    <div className="absolute right-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
+                      {mode === 'view' ? (
+                        <button
+                          onClick={() => { setMenuOpen(false); setMode('edit'); }}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                        >
+                          <PenLine size={14} /> Edit
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => { setMenuOpen(false); setMode('view'); }}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                        >
+                          <X size={14} /> Cancel
+                        </button>
+                      )}
+                      <button
+                        onClick={() => { setMenuOpen(false); setConfirmArchive(true); }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-rose-500 hover:bg-rose-50"
+                      >
+                        <Trash2 size={14} /> Archive
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
@@ -516,6 +586,154 @@ export default function ProgramDetailScreen() {
                 </>
                 )}
               </section>
+
+              <section className="rounded-2xl border border-slate-200 bg-white p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+                    <FolderKanban size={18} className="text-emerald-500" /> Projects
+                    <span className="text-sm font-normal text-slate-400">({programProjects.length})</span>
+                  </h3>
+                  <Link
+                    href={`/company/admin/projects/new?programId=${programId}`}
+                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                  >
+                    <Plus size={13} /> New Project
+                  </Link>
+                </div>
+                {loadingExtras ? (
+                  <div className="mt-4 space-y-3">
+                    {[0, 1].map((i) => (
+                      <div key={i} className="h-28 animate-pulse rounded-xl bg-slate-100" />
+                    ))}
+                  </div>
+                ) : programProjects.length === 0 ? (
+                  <p className="mt-4 rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-400">
+                    No projects in this program yet.
+                  </p>
+                ) : (
+                  <div className="mt-4 space-y-4">
+                    {programProjects.map((p) => {
+                      const tasks = tasksByProject[p._id] || [];
+                      return (
+                        <div key={p._id} className="overflow-hidden rounded-xl border border-slate-200">
+                          <div className="h-2 w-full" style={{ backgroundColor: p.color || '#10b981' }} />
+                          <div className="p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="min-w-0">
+                                <Link
+                                  href={`/company/admin/projects/${p._id}`}
+                                  className="block truncate text-sm font-semibold text-slate-900 hover:text-emerald-600 hover:underline"
+                                >
+                                  {p.name}
+                                </Link>
+                                {p.description && (
+                                  <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{p.description}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="mt-3 border-t border-slate-100 pt-3">
+                              <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+                                <ListTodo size={13} /> Tasks ({tasks.length})
+                              </p>
+                              {tasks.length === 0 ? (
+                                <p className="mt-2 text-xs text-slate-400">No tasks in this project yet.</p>
+                              ) : (
+                                <div className="mt-2 space-y-1.5">
+                                  {tasks.map((t) => (
+                                    <Link
+                                      key={t._id}
+                                      href={`/company/admin/tasks/${t._id}?internId=${t.internId}`}
+                                      className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs hover:bg-slate-100"
+                                    >
+                                      <span className="truncate font-medium text-slate-700">{t.title}</span>
+                                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
+                                        t.status === 'complete' ? 'bg-emerald-100 text-emerald-700'
+                                        : t.status === 'in_review' ? 'bg-blue-100 text-blue-700'
+                                        : t.status === 'in_progress' ? 'bg-amber-100 text-amber-700'
+                                        : 'bg-slate-200 text-slate-500'
+                                      }`}>
+                                        {t.status.replace('_', ' ')}
+                                      </span>
+                                    </Link>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+
+              <section className="rounded-2xl border border-slate-200 bg-white p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+                    <ListTodo size={18} className="text-emerald-500" /> Program Tasks
+                    <span className="text-sm font-normal text-slate-400">({programDirectTasks.length})</span>
+                  </h3>
+                  <Link
+                    href={`/company/admin/tasks/new?programId=${programId}&target=program`}
+                    className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                  >
+                    <Plus size={13} /> New Task
+                  </Link>
+                </div>
+                {loadingExtras ? (
+                  <div className="mt-4 space-y-2">
+                    {[0, 1].map((i) => (
+                      <div key={i} className="h-12 animate-pulse rounded-xl bg-slate-100" />
+                    ))}
+                  </div>
+                ) : programDirectTasks.length === 0 ? (
+                  <p className="mt-4 rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-400">
+                    No tasks assigned directly to this program yet.
+                  </p>
+                ) : (
+                  <div className="mt-4 space-y-1.5">
+                    {programDirectTasks.map((t) => (
+                      <Link
+                        key={t._id}
+                        href={`/company/admin/tasks/${t._id}?internId=${t.internId}`}
+                        className="flex items-center justify-between gap-2 rounded-xl border border-slate-100 px-4 py-3 text-sm hover:bg-slate-50"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium text-slate-800">{t.title}</span>
+                          {t.description && (
+                            <span className="block truncate text-xs text-slate-400">{t.description}</span>
+                          )}
+                        </span>
+                        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium capitalize ${
+                          t.status === 'complete' ? 'bg-emerald-100 text-emerald-700'
+                          : t.status === 'in_review' ? 'bg-blue-100 text-blue-700'
+                          : t.status === 'in_progress' ? 'bg-amber-100 text-amber-700'
+                          : 'bg-slate-200 text-slate-500'
+                        }`}>
+                          {t.status.replace('_', ' ')}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="rounded-2xl border border-slate-200 bg-white p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+                    <ClipboardCheck size={18} className="text-emerald-500" /> Evaluation
+                  </h3>
+                  <Link
+                    href={`/company/admin/evaluations?programId=${programId}`}
+                    className="rounded-lg bg-emerald-500 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-600"
+                  >
+                    Open Evaluations
+                  </Link>
+                </div>
+                <p className="mt-2 text-sm text-slate-500">
+                  Review performance, attendance and ratings for the {enrolledInterns.length} intern(s) in this program.
+                </p>
+              </section>
             </div>
 
             <div className="space-y-6">
@@ -524,10 +742,117 @@ export default function ProgramDetailScreen() {
                   <h3 className="flex items-center gap-2 font-semibold text-slate-900">
                     <Users2 size={18} className="text-emerald-500" /> Enrolled Interns
                   </h3>
-                  <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-500">
-                    {enrolledInterns.length}{program.maxInterns ? `/${program.maxInterns}` : ''}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-500">
+                      {enrolledInterns.length}{program.maxInterns ? `/${program.maxInterns}` : ''}
+                    </span>
+                    <button
+                      onClick={() => setShowEnroll((v) => !v)}
+                      aria-label="Assign Interns"
+                      className={`group flex items-center overflow-hidden rounded-lg px-2 py-1.5 text-xs font-medium transition-colors ${
+                        showEnroll ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                      }`}
+                    >
+                      <Plus size={14} />
+                      <span className="ml-0 max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-all duration-300 ease-out group-hover:ml-1.5 group-hover:max-w-[120px] group-hover:opacity-100">
+                        Assign Interns
+                      </span>
+                    </button>
+                  </div>
                 </div>
+
+                {showEnroll && (
+                  <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700">Internship</label>
+                      <Select
+                        value={selectedInternshipId}
+                        onChange={(e) => handleInternshipSelect(e.target.value)}
+                        placeholder="Select an internship..."
+                        className="mt-2"
+                      >
+                        {internships.map((ip) => (
+                          <option key={ip._id} value={ip._id}>{ip.title}</option>
+                        ))}
+                      </Select>
+                      {internships.length === 0 && (
+                        <p className="mt-2 text-xs text-slate-400">No active internships for this company yet.</p>
+                      )}
+                    </div>
+
+                    {selectedInternshipId && (
+                      <div className="mt-4">
+                        <p className="text-sm font-medium text-slate-700">
+                          Accepted Interns <span className="font-normal text-slate-400">({internshipStudents.length})</span>
+                        </p>
+
+                        {loadingStudents ? (
+                          <div className="mt-2 space-y-2 animate-pulse">
+                            {[0, 1, 2].map((i) => (
+                              <div key={i} className="h-12 rounded-xl bg-slate-100" />
+                            ))}
+                          </div>
+                        ) : internshipStudents.length === 0 ? (
+                          <p className="mt-2 rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-400">
+                            No accepted interns in this internship yet.
+                          </p>
+                        ) : (
+                          <div className="mt-2 space-y-1.5">
+                            {internshipStudents.map((i) => {
+                              const checked = selected.includes(i._id);
+                              const alreadyAssigned = program.internIds.includes(i._id);
+                              return (
+                                <label
+                                  key={i._id}
+                                  className={`flex items-center gap-3 rounded-xl border p-3 transition-colors ${
+                                    alreadyAssigned
+                                      ? 'cursor-not-allowed border-slate-100 opacity-60'
+                                      : `cursor-pointer ${checked ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-100 hover:bg-slate-50'}`
+                                  }`}
+                                >
+                                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
+                                    {initials(`${i.firstName} ${i.lastName}`.trim()) || '?'}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-medium text-slate-900">
+                                      {`${i.firstName} ${i.lastName}`.trim() || i.email}
+                                    </p>
+                                    <p className="truncate text-xs text-slate-400">
+                                      {i.email}{alreadyAssigned ? ' · Already assigned' : ''}
+                                    </p>
+                                  </div>
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    disabled={alreadyAssigned}
+                                    onChange={() => toggleSelect(i._id)}
+                                    className="h-4 w-4 rounded border-slate-300 accent-emerald-500"
+                                  />
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-5 flex items-center justify-end gap-3">
+                      <button
+                        onClick={() => setShowEnroll(false)}
+                        className="text-sm text-slate-500 hover:text-slate-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleEnroll}
+                        disabled={enrolling || selected.length === 0}
+                        className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60"
+                      >
+                        <Check size={15} /> {enrolling ? 'Assigning...' : `Assign ${selected.length}`}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-4 space-y-2">
                   {enrolledInterns.length === 0 ? (
@@ -577,111 +902,17 @@ export default function ProgramDetailScreen() {
                   </div>
                 </dl>
               </section>
+
+              <ProgramAttendanceSection
+                companyId={companyId}
+                programId={programId}
+                program={program}
+                interns={enrolledInterns}
+              />
             </div>
           </div>
         </main>
       </div>
-
-      {showEnroll && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowEnroll(false)} />
-          <div className="relative max-h-[85vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Assign Members</h3>
-              <button onClick={() => setShowEnroll(false)} aria-label="Close" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
-                <X size={16} />
-              </button>
-            </div>
-            <p className="mt-1 text-sm text-slate-400">Pick an internship, then choose the accepted interns to assign to “{program.name}”.</p>
-
-            <div className="mt-4">
-              <label className="text-sm font-medium text-slate-700">Internship</label>
-              <Select
-                value={selectedInternshipId}
-                onChange={(e) => handleInternshipSelect(e.target.value)}
-                placeholder="Select an internship..."
-                className="mt-2"
-              >
-                {internships.map((ip) => (
-                  <option key={ip._id} value={ip._id}>{ip.title}</option>
-                ))}
-              </Select>
-              {internships.length === 0 && (
-                <p className="mt-2 text-xs text-slate-400">No active internships for this company yet.</p>
-              )}
-            </div>
-
-            {selectedInternshipId && (
-              <div className="mt-4">
-                <p className="text-sm font-medium text-slate-700">
-                  Accepted Interns <span className="font-normal text-slate-400">({internshipStudents.length})</span>
-                </p>
-
-                {loadingStudents ? (
-                  <div className="mt-2 space-y-2 animate-pulse">
-                    {[0, 1, 2].map((i) => (
-                      <div key={i} className="h-12 rounded-xl bg-slate-100" />
-                    ))}
-                  </div>
-                ) : internshipStudents.length === 0 ? (
-                  <p className="mt-2 rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-400">
-                    No accepted interns in this internship yet.
-                  </p>
-                ) : (
-                  <div className="mt-2 space-y-1.5">
-                    {internshipStudents.map((i) => {
-                      const checked = selected.includes(i._id);
-                      const alreadyAssigned = program.internIds.includes(i._id);
-                      return (
-                        <label
-                          key={i._id}
-                          className={`flex items-center gap-3 rounded-xl border p-3 transition-colors ${
-                            alreadyAssigned
-                              ? 'cursor-not-allowed border-slate-100 opacity-60'
-                              : `cursor-pointer ${checked ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-100 hover:bg-slate-50'}`
-                          }`}
-                        >
-                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-xs font-semibold text-white">
-                            {initials(`${i.firstName} ${i.lastName}`.trim()) || '?'}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-slate-900">
-                              {`${i.firstName} ${i.lastName}`.trim() || i.email}
-                            </p>
-                            <p className="truncate text-xs text-slate-400">
-                              {i.email}{alreadyAssigned ? ' · Already assigned' : ''}
-                            </p>
-                          </div>
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            disabled={alreadyAssigned}
-                            onChange={() => toggleSelect(i._id)}
-                            className="h-4 w-4 rounded border-slate-300 accent-emerald-500"
-                          />
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="mt-5 flex items-center justify-end gap-3">
-              <button onClick={() => setShowEnroll(false)} className="text-sm text-slate-500 hover:text-slate-700">
-                Cancel
-              </button>
-              <button
-                onClick={handleEnroll}
-                disabled={enrolling || selected.length === 0}
-                className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60"
-              >
-                <Check size={15} /> {enrolling ? 'Assigning...' : `Assign ${selected.length}`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <ConfirmModal
         open={confirmArchive}

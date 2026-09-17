@@ -64,9 +64,38 @@ interface TaskListEnvelope {
   msg?: string;
 }
 
+export interface BroadcastMember {
+  internId: string;
+  status: TaskStatus;
+  submittedAt?: string | null;
+  reviewedAt?: string | null;
+  pointsAwarded?: number;
+  intern?: { firstName: string; lastName: string; email: string; profilePicture?: string };
+}
+
+export interface BroadcastCard {
+  taskGroupId: string;
+  title: string;
+  description?: string;
+  priority?: TaskPriority;
+  dueDate?: string;
+  projectId?: string | null;
+  programId?: string | null;
+  totalMembers: number;
+  byStatus?: Partial<Record<TaskStatus, number>>;
+  members: BroadcastMember[];
+}
+
 interface TaskResponse {
   data: Task | TaskBroadcastResult;
   msg: string;
+}
+
+interface BroadcastListEnvelope {
+  data?: { broadcasts?: BroadcastCard[]; pagination?: Pagination };
+  broadcasts?: BroadcastCard[];
+  pagination?: Pagination;
+  msg?: string;
 }
 
 function normalizeTaskBroadcast(raw?: Task | TaskBroadcastResult | null): TaskBroadcastResult {
@@ -85,15 +114,7 @@ export const taskService = {
   async listTasks(
     companyId: string,
     params?: {
-      internId?: string;
-      projectId?: string;
-      programId?: string;
-      groupId?: string;
-      status?: TaskStatus;
-      priority?: TaskPriority;
-      tag?: string;
-      search?: string;
-      sort?: string;
+      taskGroupId?: string;
       page?: number;
       limit?: number;
     },
@@ -198,6 +219,34 @@ export const taskService = {
       `/company/${companyId}/tasks/${taskId}/attachments/${attachmentId}`,
     );
     return normalizeTask(data?.data) ?? ({} as Task);
+  },
+
+  async listBroadcasts(
+    companyId: string,
+    params?: {
+      memberId?: string;
+      projectId?: string;
+      programId?: string;
+      priority?: TaskPriority;
+      status?: TaskStatus;
+      search?: string;
+      page?: number;
+      limit?: number;
+    },
+  ): Promise<{ broadcasts: BroadcastCard[]; pagination: Pagination }> {
+    const { data } = await api.get<BroadcastListEnvelope>(
+      `/company/${companyId}/tasks/broadcasts`,
+      { params },
+    );
+    const nested = data?.data;
+    const broadcasts = nested?.broadcasts ?? data?.broadcasts ?? [];
+    const pagination = nested?.pagination ?? data?.pagination;
+    return {
+      broadcasts,
+      pagination: pagination
+        ? { ...pagination, total: pagination.total ?? broadcasts.length }
+        : { page: 1, limit: broadcasts.length, pages: 1, total: broadcasts.length },
+    };
   },
 
   async listByGroup(

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   X,
   FileText,
@@ -35,13 +35,14 @@ const COLOR_OPTIONS: { key: string; name: string; cls: string }[] = [
 export default function AddNewProjectScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [interns, setInterns] = useState<Intern[]>([]);
   const [programInterns, setProgramInterns] = useState<Intern[]>([]);
   const [loadedProgramId, setLoadedProgramId] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [programId, setProgramId] = useState('');
+  const [programId, setProgramId] = useState(() => searchParams.get('programId') || '');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [color, setColor] = useState('#10B981');
@@ -136,6 +137,12 @@ export default function AddNewProjectScreen() {
               Cancel <X size={14} />
             </button>
           </div>
+          {programId && (
+            <p className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-2.5 text-sm text-emerald-700">
+              Creating inside program: <span className="font-semibold">{programs.find((p) => p._id === programId)?.name || 'Selected program'}</span>
+              {' '}— interns below are pre-filtered to this program.
+            </p>
+          )}
 
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
