@@ -41,7 +41,7 @@ export default function StudentHero() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/80 to-white">
+    <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/80 to-white" suppressHydrationWarning>
       <div className="pointer-events-none absolute inset-0">
         <Parallax offset={120} className="absolute -top-32 right-0">
           <div className="h-80 w-80 rounded-full bg-green-200/30 blur-3xl" />

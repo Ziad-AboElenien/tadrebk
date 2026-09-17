@@ -13,6 +13,8 @@ import { LS_PENDING_EMAIL } from '@/lib/constants';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
+import AuthSplit from '@/features/auth/components/AuthSplit';
+import { GraduationCap, Building2, ShieldCheck, BadgeCheck, Zap, UserPlus } from 'lucide-react';
 import dynamic from 'next/dynamic';
 const UniversityAutocomplete = dynamic(() => import('@/components/ui/UniversityAutocomplete'), { ssr: false });
 import { useGoogleAuth } from '@/features/auth/hooks/useGoogleAuth';
@@ -134,25 +136,39 @@ export default function SignupForm({ role }: SignupFormProps) {
   const isCompany = role === 'company';
 
   return (
-    <div className="w-full max-w-md">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isCompany ? 'bg-slate-100' : 'bg-emerald-50'}`}>
-            <i className={`${isCompany ? 'fas fa-building text-slate-600' : 'fas fa-graduation-cap text-emerald-600'} text-sm`} />
-          </div>
-          <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
-            {isCompany ? 'Company' : 'Student'} Sign Up
-          </span>
-        </div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Create your account</h1>
-        <p className="text-slate-400 text-sm">
-          {isCompany
-            ? "You'll set up your company profile after confirming your email."
-            : 'Join thousands of students finding their dream internships.'}
-        </p>
-      </div>
-
+    <AuthSplit
+      heroIcon={UserPlus}
+      heroGradient={isCompany ? 'from-blue-500 to-blue-700' : 'from-emerald-400 to-emerald-600'}
+      heroTitle={isCompany ? 'Start hiring in minutes' : 'Your career starts here'}
+      heroText={
+        isCompany
+          ? 'Create your company account, post your first role and meet verified student talent.'
+          : 'Create your free account, build your profile and apply to verified internships.'
+      }
+      heroFeatures={
+        isCompany
+          ? [
+              { icon: Zap, title: 'Fast Setup', tint: 'bg-amber-100', iconColor: 'text-amber-600' },
+              { icon: BadgeCheck, title: 'Verified Talent', tint: 'bg-blue-100', iconColor: 'text-blue-600' },
+              { icon: ShieldCheck, title: 'Secure Process', tint: 'bg-emerald-100', iconColor: 'text-emerald-600' },
+            ]
+          : [
+              { icon: Zap, title: 'Free Forever', tint: 'bg-amber-100', iconColor: 'text-amber-600' },
+              { icon: BadgeCheck, title: 'Verified Roles', tint: 'bg-blue-100', iconColor: 'text-blue-600' },
+              { icon: ShieldCheck, title: 'Privacy First', tint: 'bg-emerald-100', iconColor: 'text-emerald-600' },
+            ]
+      }
+      backHref="/"
+      backLabel="Back to Home"
+      cardIcon={isCompany ? Building2 : GraduationCap}
+      cardGradient={isCompany ? 'from-blue-500 to-blue-700' : 'from-emerald-400 to-emerald-600'}
+      cardTitle="Create your account"
+      cardSubtitle={
+        isCompany
+          ? "You'll set up your company profile after confirming your email."
+          : 'Join thousands of students finding their dream internships.'
+      }
+    >
       {/* Google Auth */}
       <button
         type="button"
@@ -369,6 +385,6 @@ export default function SignupForm({ role }: SignupFormProps) {
           </>
         )}
       </p>
-    </div>
-  );
-}
+    </AuthSplit>
+    );
+  }

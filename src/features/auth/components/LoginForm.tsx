@@ -16,6 +16,8 @@ import { setUser } from '@/store/userSlice';
 import { setCompany } from '@/store/companySlice';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import AuthSplit from '@/features/auth/components/AuthSplit';
+import { GraduationCap, Building2, ShieldCheck, BadgeCheck, Zap } from 'lucide-react';
 import { companyService } from '@/features/company/services/company.service';
 import { userService } from '@/features/student/services/user.service';
 import { useGoogleAuth } from '@/features/auth/hooks/useGoogleAuth';
@@ -146,21 +148,35 @@ export default function LoginForm({ role }: LoginFormProps) {
   const isCompany = role === 'company';
 
   return (
-    <div className="w-full max-w-md">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isCompany ? 'bg-slate-100' : 'bg-emerald-50'}`}>
-            <i className={`${isCompany ? 'fas fa-building text-slate-600' : 'fas fa-graduation-cap text-emerald-600'} text-sm`} />
-          </div>
-          <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
-            {isCompany ? 'Company' : 'Student'} Sign In
-          </span>
-        </div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome back</h1>
-        <p className="text-slate-400 text-sm">Sign in to continue to your account.</p>
-      </div>
-
+    <AuthSplit
+      heroIcon={isCompany ? Building2 : GraduationCap}
+      heroGradient={isCompany ? 'from-blue-500 to-blue-700' : 'from-emerald-400 to-emerald-600'}
+      heroTitle={isCompany ? 'Hire Egypt’s brightest interns' : 'Launch your career with top internships'}
+      heroText={
+        isCompany
+          ? 'Post roles, track applicants and grow your team — everything in one organized place.'
+          : 'Discover verified internships, apply in minutes and track everything from your dashboard.'
+      }
+      heroFeatures={
+        isCompany
+          ? [
+              { icon: BadgeCheck, title: 'Verified Talent', tint: 'bg-blue-100', iconColor: 'text-blue-600' },
+              { icon: Zap, title: 'Fast Posting', tint: 'bg-amber-100', iconColor: 'text-amber-600' },
+              { icon: ShieldCheck, title: 'Secure Process', tint: 'bg-emerald-100', iconColor: 'text-emerald-600' },
+            ]
+          : [
+              { icon: ShieldCheck, title: 'Secure Sign In', tint: 'bg-emerald-100', iconColor: 'text-emerald-600' },
+              { icon: BadgeCheck, title: 'Verified Companies', tint: 'bg-blue-100', iconColor: 'text-blue-600' },
+              { icon: Zap, title: 'Quick Apply', tint: 'bg-amber-100', iconColor: 'text-amber-600' },
+            ]
+      }
+      backHref="/"
+      backLabel="Back to Home"
+      cardIcon={isCompany ? Building2 : GraduationCap}
+      cardGradient={isCompany ? 'from-blue-500 to-blue-700' : 'from-emerald-400 to-emerald-600'}
+      cardTitle="Welcome back"
+      cardSubtitle={`Sign in to continue to your ${isCompany ? 'company' : 'student'} account.`}
+    >
       {/* Google Auth */}
       <button
         type="button"
@@ -260,6 +276,6 @@ export default function LoginForm({ role }: LoginFormProps) {
           </>
         )}
       </p>
-    </div>
+    </AuthSplit>
   );
 }

@@ -29,8 +29,8 @@ export default function GetStartedPage() {
         </p>
       </div>
 
-      {/* Role cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+{/* Role cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 justify-items-center">
         {/* Student card */}
         <button
           onClick={() => choose('student')}

@@ -27,13 +27,15 @@ export default function CompanyOnboardingScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
   const [legalFile, setLegalFile] = useState<File | null>(null);
 
-  // Already have a company â†’ go to dashboard
+  // Already have a complete company â†’ go to dashboard
+  const isProfileComplete = company?._id && company.name && company.industry && company.address && company.companyEmail && company.numberOfEmployees;
+  
   useEffect(() => {
-    if (company?._id) {
+    if (company?._id && company.name && company.industry && company.address && company.companyEmail && company.numberOfEmployees) {
       localStorage.removeItem(LS_PENDING_ONBOARDING);
       router.replace('/company/admin');
     }
-  }, [company?._id, router]);
+  }, [company?._id, company?.name, company?.industry, company?.address, company?.companyEmail, company?.numberOfEmployees, router]);
 
   const {
     register,
