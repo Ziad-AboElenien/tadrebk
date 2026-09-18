@@ -18,6 +18,7 @@ export default function ComposeEmailScreen() {
   const searchParams = useSearchParams();
   const internId = params.internId as string;
   const company = useAppSelector((s) => s.company.currentCompany);
+  const companyId = company?._id;
 
   const target = searchParams.get('target'); // 'all' or applicationId
   const isAll = target === 'all';
@@ -29,11 +30,11 @@ export default function ComposeEmailScreen() {
   const [message, setMessage] = useState('');
 
   const fetchAll = useCallback(async () => {
-    if (!company || !internId) return;
+    if (!company || !companyId || !internId) return;
     try {
       const [internData, appData] = await Promise.all([
         internshipService.getInternshipById(internId),
-        applicationService.getCompanyApplications(company._id, internId, { limit: 200 }),
+        applicationService.getCompanyApplications(companyId, internId, { limit: 200 }),
       ]);
       setInternship(internData);
       setApplications(appData.applications);
@@ -43,7 +44,7 @@ export default function ComposeEmailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [company, internId, router]);
+  }, [company, companyId, internId, router]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -161,7 +162,7 @@ export default function ComposeEmailScreen() {
                   onChange={(e) => setMessage(e.target.value)}
                   rows={8}
                   placeholder="e.g. Welcome to the team! We're excited to have you on board. Your start date will be..."
-                  className="w-full border border-slate-200 rounded-xl bg-white text-slate-800 placeholder:text-slate-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/40 focus:border-emerald-400 resize-none"
+                  className="w-full border border-slate-200 rounded-xl bg-white px-4 py-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 focus:border-emerald-400 resize-none"
                 />
                 <p className="text-xs text-slate-400 mt-1.5">
                   {message.length > 0 ? `${message.length} characters` : 'Leave empty for default template only'}
@@ -206,24 +207,21 @@ export default function ComposeEmailScreen() {
 
               {/* Template body */}
               <div className="bg-white px-8 py-8">
-                <h2 className="text-[#16a34a] text-xl font-bold mb-4">
+                <h2 className="text-emerald-600 text-xl font-bold mb-4">
                   Congratulations, {studentName}!
                 </h2>
 
                 <p className="text-slate-700 text-sm leading-relaxed mb-4">
-                  We are thrilled to inform you that your application for the{' '}
-                  <strong className="text-slate-900 font-bold">{internshipTitle}</strong> internship at{' '}
-                  <strong className="text-slate-900 font-bold">{companyName}</strong> has been{' '}
-                  <strong className="text-slate-900 font-bold">accepted</strong>.
+                  We are thrilled to inform you that your application for the <strong className="text-slate-900 font-bold">{internshipTitle}</strong> internship at <strong className="text-slate-900 font-bold">{companyName}</strong> has been <strong className="text-slate-900 font-bold">accepted</strong>.
                 </p>
 
                 {/* Message box */}
                 {message.trim() && (
                   <div className="bg-[#f0fdf4] border-l-4 border-[#22c55e] rounded-lg px-5 py-4 my-5">
-                    <p className="text-[#16a34a] text-xs font-bold mb-2">
+                    <p className="text-xs text-emerald-700 mb-2">
                       A message from {companyName}:
                     </p>
-                    <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">{message.trim()}</p>
+                    <p className="mt-0.5 whitespace-pre-wrap break-words text-slate-700">{message.trim()}</p>
                   </div>
                 )}
 
@@ -235,8 +233,8 @@ export default function ComposeEmailScreen() {
                     <div className="bg-slate-50 rounded-lg px-5 py-4 my-4">
                       <ul className="space-y-1">
                         {preKnowledge.map((item, i) => (
-                          <li key={i} className="text-[#16a34a] text-sm leading-relaxed flex items-start gap-2">
-                            <span className="text-[#22c55e] font-bold mt-0.5">•</span>
+                          <li key={i} className="text-slate-700 text-sm leading-relaxed">
+                            <span className="text-emerald-500 font-bold mt-0.5">•</span>
                             {item}
                           </li>
                         ))}
@@ -244,23 +242,6 @@ export default function ComposeEmailScreen() {
                     </div>
                   </>
                 )}
-
-                <p className="text-slate-500 text-sm leading-relaxed mt-4">
-                  Get ready to learn, grow, and make the most of this opportunity.
-                </p>
-
-                <div className="mt-5 text-slate-700 text-sm leading-relaxed">
-                  Best regards,<br />
-                  <strong className="font-bold">Tadreebak Team</strong>
-                </div>
-              </div>
-
-              {/* Template footer */}
-              <div className="bg-slate-100 px-8 py-4 text-center">
-                <p className="text-slate-400 text-xs">© 2026 Tadreebak. All rights reserved.</p>
-                <p className="text-slate-400 text-xs mt-1">
-                  <span className="text-[#22c55e]">Unsubscribe</span> · <span className="text-[#22c55e]">Privacy Policy</span>
-                </p>
               </div>
             </div>
           </div>

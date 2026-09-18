@@ -2,8 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import Parallax from './Parallax';
-import { fadeUp, scaleIn } from './animations';
+import { scaleIn } from './animations';
 
 const categories = [
   { icon: 'fa-code', label: 'Software Engineering', count: 42, query: 'software', color: 'from-blue-400 to-blue-600' },
@@ -14,38 +13,33 @@ const categories = [
   { icon: 'fa-users', label: 'Human Resources', count: 13, query: 'hr', color: 'from-rose-400 to-pink-600' },
 ];
 
-export default function CategoriesSection() {
+export default function CategoriesSection({
+  eyebrow = 'Explore Fields',
+  title = 'Browse by Category',
+  actionLabel = 'View All Internships',
+  actionHref = '/internships',
+}) {
   return (
-    <section className="py-16 bg-gradient-to-b from-white to-emerald-50/40 overflow-hidden">
+    <section className="py-16 bg-transparent overflow-hidden">
       <div className="max-w-5xl mx-auto px-4 sm:px-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
-          <Parallax offset={70}>
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: '50px' }}
-              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
-            >
-              <motion.span variants={fadeUp} custom={0} className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-1 block">Explore Fields</motion.span>
-              <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
-                Browse by Category
-              </motion.h2>
-            </motion.div>
-          </Parallax>
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
+          <div>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-1 block">{eyebrow}</span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+                {title}
+              </h2>
+            </div>
+          </div>
+          <div>
             <Link
-              href="/internships"
+              href={actionHref}
               className="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white font-bold rounded-xl text-sm hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-200/50 hover:scale-[1.02] transition-all duration-300"
             >
-              View All Internships
+              {actionLabel}
               <i className="fas fa-arrow-right text-xs" />
             </Link>
-          </motion.div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

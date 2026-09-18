@@ -172,10 +172,9 @@ export default function LoginForm({ role }: LoginFormProps) {
       }
       backHref="/"
       backLabel="Back to Home"
-      cardIcon={isCompany ? Building2 : GraduationCap}
       cardGradient={isCompany ? 'from-blue-500 to-blue-700' : 'from-emerald-400 to-emerald-600'}
       cardTitle="Welcome back"
-      cardSubtitle={`Sign in to continue to your ${isCompany ? 'company' : 'student'} account.`}
+      cardSubtitle="Sign in to continue to your account."
     >
       {/* Google Auth */}
       <button
@@ -258,24 +257,6 @@ export default function LoginForm({ role }: LoginFormProps) {
         </Link>
       </p>
 
-      {/* Switch role */}
-      <p className="text-center text-slate-300 text-xs mt-3">
-        {isCompany ? (
-          <>
-            Signing in as a student?{' '}
-            <Link href="/login/student" className="text-slate-400 hover:text-emerald-600 transition-colors">
-              Switch here
-            </Link>
-          </>
-        ) : (
-          <>
-            Are you a company?{' '}
-            <Link href="/login/company" className="text-slate-400 hover:text-emerald-600 transition-colors">
-              Switch here
-            </Link>
-          </>
-        )}
-      </p>
     </AuthSplit>
   );
 }

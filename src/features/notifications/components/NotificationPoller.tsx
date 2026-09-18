@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setUnreadCount } from '@/store/notificationSlice';
 import { notificationService } from '@/features/notifications/server/notification.service';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 
 let globalIntervalId: ReturnType<typeof setInterval> | null = null;
 let globalInitialized = false;
@@ -33,22 +33,9 @@ export default function NotificationPoller() {
       const count = await notificationService.getUnreadCount();
       if (mountedRef.current && !firstPollRef.current && count > lastCountRef.current) {
         const diff = count - lastCountRef.current;
-        toast(
-          <div className="flex items-center gap-3 pl-1">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
-              <i className="fas fa-bell text-emerald-500 text-sm" />
-            </div>
-            <div className="max-w-[250px]">
-              <p className="text-sm font-semibold text-dark">New Notification{diff > 1 ? 's' : ''}</p>
-              <p className="text-xs text-slate-500">You have {diff} unread notification{diff > 1 ? 's' : ''}</p>
-            </div>
-          </div>,
-          {
-            icon: false,
-            toastId: 'notification-poller',
-            className: '!bg-white !border !border-slate-100 !rounded-2xl !shadow-xl !overflow-hidden',
-            autoClose: 5000,
-          }
+        toastHelper.info(
+          `You have ${diff} unread notification${diff > 1 ? 's' : ''}`,
+          { title: `New Notification${diff > 1 ? 's' : ''}`, duration: 5000 },
         );
       }
       firstPollRef.current = false;

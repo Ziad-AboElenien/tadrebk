@@ -7,7 +7,6 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Mousewheel, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
-import CursorFollow from './CursorFollow';
 import Parallax from './Parallax';
 
 const quickTags = ['Software', 'Fintech', 'Design', 'Data'];
@@ -42,9 +41,7 @@ export default function HeroSection() {
 
   return (
     <>
-      <CursorFollow />
-
-      <section className="relative h-[100svh] min-h-[620px] bg-gradient-to-b from-emerald-50/80 to-white overflow-hidden">
+      <section className="relative h-[100svh] min-h-[620px] bg-transparent overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <Parallax offset={150} className="absolute -top-40 -right-40">
             <div className="w-96 h-96 bg-green-200/30 rounded-full blur-3xl animate-float" />
@@ -96,35 +93,44 @@ export default function HeroSection() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
-                  className="max-w-2xl mx-auto mb-4"
+                  className="max-w-lg mx-auto mb-4"
                 >
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-white rounded-2xl shadow-lg shadow-emerald-100/50 ring-1 ring-gray-100 overflow-hidden transition-all duration-300">
-                    <div className="flex items-center flex-1 gap-3 px-5 py-4">
-                      <i className="fas fa-search text-slate-400 shrink-0" />
-                      <input
-                        type="text"
-                        placeholder="Search internships..."
-                        className="w-full text-sm sm:text-sm text-slate-800 placeholder:text-slate-400 bg-transparent outline-none ring-0 focus:ring-0 focus:outline-none"
-                        style={{ fontSize: 'max(16px, 1rem)' }}
-                        value={searchTitle}
-                        onChange={(e) => setSearchTitle(e.target.value)}
-                      />
-                    </div>
-                    <div className="hidden sm:block w-px self-stretch bg-slate-100" />
-                    <div className="flex items-center flex-1 gap-3 border-t border-slate-100 sm:border-0 px-5 py-4">
-                      <i className="fas fa-location-dot text-emerald-500 shrink-0" />
-                      <input
-                        type="text"
-                        placeholder="Location"
-                        className="w-full text-sm sm:text-sm text-slate-800 placeholder:text-slate-400 bg-transparent outline-none ring-0 focus:ring-0 focus:outline-none"
-                        style={{ fontSize: 'max(16px, 1rem)' }}
-                        value={searchLocation}
-                        onChange={(e) => setSearchLocation(e.target.value)}
-                      />
-                    </div>
-                    <div className="p-2">
-                      <button type="submit" className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-3 rounded-xl font-bold text-sm hover:from-emerald-600 hover:to-teal-600 hover:shadow-lg hover:shadow-emerald-200/50 transition-all duration-300 active:scale-[0.97]">
-                        Search
+                  <div className="rounded-[1.5rem] sm:rounded-full bg-white/75 backdrop-blur-xl ring-1 ring-white shadow-[0_8px_24px_rgba(16,185,129,0.10)] p-1 transition-shadow duration-300">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5">
+                      <div className="flex items-center flex-1 gap-2.5 pl-1.5 pr-2 py-1.5">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50">
+                          <i className="fas fa-search text-emerald-600 text-xs" />
+                        </span>
+                        <input
+                          type="text"
+                          placeholder="Try 'Frontend Intern'..."
+                          className="w-full text-[13px] text-slate-800 placeholder:text-slate-400 bg-transparent outline-none border-0 ring-0 focus:ring-0 focus:outline-none focus:border-0"
+                          style={{ fontSize: 'max(16px, 1rem)' }}
+                          value={searchTitle}
+                          onChange={(e) => setSearchTitle(e.target.value)}
+                        />
+                      </div>
+                      <div className="hidden sm:block w-px self-stretch my-2 bg-slate-200/70" />
+                      <div className="flex items-center flex-1 gap-2.5 pl-1.5 pr-2 py-1.5 border-t border-slate-100 sm:border-0">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50">
+                          <i className="fas fa-location-dot text-emerald-600 text-xs" />
+                        </span>
+                        <input
+                          type="text"
+                          placeholder="Where? e.g. Cairo"
+                          className="w-full text-[13px] text-slate-800 placeholder:text-slate-400 bg-transparent outline-none border-0 ring-0 focus:ring-0 focus:outline-none focus:border-0"
+                          style={{ fontSize: 'max(16px, 1rem)' }}
+                          value={searchLocation}
+                          onChange={(e) => setSearchLocation(e.target.value)}
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        aria-label="Search internships"
+                        className="group flex items-center justify-center gap-2 rounded-xl sm:rounded-full bg-emerald-500 px-5 py-2.5 sm:h-10 sm:w-10 sm:p-0 text-[13px] font-bold text-white shadow-md shadow-emerald-500/25 outline-none transition-all duration-300 hover:bg-emerald-600 hover:shadow-emerald-500/40 active:scale-95"
+                      >
+                        <i className="fas fa-arrow-right text-sm transition-transform duration-300 group-hover:translate-x-0.5" />
+                        <span className="sm:hidden">Search</span>
                       </button>
                     </div>
                   </div>

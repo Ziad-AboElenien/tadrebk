@@ -42,23 +42,21 @@ function InternshipCardInner({
   if (compact) {
     return (
       <Link href={`/internships/${internship._id}`}>
-        <div className="group relative flex flex-col rounded-2xl bg-white/60 backdrop-blur-xl border border-white/70 shadow-[0_8px_32px_rgba(0,0,0,0.07)] hover:shadow-[0_16px_40px_rgba(16,185,129,0.15)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+        <div className="group relative flex flex-col rounded-2xl bg-white/30 backdrop-blur-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.07)] hover:shadow-[0_16px_40px_rgba(16,185,129,0.15)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
           <div className="p-5 pb-4 flex-1">
-            {/* Badges row */}
-            <div className="flex items-start justify-between mb-4">
-              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
-                {company?.name || ''}
-              </span>
-              <div className="flex items-center gap-1.5">
+            {/* Company row */}
+            <div className="flex items-center gap-2.5 mb-4">
+              <MediaImage
+                src={logoUrl}
+                alt=""
+                boxClassName="h-9 w-9 flex-shrink-0 rounded-xl overflow-hidden ring-2 ring-white/70"
+                imgClassName="w-full h-full object-cover"
+                iconClassName="fas fa-building text-sm text-slate-300"
+              />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-slate-900">{company?.name || 'Unknown Company'}</p>
                 {internship.location && (
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                    internship.location === 'remote' ? 'bg-violet-50 text-violet-600' :
-                    internship.location === 'hybrid' ? 'bg-blue-50 text-blue-600' :
-                    'bg-amber-50 text-amber-600'
-                  }`}>
-                    <i className={`fas fa-${internship.location === 'remote' ? 'globe' : internship.location === 'hybrid' ? 'code-branch' : 'map-marker-alt'} text-[9px]`} />
-                    {locationLabels[internship.location] || internship.location}
-                  </span>
+                  <p className="text-[11px] text-slate-400 capitalize">{locationLabels[internship.location] || internship.location}</p>
                 )}
               </div>
             </div>
@@ -130,7 +128,7 @@ function InternshipCardInner({
   }
 
   return (
-    <div className="group flex flex-col rounded-2xl bg-white/60 backdrop-blur-xl border border-white/70 shadow-[0_8px_32px_rgba(0,0,0,0.07)] hover:shadow-[0_16px_40px_rgba(16,185,129,0.15)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+    <div className="group flex flex-col rounded-2xl bg-white/30 backdrop-blur-2xl border border-white/80 shadow-[0_8px_32px_rgba(0,0,0,0.07)] hover:shadow-[0_16px_40px_rgba(16,185,129,0.15)] hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
       <Link href={`/internships/${internship._id}`} className="flex flex-col flex-1">
         <div className="p-5 pb-0 flex-1">
           {/* Logo + badges row */}
@@ -167,7 +165,7 @@ function InternshipCardInner({
 
           {/* Company name */}
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+            <span className="text-sm font-bold text-slate-900">
               {company?.name || 'Unknown Company'}
             </span>
             {internship.closed && (

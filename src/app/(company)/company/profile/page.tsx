@@ -1,7 +1,19 @@
 'use client';
 
-import CompanyProfileScreen from '@/features/company/screens/profile.screen';
+import { Suspense } from 'react';
+import CompanyOwnProfileScreen from '@/features/profiles/screens/company-own-profile.screen';
+import { CompanyProfileSkeleton } from '@/features/profiles/components/ProfileSkeletons';
 
 export default function CompanyProfilePage() {
-  return <CompanyProfileScreen />;
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-50">
+          <CompanyProfileSkeleton />
+        </div>
+      }
+    >
+      <CompanyOwnProfileScreen />
+    </Suspense>
+  );
 }

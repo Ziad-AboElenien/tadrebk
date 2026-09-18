@@ -1,71 +1,22 @@
 'use client';
 
-import { toast, type ToastOptions } from 'react-toastify';
-import { type ReactNode } from 'react';
+import { pushNotification, type AppNotificationType } from '@/components/ui/AppNotifications';
 
-const baseOpts: ToastOptions = {
-  icon: false,
-  autoClose: 4000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: true,
-};
-
-let toastCounter = 0;
-
-function makeIcon(faClass: string, color: string, bg: string): ReactNode {
-  return (
-    <div
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-      style={{ backgroundColor: bg }}
-    >
-      <i className={`fas ${faClass} text-sm`} style={{ color }} />
-    </div>
-  );
+export interface ToastOpts {
+  title?: string;
+  description?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  duration?: number;
 }
 
-function toastWith(
-  message: string,
-  type: 'success' | 'error' | 'info' | 'warning',
-) {
-  const map = {
-    success: {
-      icon: makeIcon('fa-check', '#10b981', '#ecfdf5'),
-      border: 'border-emerald-100',
-    },
-    error: {
-      icon: makeIcon('fa-xmark', '#ef4444', '#fef2f2'),
-      border: 'border-red-100',
-    },
-    info: {
-      icon: makeIcon('fa-bell', '#3b82f6', '#eff6ff'),
-      border: 'border-blue-100',
-    },
-    warning: {
-      icon: makeIcon('fa-exclamation-triangle', '#f59e0b', '#fffbeb'),
-      border: 'border-amber-100',
-    },
-  };
-
-  const { icon, border } = map[type];
-  const fn = type === 'error' ? toast.error : type === 'info' ? toast.info : type === 'warning' ? toast.warning : toast.success;
-
-  fn(
-    <div className="flex items-center gap-3 py-1 pl-1 pr-2">
-      {icon}
-      <span className="max-w-[260px] text-sm font-medium text-slate-900 line-clamp-3 sm:max-w-xs">{message}</span>
-    </div>,
-    {
-      ...baseOpts,
-      toastId: `toast-${type}-${message}`,
-      className: `!bg-white !border ${border} !rounded-2xl !p-4 !shadow-xl !overflow-hidden`,
-    },
-  );
+function toastWith(message: string, type: AppNotificationType, opts?: ToastOpts) {
+  pushNotification({ type, message, ...opts });
 }
 
 export const toastHelper = {
-  success: (msg: string) => toastWith(msg, 'success'),
-  error:   (msg: string) => toastWith(msg, 'error'),
-  info:    (msg: string) => toastWith(msg, 'info'),
-  warning: (msg: string) => toastWith(msg, 'warning'),
+  success: (msg: string, opts?: ToastOpts) => toastWith(msg, 'success', opts),
+  error:   (msg: string, opts?: ToastOpts) => toastWith(msg, 'error', opts),
+  info:    (msg: string, opts?: ToastOpts) => toastWith(msg, 'info', opts),
+  warning: (msg: string, opts?: ToastOpts) => toastWith(msg, 'warning', opts),
 };

@@ -12,7 +12,6 @@ import { internshipService } from '@/features/internship/services/internship.ser
 import { companyService } from '@/features/company/services/company.service';
 import { useAppSelector } from '@/store/store';
 import { CATEGORY_LABELS, type Category } from '@/features/student/types';
-import { toast } from 'react-toastify';
 import { toastHelper } from '@/lib/toast';
 
 // Map each user category to keywords that may appear in internship title or skills
@@ -263,7 +262,7 @@ function InternshipsContent() {
 
       setInternships(filtered);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to load internships', { position: 'bottom-right' });
+      toastHelper.error(error.response?.data?.message || 'Failed to load internships');
     } finally {
       setLoading(false);
       setLoadingMore(false);

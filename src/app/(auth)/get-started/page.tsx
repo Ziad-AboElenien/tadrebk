@@ -1,21 +1,36 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/store/store';
 import { LS_INTENDED_ROLE } from '@/lib/constants';
-import type { Metadata } from 'next';
+
+const DASHBOARD_BY_ROLE: Record<string, string> = {
+  company: '/company/admin',
+  admin: '/admin/dashboard',
+  student: '/dashboard',
+};
 
 export default function GetStartedPage() {
   const router = useRouter();
+  const { isAuthenticated, role } = useAppSelector((s) => s.auth);
 
-  function choose(role: 'student' | 'company') {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(LS_INTENDED_ROLE, role);
+  // Logged-in users don't need this page — bounce them to their dashboard.
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace(DASHBOARD_BY_ROLE[role] || '/dashboard');
     }
-    router.push(`/signup/${role}`);
+  }, [isAuthenticated, role, router]);
+
+  function choose(selected: 'student' | 'company') {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LS_INTENDED_ROLE, selected);
+    }
+    router.push(`/signup/${selected}`);
   }
 
   return (
-    <div className="w-full max-w-2xl">
+    <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:py-14">
       {/* Header */}
       <div className="text-center mb-12">
         <span className="inline-block bg-emerald-50 text-primary text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-4">
@@ -29,19 +44,19 @@ export default function GetStartedPage() {
         </p>
       </div>
 
-{/* Role cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 justify-items-center">
+      {/* Role cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 justify-items-center">
         {/* Student card */}
         <button
           onClick={() => choose('student')}
           id="get-started-student-btn"
-          className="group relative bg-white border-2 border-gray-100 hover:border-primary rounded-3xl p-6 sm:p-8 text-left transition-all duration-300 hover:shadow-[0_20px_60px_rgba(16,185,129,0.12)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="group relative w-full bg-white border-2 border-emerald-100 hover:border-primary rounded-3xl p-6 sm:p-8 text-left transition-all duration-300 hover:shadow-[0_20px_60px_rgba(16,185,129,0.18)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           {/* Icon */}
           <div className="w-14 h-14 bg-emerald-50 group-hover:bg-primary rounded-2xl flex items-center justify-center mb-6 transition-colors duration-300">
             <i className="fas fa-graduation-cap text-2xl text-primary group-hover:text-white transition-colors duration-300" />
           </div>
-          <h2 className="text-xl font-bold text-dark mb-2">I'm a Student</h2>
+          <h2 className="text-xl font-bold text-dark mb-2">I&apos;m a Student</h2>
           <p className="text-gray-400 text-sm leading-relaxed">
             Find internships, build your profile, and launch your career with top Egyptian companies.
           </p>
@@ -59,15 +74,15 @@ export default function GetStartedPage() {
         <button
           onClick={() => choose('company')}
           id="get-started-company-btn"
-          className="group relative bg-white border-2 border-gray-100 hover:border-dark rounded-3xl p-6 sm:p-8 text-left transition-all duration-300 hover:shadow-[0_20px_60px_rgba(26,46,53,0.08)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dark"
+          className="group relative w-full bg-white border-2 border-gray-100 hover:border-dark rounded-3xl p-6 sm:p-8 text-left transition-all duration-300 hover:shadow-[0_20px_60px_rgba(26,46,53,0.08)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dark"
         >
           {/* Icon */}
           <div className="w-14 h-14 bg-gray-100 group-hover:bg-dark rounded-2xl flex items-center justify-center mb-6 transition-colors duration-300">
             <i className="fas fa-building text-2xl text-gray-500 group-hover:text-white transition-colors duration-300" />
           </div>
-          <h2 className="text-xl font-bold text-dark mb-2">I'm a Company</h2>
+          <h2 className="text-xl font-bold text-dark mb-2">I&apos;m a Company</h2>
           <p className="text-gray-400 text-sm leading-relaxed">
-            Post internships, discover talented students, and grow your team with Egypt's best talent.
+            Post internships, discover talented students, and grow your team with Egypt&apos;s best talent.
           </p>
           <div className="flex items-center gap-2 mt-6 text-dark font-semibold text-sm">
             Get Started

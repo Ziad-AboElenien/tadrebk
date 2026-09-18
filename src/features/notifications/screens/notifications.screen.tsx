@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setUnreadCount } from '@/store/notificationSlice';
 import { notificationService } from '@/features/notifications/server/notification.service';
 import type { Notification } from '@/features/notifications/types';
-import Spinner from '@/components/ui/Spinner';
+import { Skeleton } from '@/components/ui/Skeleton';
 import Pagination from '@/components/ui/Pagination';
 import { toastHelper } from '@/lib/toast';
 
@@ -160,7 +160,18 @@ export default function NotificationsScreen() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-20"><Spinner size="lg" /></div>
+        <div className="space-y-2" aria-hidden>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-start gap-4 rounded-2xl border border-slate-100 bg-white px-5 py-5">
+              <Skeleton className="h-11 w-11 shrink-0 !rounded-full" />
+              <div className="min-w-0 flex-1 space-y-2.5">
+                <Skeleton className="h-4 w-48 !rounded-full" />
+                <Skeleton className="h-3.5 w-full !rounded-full" />
+                <Skeleton className="h-3 w-24 !rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-20 text-center">
           <i className="fas fa-bell text-4xl text-slate-300" />

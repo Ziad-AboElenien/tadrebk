@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, CheckCircle2, Eye, FileText, Loader2, Mail, XCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Eye, FileText, Loader2, Mail, XCircle } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
@@ -154,6 +154,16 @@ export default function ApplicationDetailScreen() {
                         <p className="mt-1 truncate text-xs text-slate-400">
                           Applied for <span className="font-medium text-slate-600">{internship.title}</span>
                         </p>
+                      )}
+                      {student?._id && (
+                        <Link
+                          href={`/company/admin/candidates/${student._id}?internshipTitle=${encodeURIComponent(
+                            internship?.title || 'Internship',
+                          )}&status=${app.status}`}
+                          className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:underline"
+                        >
+                          View full profile <ArrowRight size={12} />
+                        </Link>
                       )}
                     </div>
                   </div>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { toast } from 'react-toastify';
+import { toastHelper } from '@/lib/toast';
 import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage } from '@/lib/axios';
 import { useAppDispatch } from '@/store/store';
@@ -45,7 +45,7 @@ export function useGoogleAuth() {
     script.defer = true;
     script.onload = () => setScriptLoaded(true);
     script.onerror = () => {
-      toast.error('Failed to load Google Identity Services. Please refresh and try again.');
+      toastHelper.error('Failed to load Google Identity Services. Please refresh and try again.');
     };
     document.body.appendChild(script);
 
@@ -72,7 +72,7 @@ export function useGoogleAuth() {
         if (decoded?.role === 'admin' || (user as any).role === 'admin') {
           dispatch(setTokens({ tokens, userId, role: 'admin' }));
           dispatch(setUser(user));
-          toast.success(`Welcome, ${user.firstName}!`);
+          toastHelper.success(`Welcome, ${user.firstName}!`);
           router.push('/admin/dashboard');
           return;
         }
@@ -98,12 +98,12 @@ export function useGoogleAuth() {
 
         if (user.isConfirmed === false) {
           localStorage.setItem(LS_PENDING_EMAIL, user.email);
-          toast.info('Please verify your email to continue.');
+          toastHelper.info('Please verify your email to continue.');
           router.push('/confirm-email?resend=true');
           return;
         }
 
-        toast.success(`Welcome, ${user.firstName}!`);
+        toastHelper.success(`Welcome, ${user.firstName}!`);
 
         const next = searchParams.get('next');
         // Same-origin relative paths only — never "//evil.com" or "\evil.com"
@@ -123,7 +123,7 @@ export function useGoogleAuth() {
           router.push('/dashboard');
         }
       } catch (err) {
-        toast.error(getErrorMessage(err));
+        toastHelper.error(getErrorMessage(err));
       } finally {
         inFlight.current = false;
       }
@@ -133,18 +133,18 @@ export function useGoogleAuth() {
 
   const signInWithGoogle = useCallback(() => {
     if (!GOOGLE_CLIENT_ID) {
-      toast.error('Google sign-in is not configured. Ask the dev team to add NEXT_PUBLIC_GOOGLE_CLIENT_ID.');
+      toastHelper.error('Google sign-in is not configured. Ask the dev team to add NEXT_PUBLIC_GOOGLE_CLIENT_ID.');
       return;
     }
 
     if (!scriptLoaded) {
-      toast.info('Google services are still loading. Please wait a moment and try again.');
+      toastHelper.info('Google services are still loading. Please wait a moment and try again.');
       return;
     }
 
     const google = (window as any).google;
     if (!google?.accounts?.id) {
-      toast.error('Google Identity Services failed to load. Please refresh and try again.');
+      toastHelper.error('Google Identity Services failed to load. Please refresh and try again.');
       return;
     }
 
@@ -156,7 +156,7 @@ export function useGoogleAuth() {
 
     google.accounts.id.prompt((notification: any) => {
       if (notification.isNotDisplayed()) {
-        toast.warning('Google One Tap did not appear. Make sure the OAuth consent screen is set up in Google Cloud Console under the correct project (project ID: 915703608928). Add https://tadrebk.vercel.app and http://localhost:3000 to Authorized JavaScript origins.');
+        toastHelper.warning('Google One Tap did not appear. Make sure the OAuth consent screen is set up in Google Cloud Console under the correct project (project ID: 915703608928). Add https://tadrebk.vercel.app and http://localhost:3000 to Authorized JavaScript origins.');
       }
     });
   }, [handleGoogleCredential, scriptLoaded]);

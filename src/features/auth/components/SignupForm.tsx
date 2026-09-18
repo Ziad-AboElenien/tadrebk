@@ -8,7 +8,7 @@ import { toastHelper } from '@/lib/toast';
 import Link from 'next/link';
 import { signupSchema, type SignupFormData } from '@/features/auth/schemas/auth.schemas';
 import * as authService from '@/features/auth/server/auth.service';
-import { getErrorMessage } from '@/lib/axios';
+import { getErrorMessage, getErrorStatus } from '@/lib/axios';
 import { LS_PENDING_EMAIL } from '@/lib/constants';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
@@ -129,7 +129,26 @@ export default function SignupForm({ role }: SignupFormProps) {
       toastHelper.success('Account created! Please check your email for the OTP.');
       router.push('/confirm-email');
     } catch (err) {
-      toastHelper.error(getErrorMessage(err));
+      // Email already registered but never confirmed → send them back to the
+      // confirmation step with a fresh code instead of showing a dead-end error.
+      const msg = getErrorMessage(err);
+      const status = getErrorStatus(err);
+      const looksUnconfirmed =
+        status === 409 || /confirm|verif|already|registered|duplicate|exists/i.test(msg);
+      if (looksUnconfirmed) {
+        try {
+          await authService.resendOtp({ email: data.email });
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(LS_PENDING_EMAIL, data.email);
+          }
+          toastHelper.info('This email is already registered but not confirmed. We sent you a new code.');
+          router.push('/confirm-email');
+          return;
+        } catch {
+          // Resend failed (e.g. account is actually confirmed) — fall through.
+        }
+      }
+      toastHelper.error(msg);
     }
   }
 
@@ -137,6 +156,7 @@ export default function SignupForm({ role }: SignupFormProps) {
 
   return (
     <AuthSplit
+      wide
       heroIcon={UserPlus}
       heroGradient={isCompany ? 'from-blue-500 to-blue-700' : 'from-emerald-400 to-emerald-600'}
       heroTitle={isCompany ? 'Start hiring in minutes' : 'Your career starts here'}
@@ -160,7 +180,6 @@ export default function SignupForm({ role }: SignupFormProps) {
       }
       backHref="/"
       backLabel="Back to Home"
-      cardIcon={isCompany ? Building2 : GraduationCap}
       cardGradient={isCompany ? 'from-blue-500 to-blue-700' : 'from-emerald-400 to-emerald-600'}
       cardTitle="Create your account"
       cardSubtitle={

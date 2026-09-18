@@ -197,6 +197,41 @@ function FallbackCard() {
   );
 }
 
+/** Left marketing column on its own — used for the phone mockup. */
+export function StudentShowcaseIntro() {
+  return (
+    <div>
+      <h2 className="text-3xl sm:text-4xl font-bold leading-tight text-white">
+        Manage your <span className="text-emerald-400">internship journey</span> in one place
+      </h2>
+      <p className="mt-4 text-base leading-relaxed text-slate-400">
+        Discover opportunities, track applications and never miss an important update. Join thousands of students launching their careers today.
+      </p>
+      <div className="mt-8 space-y-5">
+        {dashboardFeatures.map((item) => (
+          <div key={item.title} className="group flex items-start gap-4 rounded-xl p-3 -ml-3 hover:bg-white/5 transition-colors duration-300">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-900/60 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white group-hover:scale-110 transition-all duration-300">
+              <i className={`fas ${item.icon} text-sm`} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">{item.title}</p>
+              <p className="text-sm text-slate-400">{item.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-8 flex gap-3 flex-wrap">
+        <Link href="/get-started" className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-sm shadow-emerald-500/25 hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300">
+          Start Your Journey <i className="fas fa-arrow-right text-xs" />
+        </Link>
+        <Link href="/how-it-works" className="inline-flex items-center gap-2 rounded-xl border border-gray-700 px-6 py-3 text-sm font-semibold text-slate-300 transition-all duration-300 hover:border-emerald-500/50 hover:text-emerald-300 hover:bg-white/5">
+          Learn More
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function StudentMiniDashboard() {
   const currentUser = useAppSelector((s) => s.user.currentUser);
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
@@ -241,35 +276,7 @@ export default function StudentMiniDashboard() {
   return (
     <section className="bg-gray-900 px-6 sm:px-10 py-16 relative">
       <div className="mx-auto max-w-6xl lg:grid lg:grid-cols-2 lg:gap-16 lg:items-center relative z-10">
-        <div>
-          <h2 className="text-3xl sm:text-4xl font-bold leading-tight text-white">
-            Manage your <span className="text-emerald-400">internship journey</span> in one place
-          </h2>
-          <p className="mt-4 text-base leading-relaxed text-slate-400">
-            Discover opportunities, track applications and never miss an important update. Join thousands of students launching their careers today.
-          </p>
-          <div className="mt-8 space-y-5">
-            {dashboardFeatures.map((item) => (
-              <div key={item.title} className="group flex items-start gap-4 rounded-xl p-3 -ml-3 hover:bg-white/5 transition-colors duration-300">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-900/60 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white group-hover:scale-110 transition-all duration-300">
-                  <i className={`fas ${item.icon} text-sm`} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-white">{item.title}</p>
-                  <p className="text-sm text-slate-400">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-8 flex gap-3 flex-wrap">
-            <Link href="/get-started" className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-bold text-white shadow-sm shadow-emerald-500/25 hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300">
-              Start Your Journey <i className="fas fa-arrow-right text-xs" />
-            </Link>
-            <Link href="/how-it-works" className="inline-flex items-center gap-2 rounded-xl border border-gray-700 px-6 py-3 text-sm font-semibold text-slate-300 transition-all duration-300 hover:border-emerald-500/50 hover:text-emerald-300 hover:bg-white/5">
-              Learn More
-            </Link>
-          </div>
-        </div>
+        <StudentShowcaseIntro />
 
         <div className="mt-12 lg:mt-0">
           {isLoggedIn ? (
