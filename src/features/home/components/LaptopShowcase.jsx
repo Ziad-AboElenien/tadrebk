@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import IPhoneFrame from './IPhoneFrame';
+import TabletFrame from './TabletFrame';
 import { laptopLayoutWidth, useScaledScreen } from './useScaledScreen';
 
 const MIN_SCALE = 0.82;
@@ -94,8 +95,12 @@ export default function LaptopShowcase({ children, phoneContent }) {
         <div className="sm:hidden">
           <IPhoneFrame>{phoneContent || children}</IPhoneFrame>
         </div>
+        {/* Tablet on medium screens */}
+        <div className="hidden sm:block lg:hidden">
+          <TabletFrame>{children}</TabletFrame>
+        </div>
         {/* Laptop on larger screens */}
-        <div className="hidden sm:block">
+        <div className="hidden lg:block">
           <LaptopVisual>{children}</LaptopVisual>
         </div>
       </div>

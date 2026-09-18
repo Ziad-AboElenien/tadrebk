@@ -60,6 +60,10 @@ export function laptopLayoutWidth() {
   return 1400;
 }
 
+export function tabletLayoutWidth() {
+  return 700;
+}
+
 export function phoneLayoutWidth() {
   return 430;
 }
