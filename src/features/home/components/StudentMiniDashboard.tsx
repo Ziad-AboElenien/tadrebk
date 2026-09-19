@@ -35,7 +35,7 @@ function DashboardCard({ currentUser, stats, recentApps, recommended }: {
           <p className="text-xs text-slate-400">You have {stats.total} pending update{stats.total !== 1 ? 's' : ''} today.</p>
         </div>
         {getUserImgUrl(currentUser.profilePicture) ? (
-          <img src={getUserImgUrl(currentUser.profilePicture) || ''} alt="" className="h-9 w-9 rounded-full object-cover" />
+          <img src={getUserImgUrl(currentUser.profilePicture) || ''} alt="" loading="lazy" decoding="async" className="h-9 w-9 rounded-full object-cover" />
         ) : (
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-white text-xs font-bold">
             {currentUser.firstName?.[0]}{currentUser.lastName?.[0]}

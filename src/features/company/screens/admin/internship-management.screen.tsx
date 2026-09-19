@@ -80,6 +80,8 @@ function StudentAvatar({ initials, src, alt }: { initials: string; src?: string;
         src={src}
         alt={alt}
         onError={() => setFailed(true)}
+        loading="lazy"
+        decoding="async"
         className="h-9 w-9 shrink-0 rounded-full object-cover"
       />
     );

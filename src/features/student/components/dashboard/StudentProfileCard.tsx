@@ -24,6 +24,8 @@ export default function StudentProfileCard({ student }: { student: StudentCardDa
             <img
               src={student.avatarUrl}
               alt={student.name}
+              loading="lazy"
+              decoding="async"
               className="h-24 w-24 rounded-2xl border-4 border-white object-cover shadow-lg"
             />
           ) : (

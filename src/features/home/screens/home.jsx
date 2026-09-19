@@ -11,7 +11,19 @@ const StudentShowcaseIntro = dynamic(
 );
 
 const HeroSection = dynamic(() => import('@/features/home/components/HeroSection'));
-const LaptopShowcase = dynamic(() => import('@/features/home/components/LaptopShowcase'));
+const LaptopShowcase = dynamic(() => import('@/features/home/components/LaptopShowcase'), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-transparent px-4 py-10 sm:px-8" aria-hidden>
+      <div className="mx-auto max-w-4xl">
+        <div className="mx-5 animate-pulse rounded-t-2xl bg-slate-200/60 p-2 pb-2.5 sm:mx-10">
+          <div className="h-64 rounded-lg bg-slate-200/70 sm:h-80" />
+        </div>
+        <div className="h-3.5 rounded-b-xl bg-slate-200/60" />
+      </div>
+    </div>
+  ),
+});
 const StudentMiniDashboard = dynamic(() => import('@/features/home/components/StudentMiniDashboard'), { ssr: false });
 const FeaturedInternshipsSection = dynamic(() => import('@/features/home/components/FeaturedInternshipsSection'));
 const ApplicationTimeline = dynamic(() => import('@/features/home/components/ApplicationTimeline'));

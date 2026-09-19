@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -19,6 +19,7 @@ import {
   MessageSquare,
   MoreHorizontal,
   Trash2,
+  GripVertical,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
@@ -54,6 +55,65 @@ const STATUS_RANK: Record<string, number> = {
   complete: 3,
 };
 
+const STATUS_LABEL: Record<TaskStatus, string> = {
+  todo: 'To Do',
+  in_progress: 'In Progress',
+  in_review: 'In Review',
+  complete: 'Complete',
+  archived: 'Archived',
+};
+
+type DragItem = { kind: 'single' | 'group'; id: string; title: string; from: TaskStatus };
+
+/**
+ * Canonicalize API status strings. Unknown/blank values fall back to 'todo'
+ * (visible beats invisible) instead of silently dropping the task.
+ */
+function normalizeStatus(s?: string | null): TaskStatus {
+  const v = (s || '').trim().toLowerCase().replace(/[-\s]+/g, '_');
+  const map: Record<string, TaskStatus> = {
+    todo: 'todo',
+    to_do: 'todo',
+    open: 'todo',
+    pending: 'todo',
+    backlog: 'todo',
+    in_progress: 'in_progress',
+    inprogress: 'in_progress',
+    in_review: 'in_review',
+    inreview: 'in_review',
+    review: 'in_review',
+    complete: 'complete',
+    completed: 'complete',
+    done: 'complete',
+    archived: 'archived',
+    archive: 'archived',
+  };
+  return map[v] || 'todo';
+}
+
+/**
+ * A broadcast card represents N parallel member tasks — place it in the
+ * column of its members' MOST COMMON status (tie → most advanced), ignoring
+ * archived members. Previously the minimum rank won, so one stale/archived
+ * member dragged the whole card into To Do.
+ */
+function groupColumn(statuses: string[]): TaskStatus {
+  const valid = statuses.map(normalizeStatus).filter((s) => s !== 'archived');
+  if (valid.length === 0) return 'todo';
+  const counts = new Map<TaskStatus, number>();
+  valid.forEach((s) => counts.set(s, (counts.get(s) || 0) + 1));
+  let best: TaskStatus = 'todo';
+  let bestScore = -1;
+  counts.forEach((count, status) => {
+    const score = count * 10 + (STATUS_RANK[status] ?? 0);
+    if (score > bestScore) {
+      bestScore = score;
+      best = status;
+    }
+  });
+  return best;
+}
+
 function formatDue(dateStr?: string | null): string {
   if (!dateStr) return '—';
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -79,8 +139,96 @@ export default function TaskBoardScreen() {
   const [bulking, setBulking] = useState(false);
   const [view, setView] = useState<'board' | 'list'>('board');
   const [priorityFilter, setPriorityFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<TaskStatus[]>([]);
   const [sortBy, setSortBy] = useState<'default' | 'due' | 'title' | 'priority'>('default');
   const [filterOpen, setFilterOpen] = useState(false);
+
+  // ---- Drag & drop (pointer-based: mouse + touch) ----
+  const [dragItem, setDragItem] = useState<DragItem | null>(null);
+  const [overCol, setOverCol] = useState<TaskStatus | null>(null);
+  const [movingId, setMovingId] = useState<string | null>(null);
+  const dragData = useRef<{ item: DragItem; startX: number; startY: number; x: number; y: number; moved: boolean } | null>(null);
+  const ghostRef = useRef<HTMLDivElement | null>(null);
+  const colRefs = useRef<Partial<Record<TaskStatus, HTMLDivElement | null>>>({});
+  const overColRef = useRef<TaskStatus | null>(null);
+  const suppressClick = useRef(false);
+  const performDropRef = useRef<((item: DragItem, to: TaskStatus) => void) | null>(null);
+
+  const moveGhost = useCallback((x: number, y: number) => {
+    const g = ghostRef.current;
+    if (g) g.style.transform = `translate(${x}px, ${y}px) translate(-50%, -130%) rotate(-3deg)`;
+  }, []);
+
+  const hitColumn = useCallback((x: number, y: number): TaskStatus | null => {
+    for (const col of STATUS_ORDER) {
+      const el = colRefs.current[col.key];
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return col.key;
+    }
+    return null;
+  }, []);
+
+  const onDragMove = useCallback(
+    (e: PointerEvent) => {
+      const d = dragData.current;
+      if (!d) return;
+      if (Math.abs(e.clientX - d.startX) + Math.abs(e.clientY - d.startY) > 8) d.moved = true;
+      d.x = e.clientX;
+      d.y = e.clientY;
+      moveGhost(e.clientX, e.clientY);
+      const hit = hitColumn(e.clientX, e.clientY);
+      if (hit !== overColRef.current) {
+        overColRef.current = hit;
+        setOverCol(hit);
+      }
+    },
+    [hitColumn, moveGhost],
+  );
+
+  const endDrag = useCallback(() => {
+    const d = dragData.current;
+    dragData.current = null;
+    window.removeEventListener('pointermove', onDragMove);
+    window.removeEventListener('pointerup', onDragEnd);
+    window.removeEventListener('pointercancel', onDragEnd);
+    if (d?.moved) {
+      // A real drag just happened — swallow the click that follows it.
+      suppressClick.current = true;
+      window.setTimeout(() => {
+        suppressClick.current = false;
+      }, 80);
+    }
+    const target = overColRef.current;
+    const item = d?.item;
+    setDragItem(null);
+    setOverCol(null);
+    if (item && target && target !== item.from) {
+      performDropRef.current?.(item, target);
+    }
+  }, [onDragMove]);
+
+  // Named separately so listeners can be removed (same reference).
+  const onDragEnd = useCallback(() => {
+    endDrag();
+  }, [endDrag]);
+
+  const beginDrag = useCallback(
+    (item: DragItem, e: React.PointerEvent) => {
+      if (movingId) return;
+      e.preventDefault();
+      suppressClick.current = false;
+      dragData.current = { item, startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY, moved: false };
+      overColRef.current = null;
+      setOverCol(null);
+      setDragItem(item);
+      moveGhost(e.clientX, e.clientY);
+      window.addEventListener('pointermove', onDragMove);
+      window.addEventListener('pointerup', onDragEnd);
+      window.addEventListener('pointercancel', onDragEnd);
+    },
+    [movingId, moveGhost, onDragMove, onDragEnd],
+  );
 
   const fetchAll = useCallback(async () => {
     if (!companyId) return;
@@ -116,7 +264,7 @@ export default function TaskBoardScreen() {
   const internMap = useMemo(() => new Map(interns.map((i) => [i._id, i])), [interns]);
 
   const activeFilterCount =
-    (internFilter ? 1 : 0) + priorityFilter.length + (sortBy !== 'default' ? 1 : 0);
+    (internFilter ? 1 : 0) + priorityFilter.length + statusFilter.length + (sortBy !== 'default' ? 1 : 0);
 
   const runBulkColumn = async () => {
     if (!companyId || !confirmBulk) return;
@@ -162,8 +310,45 @@ export default function TaskBoardScreen() {
     }
   };
 
-  const openBroadcast = async (groupId: string) => {
-    if (!companyId) return;
+  const performDrop = useCallback(
+    async (item: DragItem, to: TaskStatus) => {
+      if (!companyId || movingId) return;
+      setMovingId(item.kind === 'single' ? item.id : `group-${item.id}`);
+      try {
+        if (item.kind === 'single') {
+          await taskService.transitionTask(companyId, item.id, { to });
+          toastHelper.success(`Moved to ${STATUS_LABEL[to]}`);
+        } else {
+          const res = await taskService.listByGroup(companyId, item.id);
+          const ids = res.tasks.map((t) => t._id);
+          if (ids.length === 0) {
+            toastHelper.error('No tasks in this group');
+            return;
+          }
+          const results = await Promise.allSettled(
+            ids.map((id) => taskService.transitionTask(companyId, id, { to })),
+          );
+          const ok = results.filter((r) => r.status === 'fulfilled').length;
+          const fail = results.length - ok;
+          if (fail > 0) toastHelper.success(`${ok} moved · ${fail} failed`);
+          else toastHelper.success(`Moved to ${STATUS_LABEL[to]}`);
+        }
+        fetchAll();
+      } catch (err) {
+        toastHelper.error(getErrorMessage(err));
+        fetchAll();
+      } finally {
+        setMovingId(null);
+      }
+    },
+    [companyId, movingId, fetchAll],
+  );
+
+  useEffect(() => {
+    performDropRef.current = performDrop;
+  }, [performDrop]);
+
+  const openBroadcast = async (groupId: string) => {    if (!companyId) return;
     setOpening(groupId);
     try {
       const res = await taskService.listByGroup(companyId, groupId);
@@ -196,16 +381,18 @@ export default function TaskBoardScreen() {
       if (internFilter && !b.members.some((m) => m.internId === internFilter)) return;
       if (!matchPriority(b.priority)) return;
       if (q && !`${b.title} ${b.description || ''}`.toLowerCase().includes(q)) return;
-      const statuses = b.members.map((m) => m.status).filter((s) => s in grouped);
-      const rank = statuses.length > 0 ? Math.min(...statuses.map((s) => STATUS_RANK[s] ?? 0)) : 0;
-      const key = (Object.keys(STATUS_RANK).find((k) => STATUS_RANK[k] === rank) || 'todo') as TaskStatus;
+      const key = groupColumn(b.members.map((m) => m.status));
+      if (statusFilter.length > 0 && !statusFilter.includes(key)) return;
       grouped[key].push({ kind: 'group', card: b });
     });
     singles.forEach((t) => {
       if (internFilter && idOf(t.internId) !== internFilter) return;
       if (!matchPriority(t.priority)) return;
       if (q && !`${t.title} ${t.description || ''} ${(t.tags || []).join(' ')}`.toLowerCase().includes(q)) return;
-      if (grouped[t.status]) grouped[t.status].push({ kind: 'single', task: t });
+      const key = normalizeStatus(t.status);
+      if (key === 'archived') return;
+      if (statusFilter.length > 0 && !statusFilter.includes(key)) return;
+      grouped[key].push({ kind: 'single', task: t });
     });
     const prioRank: Record<string, number> = { high: 0, medium: 1, low: 2 };
     const sortFn = (a: { due?: string | null; title: string; prio?: string | null }, b: { due?: string | null; title: string; prio?: string | null }) => {
@@ -231,7 +418,7 @@ export default function TaskBoardScreen() {
       );
     });
     return grouped;
-  }, [broadcasts, singles, search, internFilter, priorityFilter, sortBy]);
+  }, [broadcasts, singles, search, internFilter, priorityFilter, statusFilter, sortBy]);
 
   const activeIntern = internFilter ? internMap.get(internFilter) : undefined;
 
@@ -344,6 +531,31 @@ export default function TaskBoardScreen() {
                           </div>
                         </div>
                         <div>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Status</p>
+                          <div className="mt-2 grid grid-cols-2 gap-1.5">
+                            {STATUS_ORDER.map((s) => (
+                              <button
+                                key={s.key}
+                                onClick={() =>
+                                  setStatusFilter((prev) =>
+                                    prev.includes(s.key) ? prev.filter((x) => x !== s.key) : [...prev, s.key],
+                                  )
+                                }
+                                className={`rounded-xl border px-3 py-2 text-sm transition-all ${
+                                  statusFilter.includes(s.key)
+                                    ? 'border-emerald-300 bg-emerald-50 font-medium text-emerald-700 shadow-sm'
+                                    : 'border-slate-100 bg-white text-slate-600 hover:border-slate-200 hover:bg-slate-50'
+                                }`}
+                              >
+                                <span className="flex items-center justify-center gap-1">
+                                  {s.title}
+                                  {statusFilter.includes(s.key) && <Check size={13} className="shrink-0" />}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
                           <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
                             <ArrowUpDown size={12} /> Sort by
                           </p>
@@ -372,6 +584,7 @@ export default function TaskBoardScreen() {
                         <button
                           onClick={() => {
                             setPriorityFilter([]);
+                            setStatusFilter([]);
                             setInternFilter('');
                             setSortBy('default');
                           }}
@@ -560,7 +773,17 @@ export default function TaskBoardScreen() {
           ) : (
             <div className="grid grid-cols-1 gap-4 overflow-x-auto sm:grid-cols-2 lg:grid-cols-4">
               {STATUS_ORDER.map((col) => (
-                <div key={col.key} className="min-w-[260px] rounded-2xl bg-slate-100/60 p-3">
+                <div
+                  key={col.key}
+                  ref={(el) => {
+                    colRefs.current[col.key] = el;
+                  }}
+                  className={`min-w-[260px] rounded-2xl p-3 transition-colors ${
+                    overCol === col.key
+                      ? 'bg-emerald-50/70 ring-2 ring-emerald-400'
+                      : 'bg-slate-100/60'
+                  } ${dragItem ? 'min-h-[160px]' : ''}`}
+                >
                   <div className="flex items-center justify-between px-1 pb-2">
                     <div className="flex items-center gap-2">
                       <col.icon size={16} className={col.iconColor} />
@@ -619,23 +842,70 @@ export default function TaskBoardScreen() {
                           key={item.card.taskGroupId}
                           card={item.card}
                           opening={opening === item.card.taskGroupId}
-                          onOpen={() => openBroadcast(item.card.taskGroupId)}
+                          dimmed={movingId === `group-${item.card.taskGroupId}` || (dragItem?.kind === 'group' && dragItem.id === item.card.taskGroupId)}
+                          grip={
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`Drag ${item.card.title}`}
+                              onPointerDown={(e) =>
+                                beginDrag(
+                                  { kind: 'group', id: item.card.taskGroupId, title: item.card.title, from: col.key },
+                                  e,
+                                )
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') openBroadcast(item.card.taskGroupId);
+                              }}
+                              className="cursor-grab touch-none rounded-md p-2 text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-500 active:cursor-grabbing"
+                            >
+                              <GripVertical size={14} />
+                            </span>
+                          }
+                          onOpen={() => {
+                            if (suppressClick.current) return;
+                            openBroadcast(item.card.taskGroupId);
+                          }}
                         />
                       ) : (
                         <Link
                           key={item.task._id}
                           href={`/company/admin/tasks/${item.task._id}?internId=${idOf(item.task.internId)}`}
-                          className={`block overflow-hidden rounded-xl border border-slate-200 ${priorityTheme(item.task.priority).cardBg} transition-shadow hover:shadow-md`}
+                          onClickCapture={(e) => {
+                            if (suppressClick.current) {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }
+                          }}
+                          className={`block overflow-hidden rounded-xl border border-slate-200 ${priorityTheme(item.task.priority).cardBg} transition-shadow hover:shadow-md ${
+                            movingId === item.task._id || (dragItem?.kind === 'single' && dragItem.id === item.task._id) ? 'opacity-50' : ''
+                          }`}
                         >
                           <div className="h-1.5 w-full" style={{ backgroundColor: priorityTheme(item.task.priority).banner }} />
                           <div className="p-4">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-xs font-medium text-slate-400">{item.task._id.slice(-8).toUpperCase()}</span>
-                            {item.task.priority && (
-                              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${priorityTheme(item.task.priority).chip}`}>
-                                {item.task.priority.toUpperCase()}
+                            <span className="flex shrink-0 items-center gap-1">
+                              {item.task.priority && (
+                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${priorityTheme(item.task.priority).chip}`}>
+                                  {item.task.priority.toUpperCase()}
+                                </span>
+                              )}
+                              <span
+                                role="button"
+                                tabIndex={0}
+                                aria-label={`Drag ${item.task.title}`}
+                                onPointerDown={(e) =>
+                                  beginDrag(
+                                    { kind: 'single', id: item.task._id, title: item.task.title, from: col.key },
+                                    e,
+                                  )
+                                }
+                                className="cursor-grab touch-none rounded-md p-2 text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-500 active:cursor-grabbing"
+                              >
+                                <GripVertical size={14} />
                               </span>
-                            )}
+                            </span>
                           </div>
                           <p className="mt-2 break-words text-sm font-semibold text-slate-900">{item.task.title}</p>
                           {item.task.description && (
@@ -669,6 +939,24 @@ export default function TaskBoardScreen() {
         onConfirm={runBulkColumn}
         onCancel={() => setConfirmBulk(null)}
       />
+
+      {/* Drag ghost (follows mouse / finger) */}
+      {dragItem && (
+        <div className="pointer-events-none fixed left-0 top-0 z-[200]">
+          <div
+            ref={ghostRef}
+            className="flex w-64 items-center gap-2.5 rounded-xl border border-emerald-300 bg-white px-4 py-3 shadow-2xl"
+          >
+            <GripVertical size={15} className="shrink-0 text-emerald-500" />
+            <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900">
+              {dragItem.title}
+            </span>
+            <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+              {dragItem.kind === 'group' ? 'Group' : 'Task'}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -677,10 +965,14 @@ function GroupCard({
   card,
   opening,
   onOpen,
+  grip,
+  dimmed,
 }: {
   card: BroadcastCard;
   opening: boolean;
   onOpen: () => void;
+  grip?: React.ReactNode;
+  dimmed?: boolean;
 }) {
   const members = card.members;
   const done = members.filter((m) => m.status === 'complete').length;
@@ -690,7 +982,9 @@ function GroupCard({
     <button
       onClick={onOpen}
       disabled={opening}
-      className={`block w-full overflow-hidden rounded-xl border border-slate-200 ${theme.cardBg} text-left transition-shadow hover:shadow-md disabled:opacity-60`}
+      className={`block w-full overflow-hidden rounded-xl border border-slate-200 ${theme.cardBg} text-left transition-shadow hover:shadow-md disabled:opacity-60 ${
+        dimmed ? 'opacity-50' : ''
+      }`}
     >
       <div className="h-1.5 w-full" style={{ backgroundColor: theme.banner }} />
       <div className="p-4">
@@ -698,15 +992,18 @@ function GroupCard({
         <span className="flex items-center gap-1.5 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
           <Calendar size={11} /> {formatDue(card.dueDate)}
         </span>
-        {card.priority ? (
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${PRIORITY_STYLES[card.priority] || 'bg-slate-100 text-slate-500'}`}>
-            {card.priority.toUpperCase()}
-          </span>
-        ) : (
-          <span className="flex items-center gap-1.5 text-xs text-slate-400">
-            <MessageSquare size={13} />
-          </span>
-        )}
+        <span className="flex shrink-0 items-center gap-1">
+          {card.priority ? (
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${PRIORITY_STYLES[card.priority] || 'bg-slate-100 text-slate-500'}`}>
+              {card.priority.toUpperCase()}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 text-xs text-slate-400">
+              <MessageSquare size={13} />
+            </span>
+          )}
+          {grip}
+        </span>
       </div>
       <p className="mt-2 break-words text-sm font-semibold text-slate-900">{card.title}</p>
       {card.description && (

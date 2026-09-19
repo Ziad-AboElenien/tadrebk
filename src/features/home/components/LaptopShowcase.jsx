@@ -1,12 +1,28 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import IPhoneFrame from './IPhoneFrame';
 import TabletFrame from './TabletFrame';
 import { laptopLayoutWidth, useScaledScreen } from './useScaledScreen';
 
 const MIN_SCALE = 0.82;
 const MAX_SCALE = 1;
+
+function useDeviceKind() {
+  const getKind = () => {
+    if (typeof window === 'undefined') return 'laptop';
+    if (window.matchMedia('(max-width: 639px)').matches) return 'phone';
+    if (window.matchMedia('(max-width: 1023px)').matches) return 'tablet';
+    return 'laptop';
+  };
+  const [kind, setKind] = useState(getKind);
+  useEffect(() => {
+    const onChange = () => setKind(getKind());
+    window.addEventListener('resize', onChange);
+    return () => window.removeEventListener('resize', onChange);
+  }, []);
+  return kind;
+}
 
 function LaptopVisual({ children }) {
   const { screenRef, innerRef } = useScaledScreen(laptopLayoutWidth);
@@ -56,6 +72,8 @@ function LaptopVisual({ children }) {
 export default function LaptopShowcase({ children, phoneContent }) {
   const sectionRef = useRef(null);
   const deviceRef = useRef(null);
+  // Render only the matching device — one mount, one data fetch, one fit loop.
+  const device = useDeviceKind();
 
   // Scroll-linked grow (one block, from the center).
   useEffect(() => {
@@ -92,17 +110,17 @@ export default function LaptopShowcase({ children, phoneContent }) {
         style={{ willChange: 'transform', transformOrigin: 'center center' }}
       >
         {/* Phone on small screens */}
-        <div className="sm:hidden">
+        {device === 'phone' && (
           <IPhoneFrame>{phoneContent || children}</IPhoneFrame>
-        </div>
+        )}
         {/* Tablet on medium screens */}
-        <div className="hidden sm:block lg:hidden">
+        {device === 'tablet' && (
           <TabletFrame>{children}</TabletFrame>
-        </div>
+        )}
         {/* Laptop on larger screens */}
-        <div className="hidden lg:block">
+        {device === 'laptop' && (
           <LaptopVisual>{children}</LaptopVisual>
-        </div>
+        )}
       </div>
     </section>
   );

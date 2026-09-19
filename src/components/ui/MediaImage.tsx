@@ -33,7 +33,7 @@ export default function MediaImage({
 
   return (
     <div className={boxClassName}>
-      <img src={src!} alt={alt} className={imgClassName} onLoad={onImgLoad} onError={onError} />
+      <img src={src!} alt={alt} className={imgClassName} onLoad={onImgLoad} onError={onError} loading="lazy" decoding="async" />
     </div>
   );
 }

@@ -24,6 +24,8 @@ export default function InternAvatar({ src, firstName, lastName, email, classNam
         src={src}
         alt={`${firstName ?? ''} ${lastName ?? ''}`.trim() || email || 'Intern'}
         onError={() => setFailed(true)}
+        loading="lazy"
+        decoding="async"
         className={`${className} shrink-0 rounded-full object-cover`}
       />
     );

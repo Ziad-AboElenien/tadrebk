@@ -70,7 +70,7 @@ export default function InternshipPanel({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           {internship.companyLogo ? (
-            <img src={internship.companyLogo} alt="" className="h-10 w-10 rounded-full object-cover" />
+            <img src={internship.companyLogo} alt="" loading="lazy" decoding="async" className="h-10 w-10 rounded-full object-cover" />
           ) : (
             <div className="h-10 w-10 shrink-0 rounded-full bg-slate-200" />
           )}
