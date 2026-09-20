@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -10,64 +10,57 @@ import {
   CheckCircle2,
   Flag,
   Globe,
+  Link2,
   MapPin,
   Share2,
   Users,
 } from 'lucide-react';
+import { useAppSelector } from '@/store/store';
 import { getCompanyImgUrl, type Company } from '@/features/company/types';
+import { companyService, type CompanyRatings } from '@/features/company/services/company.service';
 import { getInternshipTracks, type Internship } from '@/features/internship/types';
 import { CATEGORY_LABELS } from '@/features/student/types';
+import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 import {
   Pill,
   ProfileEmptyState,
   RatingStars,
   SectionCard,
+  formatDate,
   formatMonthYear,
 } from '@/features/profiles/components/ProfilePrimitives';
-
-// TODO(BACKEND): replace with a real aggregate company-rating endpoint.
-// The API only exposes per-application ratings, so these showcase values are
-// temporary placeholders until the backend aggregates them.
-const SAMPLE_RATING_SUM = 170;
-const SAMPLE_RATING_COUNT = 37;
-const SAMPLE_HISTOGRAM = [
-  { stars: 5, pct: 72 },
-  { stars: 4, pct: 19 },
-  { stars: 3, pct: 6 },
-  { stars: 2, pct: 2 },
-  { stars: 1, pct: 1 },
-];
-const SAMPLE_REVIEWS = [
-  {
-    student: 'Sara M.',
-    track: 'UI/UX Design',
-    rating: 5,
-    date: '2026-08-12',
-    body: 'Real project work from week one, and my mentor reviewed every PR. I left with three shipped features.',
-  },
-  {
-    student: 'Omar K.',
-    track: 'Data Science',
-    rating: 4,
-    date: '2026-07-03',
-    body: 'Great team and good learning curve. Onboarding took a little long but the work itself was solid.',
-  },
-];
-const SAMPLE_RESPONSE_TIME = '2 days';
 
 interface CompanyProfileViewerProps {
   company: Company;
   postings: Internship[];
   totalPostings: number;
+  ratings: CompanyRatings | null;
 }
 
-export default function CompanyProfileViewer({ company, postings, totalPostings }: CompanyProfileViewerProps) {
+export default function CompanyProfileViewer({ company, postings, totalPostings, ratings }: CompanyProfileViewerProps) {
+  const role = useAppSelector((s) => s.auth.role);
+  const isStudent = role === 'student';
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const logoUrl = getCompanyImgUrl(company.logo);
   const coverUrl = getCompanyImgUrl(company.coverPicture);
   const openPostings = postings.filter((p) => !p.closed);
   const hiringTracks = [...new Set(postings.flatMap((p) => getInternshipTracks(p)))].slice(0, 12);
+  const ratingCount = ratings?.count ?? 0;
+  const ratingAvg = ratings?.avg ?? null;
+
+  useEffect(() => {
+    if (!isStudent) return;
+    (async () => {
+      try {
+        const res = await companyService.getSavedCompanies(1, 100);
+        setSaved(res.companies.some((c) => c._id === company._id));
+      } catch {
+        // not saved (or session expired) — stay unsaved
+      }
+    })();
+  }, [isStudent, company._id]);
 
   async function handleShare() {
     const url = typeof window !== 'undefined' ? window.location.href : '';
@@ -83,8 +76,32 @@ export default function CompanyProfileViewer({ company, postings, totalPostings 
     }
   }
 
+  async function handleToggleSave() {
+    if (!isStudent) {
+      toastHelper.info('Sign in as a student to save companies');
+      return;
+    }
+    if (saving) return;
+    setSaving(true);
+    try {
+      if (saved) {
+        await companyService.unsaveCompany(company._id);
+        setSaved(false);
+        toastHelper.success('Removed from saved companies');
+      } else {
+        await companyService.saveCompany(company._id);
+        setSaved(true);
+        toastHelper.success('Company saved!');
+      }
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+    <main className="mx-auto w-full max-w-6xl flex-1 px-[2.5%] py-4 sm:px-6 sm:py-8">
       {/* ---------- cover + identity ---------- */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div className="h-44 bg-gradient-to-r from-slate-900 to-slate-700">
@@ -116,8 +133,9 @@ export default function CompanyProfileViewer({ company, postings, totalPostings 
               </button>
               <button
                 type="button"
-                onClick={() => setSaved((s) => !s)}
-                className={`flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm font-medium transition ${
+                onClick={handleToggleSave}
+                disabled={saving}
+                className={`flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm font-medium transition disabled:opacity-60 ${
                   saved
                     ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                     : 'border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -144,9 +162,12 @@ export default function CompanyProfileViewer({ company, postings, totalPostings 
                 </span>
               )}
             </div>
-            {company.description && <p className="mt-1 line-clamp-2 break-words text-slate-600">{company.description}</p>}
+            {company.headline && <p className="mt-0.5 break-words text-slate-600">{company.headline}</p>}
+            {company.description && !company.headline && (
+              <p className="mt-1 line-clamp-2 break-words text-slate-600">{company.description}</p>
+            )}
             <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-400">
-              <RatingStars ratingSum={SAMPLE_RATING_SUM} ratingCount={SAMPLE_RATING_COUNT} />
+              <RatingStars ratingSum={(ratingAvg ?? 0) * ratingCount} ratingCount={ratingCount} />
               {company.industry && (
                 <span className="flex items-center gap-1.5">
                   <Building2 size={14} /> {company.industry}
@@ -167,12 +188,11 @@ export default function CompanyProfileViewer({ company, postings, totalPostings 
         </div>
 
         {/* trust strip */}
-        <div className="grid grid-cols-2 divide-slate-100 border-t border-slate-100 sm:grid-cols-4 sm:divide-x">
+        <div className="grid grid-cols-2 divide-slate-100 border-t border-slate-100 sm:grid-cols-3 sm:divide-x">
           {[
             { label: 'Open positions', value: String(openPostings.length) },
             { label: 'Total postings', value: String(totalPostings) },
-            { label: 'Avg. intern rating', value: `${(SAMPLE_RATING_SUM / SAMPLE_RATING_COUNT).toFixed(1)}/5` },
-            { label: 'Typical reply time', value: SAMPLE_RESPONSE_TIME },
+            { label: 'Avg. intern rating', value: ratingCount > 0 && ratingAvg != null ? `${ratingAvg.toFixed(1)}/5` : '—' },
           ].map((s) => (
             <div key={s.label} className="px-6 py-4 text-center">
               <p className="text-xl font-bold text-slate-900">{s.value}</p>
@@ -240,46 +260,69 @@ export default function CompanyProfileViewer({ company, postings, totalPostings 
             </SectionCard>
           )}
 
-          <SectionCard title="Intern reviews" subtitle={`${SAMPLE_RATING_COUNT} students rated their internship here`}>
-            <div className="mb-5 flex flex-wrap items-center gap-6 rounded-xl bg-slate-50 p-5">
-              <div>
-                <p className="text-3xl font-bold text-slate-900">
-                  {(SAMPLE_RATING_SUM / SAMPLE_RATING_COUNT).toFixed(1)}
-                </p>
-                <RatingStars ratingSum={SAMPLE_RATING_SUM} ratingCount={SAMPLE_RATING_COUNT} showCount={false} />
-              </div>
-              <div className="min-w-[180px] flex-1 space-y-1.5">
-                {SAMPLE_HISTOGRAM.map((r) => (
-                  <div key={r.stars} className="flex items-center gap-2 text-xs">
-                    <span className="w-3 text-slate-400">{r.stars}</span>
-                    <div className="h-1.5 flex-1 rounded-full bg-slate-200">
-                      <div className="h-1.5 rounded-full bg-amber-400" style={{ width: `${r.pct}%` }} />
-                    </div>
-                    <span className="w-8 text-right text-slate-400">{r.pct}%</span>
+          <SectionCard
+            title="Intern reviews"
+            subtitle={
+              ratingCount > 0
+                ? `${ratingCount} student${ratingCount !== 1 ? 's' : ''} rated their internship here`
+                : 'No reviews yet'
+            }
+          >
+            {ratingCount > 0 && ratingAvg != null ? (
+              <>
+                <div className="mb-5 flex flex-wrap items-center gap-6 rounded-xl bg-slate-50 p-5">
+                  <div>
+                    <p className="text-3xl font-bold text-slate-900">{ratingAvg.toFixed(1)}</p>
+                    <RatingStars ratingSum={ratingAvg * ratingCount} ratingCount={ratingCount} showCount={false} />
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {SAMPLE_REVIEWS.map((r, i) => (
-                <div key={i} className="border-b border-slate-100 pb-4 last:border-0 last:pb-0">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-500">
-                        {r.student[0]}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">{r.student}</p>
-                        <p className="text-xs text-slate-400">{r.track} intern · {formatMonthYear(r.date)}</p>
-                      </div>
+                  {ratings && ratings.histogram.length > 0 && (
+                    <div className="min-w-[180px] flex-1 space-y-1.5">
+                      {ratings.histogram.map((r) => (
+                        <div key={r.stars} className="flex items-center gap-2 text-xs">
+                          <span className="w-3 text-slate-400">{r.stars}</span>
+                          <div className="h-1.5 flex-1 rounded-full bg-slate-200">
+                            <div className="h-1.5 rounded-full bg-amber-400" style={{ width: `${r.pct}%` }} />
+                          </div>
+                          <span className="w-8 text-right text-slate-400">{r.pct}%</span>
+                        </div>
+                      ))}
                     </div>
-                    <RatingStars ratingSum={r.rating} ratingCount={1} showCount={false} size={13} />
-                  </div>
-                  <p className="mt-3 break-words text-sm leading-relaxed text-slate-600">{r.body}</p>
+                  )}
                 </div>
-              ))}
-            </div>
+
+                {ratings && ratings.reviews.length > 0 && (
+                  <div className="space-y-4">
+                    {ratings.reviews.map((r, i) => (
+                      <div key={i} className="border-b border-slate-100 pb-4 last:border-0 last:pb-0">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-500">
+                              {(r.student || '?')[0]?.toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-slate-900">{r.student || 'Anonymous'}</p>
+                              <p className="text-xs text-slate-400">
+                                {[r.track ? `${r.track} intern` : null, r.date ? formatDate(r.date) : null]
+                                  .filter(Boolean)
+                                  .join(' · ') || 'Intern'}
+                              </p>
+                            </div>
+                          </div>
+                          {!!r.rating && r.rating > 0 && (
+                            <RatingStars ratingSum={r.rating} ratingCount={1} showCount={false} size={13} />
+                          )}
+                        </div>
+                        {r.body && (
+                          <p className="mt-3 break-words text-sm leading-relaxed text-slate-600">{r.body}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <ProfileEmptyState message="No intern reviews yet — be the first to rate this company after your internship." />
+            )}
           </SectionCard>
         </div>
 
@@ -299,6 +342,12 @@ export default function CompanyProfileViewer({ company, postings, totalPostings 
                   <dd className="mt-0.5 font-medium text-slate-900">{company.numberOfEmployees} employees</dd>
                 </div>
               )}
+              {company.foundedYear != null && (
+                <div>
+                  <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Founded</dt>
+                  <dd className="mt-0.5 font-medium text-slate-900">{company.foundedYear}</dd>
+                </div>
+              )}
               {company.address && (
                 <div>
                   <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Location</dt>
@@ -311,16 +360,38 @@ export default function CompanyProfileViewer({ company, postings, totalPostings 
               </div>
             </dl>
 
-            {company.googleMapsUrl && (
-              <div className="mt-5 border-t border-slate-100 pt-5">
-                <a
-                  href={company.googleMapsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-2 text-sm font-medium text-emerald-600 hover:underline"
-                >
-                  <Globe size={15} /> View on map
-                </a>
+            {(company.website || company.linkedin || company.googleMapsUrl) && (
+              <div className="mt-5 space-y-2 border-t border-slate-100 pt-5">
+                {company.website && (
+                  <a
+                    href={company.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 text-sm font-medium text-emerald-600 hover:underline"
+                  >
+                    <Globe size={15} /> Visit website
+                  </a>
+                )}
+                {company.linkedin && (
+                  <a
+                    href={company.linkedin}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 text-sm font-medium text-emerald-600 hover:underline"
+                  >
+                    <Link2 size={15} /> LinkedIn
+                  </a>
+                )}
+                {company.googleMapsUrl && (
+                  <a
+                    href={company.googleMapsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 text-sm font-medium text-emerald-600 hover:underline"
+                  >
+                    <Globe size={15} /> View on map
+                  </a>
+                )}
               </div>
             )}
           </SectionCard>
@@ -332,8 +403,9 @@ export default function CompanyProfileViewer({ company, postings, totalPostings 
             </p>
             <button
               type="button"
-              onClick={() => setSaved((s) => !s)}
-              className="mt-4 w-full rounded-lg bg-emerald-500 py-2.5 text-sm font-semibold hover:bg-emerald-600"
+              onClick={handleToggleSave}
+              disabled={saving}
+              className="mt-4 w-full rounded-lg bg-emerald-500 py-2.5 text-sm font-semibold hover:bg-emerald-600 disabled:opacity-60"
             >
               {saved ? 'Saved ✓' : 'Save company'}
             </button>

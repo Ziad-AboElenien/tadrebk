@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
 import dynamic from 'next/dynamic';
@@ -42,15 +42,22 @@ export default function HomeComponent() {
   const router = useRouter();
   const role = useAppSelector((s) => s.auth.role);
   const isAuthenticated = useAppSelector((s) => s.auth.isAuthenticated);
+  // False on the server AND on the first client render (hydration-safe),
+  // true right after — so the redirect decision never splits SSR/CSR trees.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   // `/` is a guest-only landing page — logged-in users go to their dashboard.
   useEffect(() => {
-    if (isAuthenticated) {
+    if (mounted && isAuthenticated) {
       router.replace(DASHBOARD_BY_ROLE[role] || '/dashboard');
     }
-  }, [isAuthenticated, role, router]);
+  }, [mounted, isAuthenticated, role, router]);
 
-  if (isAuthenticated) {
+  if (mounted && isAuthenticated) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-slate-200 border-t-emerald-500" />

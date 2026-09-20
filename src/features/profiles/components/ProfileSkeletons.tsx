@@ -5,7 +5,7 @@ import { Skeleton, SkeletonAvatar, SkeletonLines } from '@/components/ui/Skeleto
 /** Loading skeleton matching the student profile layout (own + viewer). */
 export function StudentProfileSkeleton() {
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+    <main className="mx-auto w-full max-w-6xl flex-1 px-[2.5%] py-4 sm:px-6 sm:py-8">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <Skeleton className="h-40 rounded-none sm:h-44" />
         <div className="px-5 pb-6 sm:px-6">
@@ -52,7 +52,7 @@ export function StudentProfileSkeleton() {
 /** Loading skeleton matching the company profile layout (own + viewer). */
 export function CompanyProfileSkeleton() {
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+    <main className="mx-auto w-full max-w-6xl flex-1 px-[2.5%] py-4 sm:px-6 sm:py-8">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <Skeleton className="h-44 rounded-none" />
         <div className="px-5 pb-6 sm:px-6">
@@ -107,7 +107,7 @@ export function CompanyProfileSkeleton() {
 /** Loading skeleton for the settings shell (sidebar + panel). */
 export function SettingsSkeleton() {
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+    <main className="mx-auto w-full max-w-6xl px-[2.5%] py-4 sm:px-6 sm:py-8">
       <Skeleton className="mb-2 h-8 w-44 !rounded-lg" />
       <Skeleton className="mb-6 h-4 w-72 max-w-full !rounded-full" />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[16rem_1fr]">

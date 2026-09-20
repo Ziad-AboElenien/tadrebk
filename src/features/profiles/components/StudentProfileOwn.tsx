@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useAppDispatch } from '@/store/store';
 import { setUser } from '@/store/userSlice';
-import { CATEGORY_LABELS, getUserImgUrl, type User } from '@/features/student/types';
+import { CATEGORY_LABELS, getUserImgUrl, skillName, type User } from '@/features/student/types';
 import { userService } from '@/features/student/services/user.service';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
@@ -103,7 +103,17 @@ export default function StudentProfileOwn({ user }: { user: User }) {
   async function handleAddSkill({ name, meta: skillMeta }: SkillFormValue) {
     setModalSaving(true);
     try {
-      await userService.updateProfile(userId, { skills: [...(user.skills || []), name] });
+      await userService.updateProfile(userId, {
+        skills: [
+          ...(user.skills || []),
+          {
+            name,
+            source: skillMeta.source,
+            sourceRef: skillMeta.ref || (skillMeta.source === 'self' ? 'Self-study' : '—'),
+            description: skillMeta.description,
+          },
+        ],
+      });
       setSkillMeta(userId, name, skillMeta);
       await refreshUser();
       refreshMeta();
@@ -119,7 +129,12 @@ export default function StudentProfileOwn({ user }: { user: User }) {
   async function handleAddCourse({ name, meta: courseMeta, certificate }: CourseFormValue) {
     setModalSaving(true);
     try {
-      await userService.addCourse(name, certificate ?? undefined);
+      await userService.addCourse(name, certificate ?? undefined, {
+        startDate: courseMeta.startDate,
+        endDate: courseMeta.present ? undefined : courseMeta.endDate,
+        present: courseMeta.present,
+        description: courseMeta.description,
+      });
       setCourseMeta(userId, name, courseMeta);
       await refreshUser();
       refreshMeta();
@@ -135,7 +150,7 @@ export default function StudentProfileOwn({ user }: { user: User }) {
   async function handleAddEducation({ entry, description }: EducationFormValue) {
     setModalSaving(true);
     try {
-      const list = [...(user.education || []), entry];
+      const list = [...(user.education || []), { ...entry, description }];
       await userService.updateProfile(userId, { education: list });
       const fresh = await refreshUser();
       const idx = list.length - 1;
@@ -153,7 +168,7 @@ export default function StudentProfileOwn({ user }: { user: User }) {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-[2.5%] py-4 sm:px-6 sm:py-8">
         {!user.isConfirmed && (
           <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
             <AlertCircle size={18} className="shrink-0 text-amber-600" />
@@ -261,7 +276,7 @@ export default function StudentProfileOwn({ user }: { user: User }) {
               {user.skills?.length ? (
                 <div className="flex flex-wrap gap-2">
                   {user.skills.map((s) => (
-                    <Pill key={s}>{s}</Pill>
+                    <Pill key={skillName(s)}>{skillName(s)}</Pill>
                   ))}
                 </div>
               ) : (
@@ -299,9 +314,9 @@ export default function StudentProfileOwn({ user }: { user: User }) {
                           {formatMonthYear(e.startDate)} – {formatMonthYear(e.endDate)}
                           {e.grade ? ` · Grade: ${e.grade}` : ''}
                         </p>
-                        {meta.education[educationKey(i, e.institution)]?.description && (
+                        {(e.description ?? meta.education[educationKey(i, e.institution)]?.description) && (
                           <p className="mt-1.5 break-words text-sm text-slate-500">
-                            {meta.education[educationKey(i, e.institution)]?.description}
+                            {e.description ?? meta.education[educationKey(i, e.institution)]?.description}
                           </p>
                         )}
                       </div>
@@ -356,7 +371,14 @@ export default function StudentProfileOwn({ user }: { user: User }) {
                   {user.courses.map((c, i) => {
                     const certUrl =
                       c.certificate?.secure_url || c.certificate?.certificateUrl || c.attachmentUrl || c.link;
-                    const cm = meta.courses[c.name];
+                    // Backend fields win; localStorage is a legacy fallback.
+                    const legacy = meta.courses[c.name] || {};
+                    const cm = {
+                      startDate: c.startDate ?? legacy.startDate,
+                      endDate: c.endDate ?? legacy.endDate,
+                      present: c.present ?? legacy.present,
+                      description: c.description ?? legacy.description,
+                    };
                     return (
                       <div key={c._id || i} className="rounded-xl border border-slate-100 p-4">
                         <div className="flex items-center gap-3">
@@ -490,12 +512,12 @@ export default function StudentProfileOwn({ user }: { user: User }) {
               </Link>
             </SectionCard>
 
-            {meta.socials.length > 0 && (
+            {(user.socials?.length ? user.socials : meta.socials).length > 0 && (
               <SectionCard title="Social links">
                 <div className="space-y-2">
-                  {meta.socials.map((s) => (
+                  {(user.socials?.length ? user.socials : meta.socials).map((s, i) => (
                     <a
-                      key={s.id}
+                      key={`${s.platform}-${s.url}-${i}`}
                       href={s.url}
                       target="_blank"
                       rel="noreferrer"
@@ -518,7 +540,7 @@ export default function StudentProfileOwn({ user }: { user: User }) {
           open
           saving={modalSaving}
           initial={null}
-          existingNames={user.skills || []}
+          existingNames={(user.skills || []).map((s) => skillName(s))}
           educationOptions={educationOptions}
           internshipOptions={internshipOptions}
           onClose={() => setSkillOpen(false)}

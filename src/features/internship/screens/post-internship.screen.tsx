@@ -330,7 +330,7 @@ export default function PostInternshipScreen() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="mx-auto max-w-7xl px-[2.5%] py-4 sm:px-6 sm:py-8 lg:px-8">
         <Link
           href="/company/admin"
           className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700"

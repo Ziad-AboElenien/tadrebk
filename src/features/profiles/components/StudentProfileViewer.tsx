@@ -11,14 +11,16 @@ import {
   FileText,
   Flag,
   GraduationCap,
+  Link2,
   MapPin,
   MessageSquare,
   Send,
   Share2,
 } from 'lucide-react';
-import { CATEGORY_LABELS, getUserImgUrl, type User } from '@/features/student/types';
+import { CATEGORY_LABELS, getUserImgUrl, skillName, type User } from '@/features/student/types';
 import { openFileProxy } from '@/lib/file-proxy';
 import { toastHelper } from '@/lib/toast';
+import { getProfileMeta } from '@/features/profiles/services/profile-meta.store';
 import {
   Pill,
   ProfileEmptyState,
@@ -42,6 +44,7 @@ interface StudentProfileViewerProps {
   onBack?: () => void;
   /** Called when "Invite to internship" is pressed. Falls back to a toast when omitted. */
   onInvite?: () => void;
+  inviteLabel?: string;
 }
 
 /**
@@ -55,6 +58,7 @@ export default function StudentProfileViewer({
   backLabel = 'Back to candidates',
   onBack,
   onInvite,
+  inviteLabel,
 }: StudentProfileViewerProps) {
   const fullName = `${user.firstName} ${user.lastName}`.trim();
   const [saved, setSaved] = useState(false);
@@ -63,6 +67,8 @@ export default function StudentProfileViewer({
   const resumeUrl = getUserImgUrl(user.resume);
   const rated = (user.experience || []).filter((x) => typeof x.rating === 'number' && (x.rating as number) > 0);
   const avgRating = rated.length ? (rated.reduce((a, x) => a + (x.rating as number), 0) / rated.length).toFixed(1) : null;
+  // Backend links win; fall back to pre-migration locally stored links.
+  const socials = user.socials?.length ? user.socials : getProfileMeta(user._id).socials;
 
   async function handleShare() {
     const url = typeof window !== 'undefined' ? window.location.href : '';
@@ -79,7 +85,7 @@ export default function StudentProfileViewer({
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 p-4 sm:p-6 lg:p-8">
+    <main className="mx-auto w-full max-w-6xl flex-1 px-[2.5%] py-4 sm:p-6 lg:p-8">
       {onBack || backHref ? (
         backHref ? (
           <a href={backHref} className="mb-5 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700">
@@ -149,7 +155,7 @@ export default function StudentProfileViewer({
                 onClick={() => (onInvite ? onInvite() : toastHelper.info('Invites are coming soon'))}
                 className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
               >
-                <Send size={15} /> Invite to internship
+                <Send size={15} /> {inviteLabel || 'Invite to internship'}
               </button>
             </div>
           </div>
@@ -205,7 +211,7 @@ export default function StudentProfileViewer({
             {user.skills?.length ? (
               <div className="flex flex-wrap gap-2">
                 {user.skills.map((s) => (
-                  <Pill key={s}>{s}</Pill>
+                  <Pill key={skillName(s)}>{skillName(s)}</Pill>
                 ))}
               </div>
             ) : (
@@ -361,6 +367,26 @@ export default function StudentProfileViewer({
             </SectionCard>
           )}
 
+          {socials.length > 0 && (
+            <SectionCard title="Social links">
+              <div className="space-y-2">
+                {socials.map((s, i) => (
+                  <a
+                    key={`${s.platform}-${s.url}-${i}`}
+                    href={s.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2.5 rounded-xl border border-slate-100 px-3.5 py-2.5 text-sm transition hover:border-emerald-200 hover:bg-emerald-50/40"
+                  >
+                    <Link2 size={14} className="shrink-0 text-slate-400" />
+                    <span className="w-24 shrink-0 truncate text-xs font-semibold text-slate-600">{s.platform}</span>
+                    <span className="min-w-0 flex-1 truncate text-xs text-emerald-600">{s.url}</span>
+                  </a>
+                ))}
+              </div>
+            </SectionCard>
+          )}
+
           <SectionCard title="Actions">
             <div className="space-y-2">
               <button
@@ -368,7 +394,7 @@ export default function StudentProfileViewer({
                 onClick={() => (onInvite ? onInvite() : toastHelper.info('Invites are coming soon'))}
                 className="w-full rounded-lg bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600"
               >
-                Invite to internship
+                {inviteLabel || 'Invite to internship'}
               </button>
               <button
                 type="button"

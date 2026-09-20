@@ -15,6 +15,10 @@ export interface Company {
   googleMapsUrl?: string;
   companyEmail?: string;
   numberOfEmployees?: string;  // API returns as string
+  website?: string;
+  linkedin?: string;
+  headline?: string;
+  foundedYear?: number;
   createdBy: string;           // API uses "createdBy" not "ownerId"
   logo?: string | CloudinaryResource;
   coverPicture?: string | CloudinaryResource;
@@ -113,6 +117,10 @@ export interface UpdateCompanyRequest {
   location?: { lat: number; lng: number };
   companyEmail?: string;
   numberOfEmployees?: string;
+  website?: string;
+  linkedin?: string;
+  headline?: string;
+  foundedYear?: number;
 }
 
 // For the companies listing response

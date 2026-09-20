@@ -6,6 +6,7 @@ export interface Education {
   grade?: string;
   startDate?: string;
   endDate?: string;
+  description?: string;
 }
 
 export interface Experience {
@@ -33,6 +34,15 @@ export interface Course {
   attachmentUrl?: string;
   attachmentType?: 'image' | 'pdf';
   certificate?: CourseCertificate;
+  startDate?: string;
+  endDate?: string;
+  present?: boolean;
+  description?: string;
+}
+
+export interface SocialLink {
+  platform: string;
+  url: string;
 }
 
 export interface CloudinaryResource {
@@ -122,6 +132,30 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   other: 'Other',
 };
 
+export type SkillSource = 'self' | 'education' | 'internship' | 'other';
+
+export interface SkillObject {
+  name: string;
+  source: SkillSource;
+  sourceRef?: string;
+  description?: string;
+}
+
+export type Skill = string | SkillObject;
+
+/** Display name regardless of shape. */
+export function skillName(s: Skill): string {
+  return typeof s === 'string' ? s : s.name;
+}
+
+/** Provenance regardless of shape (undefined for plain strings). */
+export function skillProvenance(
+  s: Skill,
+): { source: SkillSource; ref?: string; description?: string } | undefined {
+  if (typeof s === 'string') return undefined;
+  return { source: s.source, ref: s.sourceRef, description: s.description };
+}
+
 export interface User {
   _id: string;
   firstName: string;
@@ -138,11 +172,12 @@ export interface User {
   dateOfBirth?: string;
   gender?: 'male' | 'female';
   resume?: string | CloudinaryResource;
-  skills?: string[];
+  skills?: Skill[];
   categories?: Category[];
   education?: Education[];
   experience?: Experience[];
   courses?: Course[];
+  socials?: SocialLink[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -156,10 +191,11 @@ export interface UpdateUserRequest {
   address?: string;
   dateOfBirth?: string;
   gender?: 'male' | 'female';
-  skills?: string[];
+  skills?: Skill[];
   categories?: Category[];
   education?: Education[];
   courses?: Course[];
+  socials?: SocialLink[];
 }
 
 /** Extract a URL string from either a plain URL or a Cloudinary resource object */

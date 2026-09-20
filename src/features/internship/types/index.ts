@@ -36,6 +36,7 @@ export interface Internship {
   addedBy?: string;    // API returns addedBy
   updatedBy?: string;  // API returns updatedBy
   closed: boolean;     // API uses "closed" not "isClosed"
+  applicantsCount?: number; // aggregated by the list endpoint (no N+1 needed)
   createdAt?: string;
   updatedAt?: string;
   // Populated company data (when fetched with company info)

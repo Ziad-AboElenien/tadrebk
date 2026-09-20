@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSyncExternalStore } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   LayoutGrid,
@@ -12,7 +13,8 @@ import {
   MessageSquare,
   BarChart3,
   Settings,
-  X,
+  PanelLeftClose,
+  PanelLeftOpen,
   type LucideIcon,
 } from 'lucide-react';
 import { useAdminShell } from '@/components/tadrebk/admin-shell';
@@ -29,6 +31,21 @@ const NAV_ITEMS: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: 'Settings', icon: Settings, href: '/company/settings' },
 ];
 
+function subscribeMq(callback: () => void) {
+  const mq = window.matchMedia('(max-width: 1023.5px)');
+  mq.addEventListener('change', callback);
+  return () => mq.removeEventListener('change', callback);
+}
+
+/** True on mobile/tablet — SSR-safe (false on server, corrected after mount). */
+function useIsMobile(): boolean {
+  return useSyncExternalStore(
+    subscribeMq,
+    () => window.matchMedia('(max-width: 1023.5px)').matches,
+    () => false,
+  );
+}
+
 type SidebarProps = {
   active?: string;
   adminName?: string;
@@ -37,7 +54,23 @@ type SidebarProps = {
 
 export default function Sidebar({ active, adminName, adminRole }: SidebarProps) {
   const pathname = usePathname();
-  const { sidebarOpen, setSidebarOpen } = useAdminShell();
+  const { sidebarOpen, setSidebarOpen, collapsed, toggleCollapsed } = useAdminShell();
+  const isMobile = useIsMobile();
+
+  // Icon-only rail on desktop when collapsed; on mobile/tablet the rail is
+  // always visible and the toggle opens the full drawer overlay instead.
+  // (Page offset is pure CSS via .admin-offset + data-collapsed — no JS writes.)
+  const drawer = isMobile && sidebarOpen;
+  // The open drawer always shows labels; the rail/icon-only mode applies
+  // to the docked sidebar (collapsed desktop, or mobile rail).
+  const iconOnly = !drawer && (collapsed || (isMobile && !sidebarOpen));
+
+  // Page offset derives from the SAME state as the sidebar width, written in
+  // the same render commit — so the content and the sidebar animate as one
+  // unit with zero lag. Skipped while the drawer overlays (it floats).
+  if (typeof document !== 'undefined' && !drawer) {
+    document.documentElement.style.setProperty('--sbw', isMobile ? '52px' : collapsed ? '76px' : '256px');
+  }
 
   const isActive = (label: string, href?: string) => {
     if (active) return label === active;
@@ -45,10 +78,50 @@ export default function Sidebar({ active, adminName, adminRole }: SidebarProps) 
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
+  const renderItem = ({ label, icon: Icon, href }: { label: string; icon: LucideIcon; href?: string }) => {
+    const selected = isActive(label, href);
+    // Rail mode: no colored box — the icon itself carries the active color.
+    const cls = iconOnly
+      ? `flex w-full items-center justify-center rounded-lg px-3 py-2.5 text-sm transition-colors ${
+          selected ? 'font-medium text-emerald-600' : 'text-slate-400 hover:text-slate-600'
+        }`
+      : `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+          selected ? 'bg-emerald-50 font-medium text-emerald-600' : 'text-slate-600 hover:bg-slate-50'
+        }`;
+    const content = (
+      <>
+        <Icon size={18} className="shrink-0" />
+        <span className={iconOnly ? 'hidden' : ''}>{label}</span>
+      </>
+    );
+    return href ? (
+      <Link
+        key={label}
+        href={href}
+        title={iconOnly ? label : undefined}
+        aria-label={label}
+        className={cls}
+        onClick={() => setSidebarOpen(false)}
+      >
+        {content}
+      </Link>
+    ) : (
+      <button
+        key={label}
+        type="button"
+        title={iconOnly ? label : undefined}
+        aria-label={label}
+        className={`${cls} cursor-not-allowed opacity-70`}
+      >
+        {content}
+      </button>
+    );
+  };
+
   return (
     <>
-      {/* Backdrop — mobile only */}
-      {sidebarOpen && (
+      {/* Backdrop — mobile drawer only */}
+      {drawer && (
         <div
           className="fixed inset-0 z-40 bg-slate-900/50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
@@ -56,65 +129,85 @@ export default function Sidebar({ active, adminName, adminRole }: SidebarProps) 
         />
       )}
 
+      {/* Flow spacer — reserves the docked sidebar width in every layout,
+          so content never slides underneath. Hidden when the drawer overlays. */}
+      {!drawer && (
+        <div
+          aria-hidden="true"
+          className={`shrink-0 transition-all duration-200 ${
+            iconOnly ? 'w-[60px] lg:w-[76px]' : 'w-[60px] lg:w-64'
+          }`}
+        />
+      )}
+
       <aside
         className={[
-          'z-50 flex w-72 max-w-[85vw] flex-shrink-0 flex-col border-r border-slate-200 bg-white',
-          'fixed inset-y-0 left-0 transition-transform duration-200 lg:static lg:w-64 lg:translate-x-0 lg:transition-none',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 flex h-dvh flex-shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-200',
+          drawer ? 'w-60 max-w-[75vw]' : 'w-[60px]',
+          !drawer && !iconOnly ? 'lg:w-64' : '',
+          !drawer && iconOnly ? 'lg:w-[76px]' : '',
         ].join(' ')}
       >
-        <div className="flex items-center justify-between px-4 py-5 sm:px-6">
+        {/* Edge-attached toggle — opens the drawer on mobile, collapses on desktop */}
+        {!drawer && (
+          <button
+            type="button"
+            onClick={() => (isMobile ? setSidebarOpen(true) : toggleCollapsed())}
+            aria-label={isMobile ? 'Open menu' : collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={isMobile ? 'Open menu' : collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="absolute -right-3.5 top-7 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-md transition-colors hover:text-emerald-600"
+          >
+            {collapsed && !isMobile ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
+          </button>
+        )}
+        <div className={`flex items-center py-5 ${iconOnly && !drawer ? 'justify-center px-2' : 'justify-between px-4 sm:px-6'}`}>
           <div className="flex items-center gap-2">
-            <Link href="/" className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 text-white">
+            <Link
+              href="/"
+              aria-label="Tadrebk home"
+              className={
+                iconOnly
+                  ? 'flex h-9 w-9 items-center justify-center'
+                  : 'flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 text-white'
+              }
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/images/favicon2.png" alt="" className="h-6 w-6" />
             </Link>
-            <Link href="/" className="text-lg font-semibold text-slate-900">Tadrebk</Link>
+            <Link href="/" className={`text-lg font-semibold text-slate-900 ${iconOnly && !drawer ? 'hidden' : ''}`}>
+              Tadrebk
+            </Link>
           </div>
-          <button
-            type="button"
-            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Close menu"
-          >
-            <X size={18} />
-          </button>
+          <div className={`items-center gap-1 ${drawer ? 'flex' : 'hidden'}`}>
+            <button
+              type="button"
+              className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close menu"
+              title="Close menu"
+            >
+              <PanelLeftClose size={18} />
+            </button>
+          </div>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
-          {NAV_ITEMS.map(({ label, icon: Icon, href }) => {
-            const selected = isActive(label, href);
-            const content = (
-              <>
-                <Icon size={18} />
-                {label}
-              </>
-            );
-            const cls = `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
-              selected ? 'bg-emerald-50 font-medium text-emerald-600' : 'text-slate-600 hover:bg-slate-50'
-            }`;
-            return href ? (
-              <Link key={label} href={href} className={cls} onClick={() => setSidebarOpen(false)}>
-                {content}
-              </Link>
-            ) : (
-              <button key={label} type="button" className={`${cls} cursor-not-allowed opacity-70`}>
-                {content}
-              </button>
-            );
-          })}
+        <nav className={`flex-1 space-y-1 overflow-y-auto pb-4 ${iconOnly && !drawer ? 'px-2' : 'px-3'}`}>
+          {NAV_ITEMS.map(renderItem)}
         </nav>
 
-        <div className="border-t border-slate-100 px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white">
+        <div className={`border-t border-slate-100 py-4 ${iconOnly && !drawer ? 'px-2' : 'px-4'}`}>
+          <div className={`flex items-center gap-3 ${iconOnly && !drawer ? 'justify-center' : ''}`}>
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-semibold text-white"
+              title={iconOnly && !drawer ? adminName || 'Admin User' : undefined}
+            >
               {(adminName || 'Admin User')
                 .split(' ')
                 .map((w) => w[0])
                 .slice(0, 2)
                 .join('')}
             </div>
-            <div className="min-w-0 leading-tight">
+            <div className={`min-w-0 leading-tight ${iconOnly && !drawer ? 'hidden' : ''}`}>
               <p className="truncate text-sm font-medium text-slate-900">{adminName || 'Admin User'}</p>
               <p className="truncate text-xs text-slate-400">{adminRole || 'Company Name'}</p>
             </div>

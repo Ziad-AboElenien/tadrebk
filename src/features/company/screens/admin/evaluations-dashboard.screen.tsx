@@ -146,7 +146,7 @@ export default function EvaluationsDashboardScreen() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title={program ? `Evaluations · ${program.name}` : 'Evaluations Dashboard'} />
 
-        <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 space-y-6 overflow-y-auto px-[2.5%] py-4 sm:p-6 lg:p-8">
           {program && (
             <Link href={`/company/admin/programs/${program._id}`} className="text-sm font-medium text-emerald-600 hover:underline">
               ← Back to {program.name}

@@ -48,7 +48,7 @@ export default function CompanyRateApplicationScreen() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Rate Intern" />
 
-        <main className="animate-fade-in mx-auto w-full max-w-2xl flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="animate-fade-in mx-auto w-full max-w-2xl flex-1 space-y-6 overflow-y-auto px-[2.5%] py-4 sm:p-6 lg:p-8">
           <Link
             href="/company/admin/interns"
             className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"

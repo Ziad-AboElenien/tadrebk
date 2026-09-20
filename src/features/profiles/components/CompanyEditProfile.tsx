@@ -52,6 +52,7 @@ export default function CompanyEditProfile({ company }: { company: Company }) {
     defaultValues: {
       name: company.name || '',
       description: company.description || '',
+      headline: company.headline || '',
       industry: company.industry || '',
       address: company.address || '',
       location: {
@@ -60,6 +61,9 @@ export default function CompanyEditProfile({ company }: { company: Company }) {
       },
       companyEmail: company.companyEmail || '',
       numberOfEmployees: company.numberOfEmployees || '',
+      website: company.website || '',
+      linkedin: company.linkedin || '',
+      foundedYear: company.foundedYear != null ? String(company.foundedYear) : '',
     },
   });
 
@@ -79,11 +83,15 @@ export default function CompanyEditProfile({ company }: { company: Company }) {
       const updated = await companyService.updateCompany(company._id, {
         name: data.name,
         description: data.description,
+        headline: data.headline?.trim() || undefined,
         industry: industry || data.industry,
         address: data.address,
         location: parseLocation(data.location?.lat, data.location?.lng),
         companyEmail: data.companyEmail,
         numberOfEmployees: data.numberOfEmployees,
+        website: data.website?.trim() || undefined,
+        linkedin: data.linkedin?.trim() || undefined,
+        foundedYear: data.foundedYear?.trim() ? Number(data.foundedYear.trim()) : undefined,
       });
       dispatch(setCompany(updated));
       toastHelper.success('Company profile saved!');
@@ -251,6 +259,13 @@ export default function CompanyEditProfile({ company }: { company: Company }) {
             />
           )}
 
+          <Input
+            label="Headline"
+            placeholder="e.g. Building payment infrastructure for MENA"
+            error={errors.headline?.message}
+            {...register('headline')}
+          />
+
           <div className="flex flex-col gap-1.5">
             <label className="flex items-center justify-between text-sm font-semibold text-slate-700">
               Description
@@ -302,13 +317,40 @@ export default function CompanyEditProfile({ company }: { company: Company }) {
             </p>
           </div>
 
-          <Input
-            label="Number of employees"
-            placeholder="e.g. 51–200"
-            error={errors.numberOfEmployees?.message}
-            leftIcon={<i className="fas fa-users text-slate-400" />}
-            {...register('numberOfEmployees')}
-          />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              label="Website"
+              placeholder="https://example.com"
+              error={errors.website?.message}
+              leftIcon={<i className="fas fa-globe text-slate-400" />}
+              {...register('website')}
+            />
+            <Input
+              label="LinkedIn"
+              placeholder="https://linkedin.com/company/…"
+              error={errors.linkedin?.message}
+              leftIcon={<i className="fab fa-linkedin text-slate-400" />}
+              {...register('linkedin')}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              label="Number of employees"
+              placeholder="e.g. 51–200"
+              error={errors.numberOfEmployees?.message}
+              leftIcon={<i className="fas fa-users text-slate-400" />}
+              {...register('numberOfEmployees')}
+            />
+            <Input
+              label="Founded year"
+              placeholder="e.g. 2018"
+              inputMode="numeric"
+              error={errors.foundedYear?.message}
+              leftIcon={<i className="fas fa-calendar text-slate-400" />}
+              {...register('foundedYear')}
+            />
+          </div>
 
           <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
             <p className="flex items-center gap-1.5 text-xs text-slate-400">

@@ -17,6 +17,7 @@ import {
   Users,
 } from 'lucide-react';
 import { getCompanyImgUrl, type Company } from '@/features/company/types';
+import { type CompanyRatings } from '@/features/company/services/company.service';
 import { getInternshipTracks, type Internship } from '@/features/internship/types';
 import { CATEGORY_LABELS } from '@/features/student/types';
 import {
@@ -28,17 +29,6 @@ import {
   formatMonthYear,
 } from '@/features/profiles/components/ProfilePrimitives';
 
-// TODO(BACKEND): replace with a real aggregate company-rating endpoint.
-const SAMPLE_RATING_SUM = 170;
-const SAMPLE_RATING_COUNT = 37;
-const SAMPLE_HISTOGRAM = [
-  { stars: 5, pct: 72 },
-  { stars: 4, pct: 19 },
-  { stars: 3, pct: 6 },
-  { stars: 2, pct: 2 },
-  { stars: 1, pct: 1 },
-];
-
 export interface PostingWithApplicants extends Internship {
   applicantsCount: number;
 }
@@ -47,6 +37,7 @@ interface CompanyProfileOwnProps {
   company: Company;
   postings: PostingWithApplicants[];
   totalApplicants: number;
+  ratings: CompanyRatings | null;
 }
 
 function companyCompleteness(c: Company, postings: Internship[]) {
@@ -62,16 +53,18 @@ function companyCompleteness(c: Company, postings: Internship[]) {
   return { pct: Math.round((done / checks.length) * 100), checks };
 }
 
-export default function CompanyProfileOwn({ company, postings, totalApplicants }: CompanyProfileOwnProps) {
+export default function CompanyProfileOwn({ company, postings, totalApplicants, ratings }: CompanyProfileOwnProps) {
   const { pct, checks } = companyCompleteness(company, postings);
   const pending = checks.filter((c) => !c.done);
   const logoUrl = getCompanyImgUrl(company.logo);
   const coverUrl = getCompanyImgUrl(company.coverPicture);
   const openCount = postings.filter((p) => !p.closed).length;
   const hiringTracks = [...new Set(postings.flatMap((p) => getInternshipTracks(p)))].slice(0, 12);
+  const ratingCount = ratings?.count ?? 0;
+  const ratingAvg = ratings?.avg ?? null;
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 p-4 sm:p-6 lg:p-8">
+    <main className="mx-auto w-full max-w-6xl flex-1 px-[2.5%] py-4 sm:p-6 lg:p-8">
       {!company.approvedByAdmin && (
         <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
           <AlertCircle size={18} className="shrink-0 text-amber-600" />
@@ -147,9 +140,13 @@ export default function CompanyProfileOwn({ company, postings, totalApplicants }
                 </span>
               )}
             </div>
-            {company.industry && <p className="mt-0.5 break-words text-slate-600">{company.industry}</p>}
+            {company.headline ? (
+              <p className="mt-0.5 break-words text-slate-600">{company.headline}</p>
+            ) : (
+              company.industry && <p className="mt-0.5 break-words text-slate-600">{company.industry}</p>
+            )}
             <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-400">
-              <RatingStars ratingSum={SAMPLE_RATING_SUM} ratingCount={SAMPLE_RATING_COUNT} />
+              <RatingStars ratingSum={(ratingAvg ?? 0) * ratingCount} ratingCount={ratingCount} />
               {company.numberOfEmployees && (
                 <span className="flex items-center gap-1.5">
                   <Users size={14} /> {company.numberOfEmployees} employees
@@ -170,7 +167,7 @@ export default function CompanyProfileOwn({ company, postings, totalApplicants }
         {[
           { label: 'Open postings', value: String(openCount), icon: Briefcase },
           { label: 'Total applicants', value: String(totalApplicants), icon: Users },
-          { label: 'Avg. intern rating', value: `${(SAMPLE_RATING_SUM / SAMPLE_RATING_COUNT).toFixed(1)}/5`, icon: TrendingUp },
+          { label: 'Avg. intern rating', value: ratingCount > 0 && ratingAvg != null ? `${ratingAvg.toFixed(1)}/5` : '—', icon: TrendingUp },
           { label: 'Total postings', value: String(postings.length), icon: Building2 },
         ].map((s) => (
           <div key={s.label} className="rounded-2xl border border-slate-200 bg-white p-5">
@@ -270,27 +267,35 @@ export default function CompanyProfileOwn({ company, postings, totalApplicants }
 
           <SectionCard
             title="What interns say"
-            subtitle={`${SAMPLE_RATING_COUNT} reviews from students who completed an internship here`}
+            subtitle={
+              ratingCount > 0
+                ? `${ratingCount} review${ratingCount !== 1 ? 's' : ''} from students who completed an internship here`
+                : 'No reviews yet'
+            }
           >
-            <div className="flex flex-wrap items-center gap-6 rounded-xl bg-slate-50 p-5">
-              <div>
-                <p className="text-3xl font-bold text-slate-900">
-                  {(SAMPLE_RATING_SUM / SAMPLE_RATING_COUNT).toFixed(1)}
-                </p>
-                <RatingStars ratingSum={SAMPLE_RATING_SUM} ratingCount={SAMPLE_RATING_COUNT} showCount={false} />
-              </div>
-              <div className="min-w-[180px] flex-1 space-y-1.5">
-                {SAMPLE_HISTOGRAM.map((r) => (
-                  <div key={r.stars} className="flex items-center gap-2 text-xs">
-                    <span className="w-3 text-slate-400">{r.stars}</span>
-                    <div className="h-1.5 flex-1 rounded-full bg-slate-200">
-                      <div className="h-1.5 rounded-full bg-amber-400" style={{ width: `${r.pct}%` }} />
-                    </div>
-                    <span className="w-8 text-right text-slate-400">{r.pct}%</span>
+            {ratingCount > 0 && ratingAvg != null ? (
+              <div className="flex flex-wrap items-center gap-6 rounded-xl bg-slate-50 p-5">
+                <div>
+                  <p className="text-3xl font-bold text-slate-900">{ratingAvg.toFixed(1)}</p>
+                  <RatingStars ratingSum={ratingAvg * ratingCount} ratingCount={ratingCount} showCount={false} />
+                </div>
+                {ratings && ratings.histogram.length > 0 && (
+                  <div className="min-w-[180px] flex-1 space-y-1.5">
+                    {ratings.histogram.map((r) => (
+                      <div key={r.stars} className="flex items-center gap-2 text-xs">
+                        <span className="w-3 text-slate-400">{r.stars}</span>
+                        <div className="h-1.5 flex-1 rounded-full bg-slate-200">
+                          <div className="h-1.5 rounded-full bg-amber-400" style={{ width: `${r.pct}%` }} />
+                        </div>
+                        <span className="w-8 text-right text-slate-400">{r.pct}%</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            </div>
+            ) : (
+              <ProfileEmptyState message="No intern reviews yet — they will appear here once students rate you." />
+            )}
           </SectionCard>
         </div>
 
@@ -324,6 +329,11 @@ export default function CompanyProfileOwn({ company, postings, totalApplicants }
               <MetaRow icon={Building2} label="Industry" value={company.industry} />
               <MetaRow icon={Users} label="Size" value={company.numberOfEmployees} />
               <MetaRow icon={MapPin} label="Address" value={company.address} />
+              <MetaRow icon={Globe} label="Website" value={company.website} />
+              <MetaRow icon={Globe} label="LinkedIn" value={company.linkedin} />
+              {company.foundedYear != null && (
+                <MetaRow icon={Building2} label="Founded" value={String(company.foundedYear)} />
+              )}
               <MetaRow icon={Globe} label="Map" value={company.googleMapsUrl} />
             </div>
             <div className="mt-4 text-right">

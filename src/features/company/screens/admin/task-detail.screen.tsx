@@ -210,7 +210,7 @@ export default function TaskDetailScreen() {
         <Sidebar active="Tasks" />
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar title="Task Details" />
-          <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8 animate-pulse">
+          <main className="flex-1 space-y-6 px-[2.5%] py-4 sm:p-6 lg:p-8 animate-pulse">
             <div className="h-32 rounded-2xl bg-slate-200 sm:h-36" />
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <div className="space-y-6 lg:col-span-2">
@@ -486,7 +486,7 @@ export default function TaskDetailScreen() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Task Details" />
 
-        <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 space-y-6 overflow-y-auto px-[2.5%] py-4 sm:p-6 lg:p-8">
           {(() => {
             const theme = priorityTheme(task.priority);
             return (

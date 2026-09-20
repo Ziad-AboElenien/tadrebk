@@ -95,7 +95,7 @@ export default function ApplicationDetailScreen() {
     phoneNumber?: string;
     bio?: string;
     headline?: string;
-    skills?: string[];
+    skills?: (string | { name: string })[];
     profilePicture?: { secure_url?: string };
     education?: { institution?: string; degree?: string; field?: string; grade?: string; startDate?: string; endDate?: string }[];
     experience?: { internshipTitle?: string; companyName?: string; completedAt?: string }[];
@@ -113,7 +113,7 @@ export default function ApplicationDetailScreen() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Application Details" />
 
-        <main className="animate-fade-in mx-auto w-full max-w-4xl flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="animate-fade-in mx-auto w-full max-w-4xl flex-1 space-y-6 overflow-y-auto px-[2.5%] py-4 sm:p-6 lg:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <button
               onClick={() => router.back()}
@@ -159,7 +159,7 @@ export default function ApplicationDetailScreen() {
                         <Link
                           href={`/company/admin/candidates/${student._id}?internshipTitle=${encodeURIComponent(
                             internship?.title || 'Internship',
-                          )}&status=${app.status}`}
+                          )}&status=${app.status}&internshipId=${internshipId}`}
                           className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:underline"
                         >
                           View full profile <ArrowRight size={12} />
@@ -225,11 +225,14 @@ export default function ApplicationDetailScreen() {
                   <div className="mt-4">
                     <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Skills</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                      {student.skills.map((sk) => (
-                        <span key={sk} className="break-words rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">
-                          {sk}
-                        </span>
-                      ))}
+                      {student.skills.map((sk) => {
+                        const label = typeof sk === 'string' ? sk : sk.name;
+                        return (
+                          <span key={label} className="break-words rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-600">
+                            {label}
+                          </span>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

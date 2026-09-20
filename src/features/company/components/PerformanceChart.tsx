@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
+import { useChartWidth } from './useChartWidth';
 
 export interface PerformancePoint {
   label: string;
@@ -20,12 +21,12 @@ export default function PerformanceChart({
   completedColor = '#1e293b',
 }: PerformanceChartProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const { ref: wrapRef, width } = useChartWidth();
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
 
-    const width = svg.node()?.clientWidth ?? 560;
     const height = 240;
     const margin = { top: 8, right: 8, bottom: 24, left: 8 };
     const innerWidth = width - margin.left - margin.right;
@@ -90,16 +91,18 @@ export default function PerformanceChart({
       .attr('fill', '#94a3b8')
       .attr('font-size', 11)
       .text((d) => d.label);
-  }, [data, activeColor, completedColor]);
+  }, [data, activeColor, completedColor, width]);
 
   return (
-    <svg
-      ref={svgRef}
-      className="h-60 w-full"
-      role="img"
-      aria-label="Internship performance bar chart"
-      viewBox={`0 0 ${560} ${240}`}
-      preserveAspectRatio="xMidYMid meet"
-    />
+    <div ref={wrapRef} className="w-full">
+      <svg
+        ref={svgRef}
+        className="block h-60 w-full"
+        role="img"
+        aria-label="Internship performance bar chart"
+        viewBox={`0 0 ${width} ${240}`}
+        preserveAspectRatio="xMidYMid meet"
+      />
+    </div>
   );
 }

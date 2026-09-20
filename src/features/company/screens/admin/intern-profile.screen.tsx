@@ -73,7 +73,7 @@ export default function InternProfileScreen() {
         <Sidebar active="Interns" />
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar title="Intern Profile" />
-          <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8 animate-pulse">
+          <main className="flex-1 space-y-6 px-[2.5%] py-4 sm:p-6 lg:p-8 animate-pulse">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-36 rounded-lg bg-slate-200" />
@@ -189,7 +189,10 @@ export default function InternProfileScreen() {
   const email = intern.email;
   const phone = intern.phoneNumber;
   const skillList = intern.skills && intern.skills.length > 0
-    ? intern.skills.slice(0, 5).map((s) => ({ label: s, pct: 70 + (Math.abs(s.length * 7) % 26) }))
+    ? intern.skills.slice(0, 5).map((s) => {
+        const label = typeof s === 'string' ? s : s.name;
+        return { label, pct: 70 + (Math.abs(label.length * 7) % 26) };
+      })
     : SKILLS;
 
   return (
@@ -199,7 +202,7 @@ export default function InternProfileScreen() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Intern Profile" />
 
-        <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 space-y-6 overflow-y-auto px-[2.5%] py-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-3">
               <Link href="/company/admin/interns" className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
@@ -283,7 +286,7 @@ export default function InternProfileScreen() {
                 <h3 className="font-semibold text-slate-900">Personal Information</h3>
                 <dl className="mt-4 space-y-4 text-sm">
                   {[
-                    { icon: GraduationCap, label: 'SKILLS', value: (intern.skills || []).join(', ') || '—' },
+                    { icon: GraduationCap, label: 'SKILLS', value: (intern.skills || []).map((s) => (typeof s === 'string' ? s : s.name)).join(', ') || '—' },
                     { icon: Mail, label: 'EMAIL ADDRESS', value: email },
                     { icon: Phone, label: 'PHONE NUMBER', value: phone || '—' },
                     { icon: MapPin, label: 'LOCATION', value: intern.address || '—' },

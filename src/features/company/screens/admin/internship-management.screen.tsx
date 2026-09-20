@@ -287,7 +287,7 @@ export default function InternshipManagementScreen() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title={internship?.title || 'Internship Management'} />
 
-        <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 space-y-6 overflow-y-auto px-[2.5%] py-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
               <Link

@@ -10,6 +10,7 @@ import {
   Ban,
   Layers,
   Search,
+  X,
   MoreHorizontal,
   Trash2,
   Play,
@@ -50,6 +51,7 @@ export default function InternsManagementScreen() {
   const [internships, setInternships] = useState<Internship[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
   const [filter, setFilter] = useState<FilterKey>('all');
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [busyRow, setBusyRow] = useState<string | null>(null);
@@ -149,7 +151,7 @@ export default function InternsManagementScreen() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Interns Management" />
 
-        <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 space-y-6 px-[2.5%] py-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Interns Overview</h2>
@@ -168,43 +170,64 @@ export default function InternsManagementScreen() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
             {stats.map((s) => (
-              <div key={s.label} className="rounded-2xl border border-slate-200 bg-white p-5">
-                <div className="flex items-start justify-between">
-                  <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${s.iconColor}`}>
-                    <s.icon size={18} />
+              <div key={s.label} className="rounded-2xl border border-slate-200 bg-white p-3.5 text-center sm:p-5">
+                <div className="flex justify-center">
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-lg sm:h-9 sm:w-9 ${s.iconColor}`}>
+                    <s.icon size={17} />
                   </span>
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">Postings</span>
                 </div>
-                <p className="mt-3 text-2xl font-semibold text-slate-900">{s.value}</p>
-                <p className="text-sm text-slate-500">{s.label}</p>
+                <p className="mt-2.5 text-xl font-semibold text-slate-900 sm:mt-3 sm:text-2xl">{s.value}</p>
+                <p className="truncate text-xs text-slate-500 sm:text-sm">{s.label}</p>
               </div>
             ))}
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h3 className="font-semibold text-slate-900">Internship Postings</h3>
-                <p className="text-sm text-slate-400">Manage and monitor all your internships.</p>
-              </div>
-              <div className="relative flex flex-wrap items-center gap-2">
-                <div className="relative min-w-0 flex-1 sm:flex-none">
-                  <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search by title..."
-                    className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 sm:w-64"
-                  />
-                </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+            <div className="mb-4">
+              <h3 className="font-semibold text-slate-900">Internship Postings</h3>
+              <p className="text-sm text-slate-400">Manage and monitor all your internships.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
                 <GlassFilter
                   options={FILTERS}
                   value={filter}
                   onChange={(key) => setFilter(key as FilterKey)}
                   ariaLabel="Filter internships"
                 />
+              </div>
+              <div className={`flex items-center transition-all duration-300 ${searchOpen ? 'min-w-0 flex-1' : 'shrink-0'}`}>
+                {!searchOpen ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearchOpen(true)}
+                    aria-label="Open search"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-colors hover:border-emerald-300 hover:text-emerald-600"
+                  >
+                    <Search size={15} />
+                  </button>
+                ) : (
+                  <div className="relative w-full animate-fade-in">
+                    <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search by title..."
+                      autoFocus
+                      className="w-full rounded-xl border border-slate-200 py-2 pl-9 pr-9 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setSearchOpen(false)}
+                      aria-label="Close search"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

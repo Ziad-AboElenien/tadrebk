@@ -8,7 +8,7 @@ import type { Internship } from '@/features/internship/types';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import EmptyState from '@/components/ui/EmptyState';
-import { companyService } from '@/features/company/services/company.service';
+import { companyService, type CompanyRatings } from '@/features/company/services/company.service';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { toastHelper } from '@/lib/toast';
 import CompanyProfileViewer from '@/features/profiles/components/CompanyProfileViewer';
@@ -20,6 +20,7 @@ export default function CompanyDetailsScreen() {
   const [company, setCompany] = useState<Company | null>(null);
   const [internships, setInternships] = useState<Internship[]>([]);
   const [totalInternships, setTotalInternships] = useState(0);
+  const [ratings, setRatings] = useState<CompanyRatings | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,9 +29,13 @@ export default function CompanyDetailsScreen() {
         setLoading(true);
         const companyData = await companyService.getCompanyById(companyId);
         setCompany(companyData);
-        const result = await internshipService.listInternships({ companyId, limit: 12 });
+        const [result, ratingData] = await Promise.all([
+          internshipService.listInternships({ companyId, limit: 12 }),
+          companyService.getCompanyRatings(companyId).catch(() => null),
+        ]);
         setInternships(result.internships);
         setTotalInternships(result.pagination.total);
+        setRatings(ratingData);
       } catch {
         toastHelper.error('Failed to load company profile');
       } finally {
@@ -90,7 +95,7 @@ export default function CompanyDetailsScreen() {
         )}
       </div>
 
-      <CompanyProfileViewer company={company} postings={internships} totalPostings={totalInternships} />
+      <CompanyProfileViewer company={company} postings={internships} totalPostings={totalInternships} ratings={ratings} />
     </div>
   );
 }

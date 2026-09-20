@@ -22,9 +22,12 @@ import { setUser } from '@/store/userSlice';
 import {
   CATEGORY_LABELS,
   getUserImgUrl,
+  skillName,
+  skillProvenance,
   type Category,
   type Course,
   type Education,
+  type SkillObject,
   type User,
 } from '@/features/student/types';
 import { userService } from '@/features/student/services/user.service';
@@ -45,15 +48,12 @@ import {
   SOCIAL_PLATFORMS,
   educationKey,
   getProfileMeta,
-  newSocialId,
   removeCourseMeta,
   removeSkillMeta,
   setCourseMeta,
   setEducationMeta,
   setSkillMeta,
-  setSocials,
   useProfileMeta,
-  type SocialLink,
 } from '@/features/profiles/services/profile-meta.store';
 import { Pill, formatMonthYear } from '@/features/profiles/components/ProfilePrimitives';
 
@@ -97,12 +97,14 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
   const [modalSaving, setModalSaving] = useState(false);
   const [deleteSkill, setDeleteSkill] = useState<string | null>(null);
   const [deleteEdu, setDeleteEdu] = useState<number | null>(null);
+  const [deleteCourseName, setDeleteCourseName] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   // ---------- socials ----------
   const [platform, setPlatform] = useState(SOCIAL_PLATFORMS[0]);
   const [socialUrl, setSocialUrl] = useState('');
   const [socialError, setSocialError] = useState<string | null>(null);
+  const [savingSocials, setSavingSocials] = useState(false);
 
   const profileBlank = useBlankImage(getUserImgUrl(user.profilePicture));
   const coverBlank = useBlankImage(getUserImgUrl(user.coverPicture));
@@ -248,9 +250,17 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
   async function saveSkill({ name, meta: skillMeta }: SkillFormValue) {
     setModalSaving(true);
     try {
+      // Backend requires sourceRef on skill objects — default it for self-study.
+      const obj: SkillObject = {
+        name,
+        source: skillMeta.source,
+        sourceRef: skillMeta.ref || (skillMeta.source === 'self' ? 'Self-study' : '—'),
+        description: skillMeta.description,
+      };
+      const current = user.skills || [];
       const skills = skillModal.name
-        ? user.skills || []
-        : [...(user.skills || []), name];
+        ? current.map((s) => (skillName(s) === skillModal.name ? obj : s))
+        : [...current, obj];
       await userService.updateProfile(userId, { skills });
       setSkillMeta(userId, name, skillMeta);
       await refreshUser();
@@ -270,7 +280,7 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
     try {
       await userService.updateProfile(
         userId,
-        { skills: (user.skills || []).filter((s) => s !== deleteSkill) },
+        { skills: (user.skills || []).filter((s) => skillName(s) !== deleteSkill) },
       );
       removeSkillMeta(userId, deleteSkill);
       await refreshUser();
@@ -288,17 +298,15 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
   async function saveEducation({ entry, description }: EducationFormValue) {
     setModalSaving(true);
     try {
+      const full: Education = { ...entry, description };
       const list = [...(user.education || [])];
       if (eduModal.index !== undefined) {
-        list[eduModal.index] = entry;
+        list[eduModal.index] = full;
       } else {
-        list.push(entry);
+        list.push(full);
       }
       await userService.updateProfile(userId, { education: list });
-      const fresh = await refreshUser();
-      const idx = eduModal.index !== undefined ? eduModal.index : list.length - 1;
-      const saved = fresh.education?.[idx] || entry;
-      setEducationMeta(userId, educationKey(idx, saved.institution), { description });
+      await refreshUser();
       refreshMeta();
       setEduModal({ open: false });
       toastHelper.success(eduModal.index !== undefined ? 'Education updated!' : 'Education added!');
@@ -332,14 +340,20 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
   async function saveCourse({ name, meta: courseMeta, certificate }: CourseFormValue) {
     setModalSaving(true);
     try {
+      const fields = {
+        startDate: courseMeta.startDate,
+        endDate: courseMeta.present ? undefined : courseMeta.endDate,
+        present: courseMeta.present,
+        description: courseMeta.description,
+      };
       if (courseModal.name) {
         // Backend has no delete/replace-course endpoint: update name/file in place by index.
         const idx = (user.courses || []).findIndex((c) => c.name === courseModal.name);
         if (idx >= 0) {
-          await userService.updateCourse(idx, name, certificate ?? undefined);
+          await userService.updateCourse(idx, name, certificate ?? undefined, fields);
         }
       } else {
-        await userService.addCourse(name, certificate ?? undefined);
+        await userService.addCourse(name, certificate ?? undefined, fields);
       }
       setCourseMeta(userId, name, courseMeta);
       if (courseModal.name && courseModal.name !== name) removeCourseMeta(userId, courseModal.name);
@@ -354,8 +368,41 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
     }
   }
 
-  // ================= socials =================
-  function addSocial() {
+  async function confirmDeleteCourse() {
+    if (deleteCourseName === null) return;
+    setDeleting(true);
+    try {
+      const idx = (user.courses || []).findIndex((c) => c.name === deleteCourseName);
+      if (idx < 0) throw new Error('Course not found');
+      await userService.deleteCourse(idx);
+      removeCourseMeta(userId, deleteCourseName);
+      await refreshUser();
+      refreshMeta();
+      toastHelper.success('Course removed');
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setDeleting(false);
+      setDeleteCourseName(null);
+    }
+  }
+
+  // ================= socials (backend) =================
+  const socials = user.socials ?? [];
+
+  async function persistSocials(next: { platform: string; url: string }[]) {
+    setSavingSocials(true);
+    try {
+      await userService.updateProfile(userId, { socials: next });
+      await refreshUser();
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setSavingSocials(false);
+    }
+  }
+
+  async function addSocial() {
     const url = socialUrl.trim();
     if (!url) {
       setSocialError('Paste your profile link.');
@@ -365,20 +412,19 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
       setSocialError('Link must start with http(s)://');
       return;
     }
+    if (socials.length >= 10) {
+      setSocialError('You can add up to 10 links.');
+      return;
+    }
     setSocialError(null);
-    const next: SocialLink[] = [...meta.socials, { id: newSocialId(), platform, url }];
-    setSocials(userId, next);
-    refreshMeta();
+    await persistSocials([...socials, { platform, url }]);
     setSocialUrl('');
     toastHelper.success('Social link added!');
   }
 
-  function removeSocial(id: string) {
-    setSocials(
-      userId,
-      meta.socials.filter((s) => s.id !== id),
-    );
-    refreshMeta();
+  async function removeSocial(index: number) {
+    await persistSocials(socials.filter((_, i) => i !== index));
+    toastHelper.success('Social link removed');
   }
 
   const avatarUrl = getUserImgUrl(user.profilePicture);
@@ -386,14 +432,27 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
   const resumeUrl = getUserImgUrl(user.resume);
   const fullName = `${user.firstName} ${user.lastName}`.trim();
   const editingSkillMeta = skillModal.name ? getProfileMeta(userId).skills[skillModal.name] : undefined;
-  const editingCourseMeta = courseModal.name ? getProfileMeta(userId).courses[courseModal.name] : undefined;
+  const editingCourse = courseModal.name
+    ? (user.courses || []).find((c) => c.name === courseModal.name)
+    : undefined;
+  const editingCourseMeta = editingCourse
+    ? {
+        startDate: editingCourse.startDate ?? getProfileMeta(userId).courses[editingCourse.name]?.startDate,
+        endDate: editingCourse.endDate ?? getProfileMeta(userId).courses[editingCourse.name]?.endDate,
+        present: editingCourse.present ?? getProfileMeta(userId).courses[editingCourse.name]?.present,
+        description:
+          editingCourse.description ?? getProfileMeta(userId).courses[editingCourse.name]?.description,
+      }
+    : undefined;
   const editingEdu =
     eduModal.index !== undefined
       ? {
           entry: user.education?.[eduModal.index] as Education,
-          description: getProfileMeta(userId).education[
-            educationKey(eduModal.index, user.education?.[eduModal.index]?.institution)
-          ]?.description,
+          description:
+            user.education?.[eduModal.index]?.description ??
+            getProfileMeta(userId).education[
+              educationKey(eduModal.index, user.education?.[eduModal.index]?.institution)
+            ]?.description,
         }
       : null;
 
@@ -553,13 +612,20 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
         ) : (
           <div className="space-y-2">
             {(user.skills || []).map((skill) => {
-              const sm = meta.skills[skill];
+              const name = skillName(skill);
+              // Backend provenance wins; localStorage is a legacy fallback.
+              const prov = skillProvenance(skill);
+              const sm = prov
+                ? { source: prov.source, ref: prov.ref }
+                : meta.skills[name]
+                  ? { source: meta.skills[name].source, ref: meta.skills[name].ref }
+                  : undefined;
               return (
                 <div
-                  key={skill}
+                  key={name}
                   className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-100 px-4 py-2.5"
                 >
-                  <Pill>{skill}</Pill>
+                  <Pill>{name}</Pill>
                   <span className="min-w-0 flex-1 truncate text-xs text-slate-400">
                     {sm ? (
                       <>
@@ -572,16 +638,16 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
                   </span>
                   <button
                     type="button"
-                    onClick={() => setSkillModal({ open: true, name: skill })}
-                    aria-label={`Edit ${skill}`}
+                    onClick={() => setSkillModal({ open: true, name })}
+                    aria-label={`Edit ${name}`}
                     className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600"
                   >
                     <Pencil size={14} />
                   </button>
                   <button
                     type="button"
-                    onClick={() => setDeleteSkill(skill)}
-                    aria-label={`Remove ${skill}`}
+                    onClick={() => setDeleteSkill(name)}
+                    aria-label={`Remove ${name}`}
                     className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500"
                   >
                     <Trash2 size={14} />
@@ -641,7 +707,7 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
         ) : (
           <div className="space-y-3">
             {(user.education || []).map((e, i) => {
-              const desc = meta.education[educationKey(i, e.institution)]?.description;
+              const desc = e.description ?? meta.education[educationKey(i, e.institution)]?.description;
               return (
                 <div key={i} className="rounded-xl border border-slate-100 p-4">
                   <div className="flex items-start justify-between gap-3">
@@ -702,20 +768,37 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(user.courses || []).map((c: Course, i: number) => {
-              const cm = meta.courses[c.name];
+              // Backend fields win; localStorage is a legacy fallback.
+              const legacy = meta.courses[c.name] || {};
+              const cm = {
+                startDate: c.startDate ?? legacy.startDate,
+                endDate: c.endDate ?? legacy.endDate,
+                present: c.present ?? legacy.present,
+                description: c.description ?? legacy.description,
+              };
               const certUrl = c.certificate?.secure_url || c.certificate?.certificateUrl || c.attachmentUrl || c.link;
               return (
                 <div key={c._id || `${c.name}-${i}`} className="rounded-xl border border-slate-100 p-4">
                   <div className="flex items-start justify-between gap-2">
                     <p className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900">{c.name}</p>
-                    <button
-                      type="button"
-                      onClick={() => setCourseModal({ open: true, name: c.name })}
-                      aria-label={`Edit ${c.name}`}
-                      className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600"
-                    >
-                      <Pencil size={14} />
-                    </button>
+                    <div className="flex shrink-0 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setCourseModal({ open: true, name: c.name })}
+                        aria-label={`Edit ${c.name}`}
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteCourseName(c.name)}
+                        aria-label={`Remove ${c.name}`}
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                   {(cm?.startDate || cm?.endDate || cm?.present) && (
                     <p className="mt-1 text-xs text-slate-400">
@@ -746,10 +829,10 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
           <Share2 size={16} className="text-emerald-500" /> Social links
         </h3>
         <p className="mb-4 text-sm text-slate-400">Shown on your public profile.</p>
-        {meta.socials.length > 0 && (
+        {socials.length > 0 && (
           <div className="mb-3 space-y-2">
-            {meta.socials.map((s) => (
-              <div key={s.id} className="flex items-center gap-3 rounded-xl border border-slate-100 px-4 py-2.5">
+            {socials.map((s, i) => (
+              <div key={`${s.platform}-${s.url}-${i}`} className="flex items-center gap-3 rounded-xl border border-slate-100 px-4 py-2.5">
                 <Link2 size={14} className="shrink-0 text-slate-400" />
                 <span className="w-28 shrink-0 truncate text-xs font-semibold text-slate-600">{s.platform}</span>
                 <a
@@ -762,9 +845,10 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
                 </a>
                 <button
                   type="button"
-                  onClick={() => removeSocial(s.id)}
+                  onClick={() => removeSocial(i)}
                   aria-label="Remove link"
-                  className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500"
+                  disabled={savingSocials}
+                  className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500 disabled:opacity-50"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -785,7 +869,7 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
             onChange={(e) => setSocialUrl(e.target.value)}
             error={socialError || undefined}
           />
-          <Button onClick={addSocial} className="shrink-0">
+          <Button onClick={addSocial} loading={savingSocials} className="shrink-0">
             <Plus size={14} /> Add
           </Button>
         </div>
@@ -797,7 +881,7 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
           open
           saving={modalSaving}
           initial={skillModal.name ? { name: skillModal.name, meta: editingSkillMeta } : null}
-          existingNames={user.skills || []}
+          existingNames={(user.skills || []).map((s) => skillName(s))}
           educationOptions={educationOptions}
           internshipOptions={internshipOptions}
           onClose={() => setSkillModal({ open: false })}
@@ -841,6 +925,15 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
         loading={deleting}
         onConfirm={confirmDeleteEducation}
         onCancel={() => setDeleteEdu(null)}
+      />
+      <ConfirmModal
+        open={deleteCourseName !== null}
+        title="Remove course?"
+        message={`"${deleteCourseName}" will be removed from your profile.`}
+        confirmLabel="Remove"
+        loading={deleting}
+        onConfirm={confirmDeleteCourse}
+        onCancel={() => setDeleteCourseName(null)}
       />
 
       {cropSrc && (

@@ -176,11 +176,15 @@ export type ProfileFormData = z.infer<typeof profileSchema>;
 export const companySettingsSchema = z.object({
   name: z.string().min(2, 'Company name must be at least 2 characters'),
   description: z.string().optional(),
+  headline: z.string().max(120, 'Headline must be 120 characters or fewer').optional(),
   industry: z.string().min(1, 'Please select an industry'),
   customIndustry: z.string().optional(),
   address: z.string().optional(),
   location: z.object({ lat: latLngRefine(-90, 90, 'Latitude must be between -90 and 90'), lng: latLngRefine(-180, 180, 'Longitude must be between -180 and 180') }).optional(),
   companyEmail: z.string().email('Invalid email').optional().or(z.literal('')),
   numberOfEmployees: z.string().optional(),
+  website: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  linkedin: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  foundedYear: z.string().optional(),
 });
 export type CompanySettingsFormData = z.infer<typeof companySettingsSchema>;

@@ -47,7 +47,7 @@ export interface Intern {
   totalPoints: number;
   bio?: string;
   headline?: string;
-  skills?: string[];
+  skills?: (string | { name: string })[];
   categories?: string[];
   profilePicture?: { public_id?: string; secure_url?: string } | null;
   coverPicture?: { public_id?: string; secure_url?: string } | null;

@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { setCompany } from '@/store/companySlice';
-import { companyService } from '@/features/company/services/company.service';
+import { companyService, type CompanyRatings } from '@/features/company/services/company.service';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { applicationService } from '@/features/student/services/application.service';
 import type { Company } from '@/features/company/types';
@@ -24,6 +24,7 @@ export default function CompanyOwnProfileScreen() {
   const [postings, setPostings] = useState<PostingWithApplicants[]>([]);
   const [totalApplicants, setTotalApplicants] = useState(0);
   const [totalPostings, setTotalPostings] = useState(0);
+  const [ratings, setRatings] = useState<CompanyRatings | null>(null);
   const [loading, setLoading] = useState(true);
 
   const isPreview = searchParams.get('preview') === 'student';
@@ -34,27 +35,37 @@ export default function CompanyOwnProfileScreen() {
     (async () => {
       try {
         const companyId = storedCompany._id;
-        const [fresh, list] = await Promise.all([
+        const [fresh, list, ratingData] = await Promise.all([
           companyService.getCompanyById(companyId).catch(() => storedCompany),
           internshipService.listInternships({ companyId, limit: 50 }),
+          companyService.getCompanyRatings(companyId).catch(() => null),
         ]);
         if (cancelled) return;
         dispatch(setCompany(fresh));
         setLocalCompany(fresh);
         setTotalPostings(list.pagination.total);
-        const counts = await Promise.allSettled(
-          list.internships.map((p) =>
-            applicationService
-              .getCompanyApplications(companyId, p._id, { limit: 1 })
-              .then((r) => r.pagination.total)
-              .catch(() => 0),
-          ),
-        );
+        setRatings(ratingData);
+        // Prefer the aggregated count from the list endpoint; fall back to
+        // per-posting fetches only for items missing it (no N+1 by default).
+        const missing = list.internships.filter((p) => typeof p.applicantsCount !== 'number');
+        const fetched = new Map<string, number>();
+        if (missing.length > 0) {
+          const counts = await Promise.allSettled(
+            missing.map((p) =>
+              applicationService
+                .getCompanyApplications(companyId, p._id, { limit: 1 })
+                .then((r) => r.pagination.total)
+                .catch(() => 0),
+            ),
+          );
+          missing.forEach((p, i) => {
+            fetched.set(p._id, counts[i].status === 'fulfilled' ? (counts[i] as PromiseFulfilledResult<number>).value : 0);
+          });
+        }
         if (cancelled) return;
-        const withCounts: PostingWithApplicants[] = list.internships.map((p, i) => ({
+        const withCounts: PostingWithApplicants[] = list.internships.map((p) => ({
           ...p,
-          applicantsCount:
-            counts[i].status === 'fulfilled' ? (counts[i] as PromiseFulfilledResult<number>).value : 0,
+          applicantsCount: typeof p.applicantsCount === 'number' ? p.applicantsCount : (fetched.get(p._id) ?? 0),
         }));
         setPostings(withCounts);
         setTotalApplicants(withCounts.reduce((a, p) => a + p.applicantsCount, 0));
@@ -118,14 +129,14 @@ export default function CompanyOwnProfileScreen() {
             </Link>
           </p>
         </div>
-        <CompanyProfileViewer company={company} postings={postings} totalPostings={totalPostings} />
+        <CompanyProfileViewer company={company} postings={postings} totalPostings={totalPostings} ratings={ratings} />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <CompanyProfileOwn company={company} postings={postings} totalApplicants={totalApplicants} />
+      <CompanyProfileOwn company={company} postings={postings} totalApplicants={totalApplicants} ratings={ratings} />
     </div>
   );
 }

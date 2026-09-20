@@ -20,6 +20,10 @@ interface UpdateCompanyPayload {
   location?: { lat: number; lng: number };
   numberOfEmployees?: string;
   companyEmail?: string;
+  website?: string;
+  linkedin?: string;
+  headline?: string;
+  foundedYear?: number;
   logo?: string;
   coverPicture?: string;
 }
@@ -77,6 +81,44 @@ function createEmptyImageFile(): File {
 // (Previously listCompanies defaulted missing → true while detail endpoints
 // defaulted → false, so the same company flipped between approved/pending
 // depending on which call populated the store.)
+export interface CompanyRatingReview {
+  student?: string;
+  track?: string;
+  rating?: number;
+  date?: string;
+  body?: string;
+}
+
+export interface CompanyRatingHistogramBucket {
+  stars: number;
+  pct: number;
+}
+
+export interface CompanyRatings {
+  avg: number | null;
+  count: number;
+  histogram: CompanyRatingHistogramBucket[];
+  reviews: CompanyRatingReview[];
+}
+
+interface CompanyRatingsResponse {
+  data?: {
+    avg?: number | null;
+    count?: number;
+    histogram?: { stars?: number; pct?: number }[];
+    reviews?: CompanyRatingReview[];
+  };
+  msg?: string;
+}
+
+export interface CompanyInvite {
+  _id?: string;
+  internshipId?: string;
+  studentId?: string;
+  status?: string;
+  createdAt?: string;
+}
+
 function withApproval(c: Company): Company {
   return { ...c, approvedByAdmin: c.approvedByAdmin ?? false };
 }
@@ -175,5 +217,65 @@ export const companyService = {
     const url = await this.uploadCoverPicture(companyId, createEmptyImageFile());
     rememberBlankCompanyMarker(url);
     return url;
+  },
+
+  async getCompanyRatings(companyId: string): Promise<CompanyRatings> {
+    const { data } = await api.get<CompanyRatingsResponse>(`/company/${companyId}/ratings`);
+    const d = data?.data ?? {};
+    const histogram = Array.isArray(d.histogram)
+      ? d.histogram
+          .filter((b) => typeof b?.stars === 'number')
+          .map((b) => ({ stars: b.stars as number, pct: typeof b.pct === 'number' ? b.pct : 0 }))
+      : [];
+    return {
+      avg: typeof d.avg === 'number' ? d.avg : null,
+      count: typeof d.count === 'number' ? d.count : 0,
+      histogram,
+      reviews: Array.isArray(d.reviews) ? d.reviews : [],
+    };
+  },
+
+  async saveCompany(companyId: string): Promise<void> {
+    await api.post(`/companies/${companyId}/save`);
+  },
+
+  async unsaveCompany(companyId: string): Promise<void> {
+    await api.delete(`/companies/${companyId}/save`);
+  },
+
+  async getSavedCompanies(page = 1, limit = 20): Promise<{
+    companies: Company[];
+    pagination: { page: number; limit: number; total: number; pages: number };
+  }> {
+    const { data } = await api.get<CompanyListResponse>('/companies/saved', { params: { page, limit } });
+    return {
+      companies: (data.data.companies || []).map(withApproval) as Company[],
+      pagination: data.data.pagination,
+    };
+  },
+
+  async listInvites(companyId: string, internshipId: string): Promise<CompanyInvite[]> {
+    const { data } = await api.get<{ data?: { invites?: CompanyInvite[] } | CompanyInvite[] }>(
+      `/company/${companyId}/internships/${internshipId}/invites`,
+    );
+    const d = data?.data;
+    if (Array.isArray(d)) return d;
+    return d?.invites ?? [];
+  },
+
+  async sendInvite(companyId: string, internshipId: string, studentId: string): Promise<CompanyInvite> {
+    const { data } = await api.post<{ data?: { invite?: CompanyInvite } | CompanyInvite }>(
+      `/company/${companyId}/internships/${internshipId}/invites`,
+      { studentId },
+    );
+    const d = data?.data;
+    if (d && !Array.isArray(d) && (d as { invite?: CompanyInvite }).invite) {
+      return (d as { invite?: CompanyInvite }).invite as CompanyInvite;
+    }
+    return (d as CompanyInvite) ?? {};
+  },
+
+  async revokeInvite(companyId: string, internshipId: string, inviteId: string): Promise<void> {
+    await api.delete(`/company/${companyId}/internships/${internshipId}/invites/${inviteId}`);
   },
 };

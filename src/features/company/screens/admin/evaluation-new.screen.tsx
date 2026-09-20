@@ -95,7 +95,7 @@ export default function EvaluationNewScreen() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="New Evaluation" />
 
-        <main className="animate-fade-in mx-auto w-full max-w-3xl flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="animate-fade-in mx-auto w-full max-w-3xl flex-1 space-y-6 overflow-y-auto px-[2.5%] py-4 sm:p-6 lg:p-8">
           <Link
             href={programId ? `/company/admin/evaluations?programId=${programId}` : '/company/admin/evaluations'}
             className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"

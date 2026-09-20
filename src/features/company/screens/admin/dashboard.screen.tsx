@@ -195,24 +195,27 @@ export default function AdminDashboardScreen() {
         <TopBar
           title="Dashboard Overview"
           actions={
-            <Link
-              href="/company/post-internship"
-              className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600"
-            >
-              <Plus size={16} /> New Internship
-            </Link>
+            <>
+              {/* Desktop / tablet: full button */}
+              <Link
+                href="/company/post-internship"
+                className="hidden items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 sm:inline-flex"
+              >
+                <Plus size={16} /> New Internship
+              </Link>
+            </>
           }
         />
 
-        <main className="flex-1 space-y-6 p-8">
+        <main className="flex-1 space-y-4 px-[2.5%] py-3 sm:space-y-6 sm:p-8">
           <div>
-            <h2 className="text-2xl font-semibold text-slate-900">Welcome back, Admin</h2>
-            <p className="text-sm text-slate-500">Here&apos;s what&apos;s happening with your internship programs today.</p>
+            <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Welcome back, Admin</h2>
+            <p className="mt-0.5 text-xs text-slate-500 sm:mt-0 sm:text-sm">Here&apos;s what&apos;s happening with your internship programs today.</p>
           </div>
 
           {loading ? (
             <div className="space-y-6 animate-pulse">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 {[0, 1, 2, 3].map((i) => (
                   <div key={i} className="rounded-2xl border border-slate-200 bg-white p-5">
                     <div className="h-3 w-24 rounded-full bg-slate-200" />
@@ -304,7 +307,7 @@ export default function AdminDashboardScreen() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 {stats.map((s) => (
                   <StatCard key={s.label} {...s} />
                 ))}

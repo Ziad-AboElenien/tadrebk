@@ -54,11 +54,13 @@ export default function CourseModal({
       return;
     }
     setError(null);
+    // Backend expects full datetimes — month inputs only carry YYYY-MM.
+    const toISO = (m: string) => (m ? `${m}-01T00:00:00.000Z` : undefined);
     onSave({
       name: trimmed,
       meta: {
-        startDate: startDate || undefined,
-        endDate: present ? undefined : endDate || undefined,
+        startDate: toISO(startDate),
+        endDate: present ? undefined : toISO(endDate),
         present,
         description: description.trim() || undefined,
       },

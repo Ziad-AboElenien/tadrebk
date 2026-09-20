@@ -3,10 +3,13 @@
 import { useCallback, useState } from 'react';
 
 /*
- * TODO(BACKEND): this whole file is a client-side stand-in for backend fields
- * that do not exist yet. Every type below maps to a proposed API field
- * (see BACKEND_GAPS.md). When the backend supports them, replace the
- * localStorage read/write with API calls and keep the same interface.
+ * Local metadata companion for profile fields.
+ *
+ * Most fields already moved to the backend (skills as objects, course
+ * dates/descriptions, education descriptions, socials — see BACKEND_GAPS.md).
+ * What remains here is a LEGACY read fallback for skills/courses/education
+ * created before the migration, so old entries keep their source labels.
+ * New writes go straight to the API; do not add new fields here.
  */
 
 export type SkillSourceType = 'self' | 'education' | 'internship' | 'other';

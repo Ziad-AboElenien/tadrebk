@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { User } from '@/features/student/types';
+import { User, type Skill } from '@/features/student/types';
 import { rememberBlankPictureMarker } from '@/features/student/types';
 
 interface UpdateUserPayload {
@@ -8,16 +8,25 @@ interface UpdateUserPayload {
   phone?: string;
   bio?: string;
   headline?: string;
-  skills?: string[];
+  skills?: Skill[];
   categories?: string[];
   dateOfBirth?: string;
   gender?: 'male' | 'female';
   address?: string;
   education?: any[];
   courses?: { name: string }[];
+  socials?: { platform: string; url: string }[];
   profilePicture?: string;
   coverPicture?: string;
   resume?: string;
+}
+
+export interface CourseFields {
+  name?: string;
+  startDate?: string;
+  endDate?: string;
+  present?: boolean;
+  description?: string;
 }
 
 interface UploadResponse {
@@ -122,10 +131,14 @@ export const userService = {
     return data?.data?.url ?? data?.url ?? data?.data?.secure_url ?? '';
   },
 
-  async addCourse(name: string, file?: File): Promise<void> {
+  async addCourse(name: string, file?: File, fields?: CourseFields): Promise<void> {
     const formData = new FormData();
     formData.append('name', name);
     if (file) formData.append('file', file);
+    if (fields?.startDate) formData.append('startDate', fields.startDate);
+    if (fields?.endDate) formData.append('endDate', fields.endDate);
+    if (fields?.present !== undefined) formData.append('present', String(fields.present));
+    if (fields?.description) formData.append('description', fields.description);
 
     await api.post('/user/courses', formData, {
       headers: {
@@ -134,16 +147,24 @@ export const userService = {
     });
   },
 
-  async updateCourse(courseIndex: number, name?: string, file?: File): Promise<void> {
+  async updateCourse(courseIndex: number, name?: string, file?: File, fields?: CourseFields): Promise<void> {
     const formData = new FormData();
     if (name !== undefined) formData.append('name', name);
     if (file) formData.append('file', file);
+    if (fields?.startDate) formData.append('startDate', fields.startDate);
+    if (fields?.endDate !== undefined) formData.append('endDate', fields.endDate);
+    if (fields?.present !== undefined) formData.append('present', String(fields.present));
+    if (fields?.description !== undefined) formData.append('description', fields.description);
 
     await api.patch(`/user/courses/${courseIndex}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
+  },
+
+  async deleteCourse(courseIndex: number): Promise<void> {
+    await api.delete(`/user/courses/${courseIndex}`);
   },
 
   async deleteAccount(userId: string): Promise<void> {

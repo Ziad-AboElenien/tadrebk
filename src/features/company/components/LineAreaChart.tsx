@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useId } from 'react';
 import * as d3 from 'd3';
+import { useChartWidth } from './useChartWidth';
 
 export interface LineChartPoint {
   label: string;
@@ -23,12 +24,12 @@ export default function LineAreaChart({
 }: LineAreaChartProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const gradientId = useId().replace(/:/g, '');
+  const { ref: wrapRef, width } = useChartWidth();
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
 
-    const width = svg.node()?.clientWidth ?? 560;
     const margin = { top: 8, right: 8, bottom: 24, left: 8 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
@@ -104,17 +105,19 @@ export default function LineAreaChart({
       .attr('fill', '#94a3b8')
       .attr('font-size', 11)
       .text((d) => d.label);
-  }, [data, fill, color, height, gradientId]);
+  }, [data, fill, color, height, gradientId, width]);
 
   return (
-    <svg
-      ref={svgRef}
-      className="w-full"
-      style={{ height }}
-      role="img"
-      aria-label="Line chart"
-      viewBox={`0 0 560 ${height}`}
-      preserveAspectRatio="xMidYMid meet"
-    />
+    <div ref={wrapRef} className="w-full">
+      <svg
+        ref={svgRef}
+        className="block w-full"
+        style={{ height }}
+        role="img"
+        aria-label="Line chart"
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+      />
+    </div>
   );
 }

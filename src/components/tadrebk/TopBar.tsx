@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, Bell, ChevronDown, Menu } from 'lucide-react';
+import { Search, Bell, ChevronDown } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { logout } from '@/store/authSlice';
 import { clearUser } from '@/store/userSlice';
@@ -12,7 +12,6 @@ import * as authService from '@/features/auth/server/auth.service';
 import Avatar from '@/components/ui/Avatar';
 import InternAvatar from '@/components/ui/InternAvatar';
 import { getCompanyImgUrl } from '@/features/company/types';
-import { useAdminShell } from '@/components/tadrebk/admin-shell';
 import { notificationService } from '@/features/notifications/server/notification.service';
 import type { Notification } from '@/features/notifications/types';
 import { internService } from '@/features/company/services/intern.service';
@@ -142,6 +141,80 @@ function SearchResults({
   );
 }
 
+function SearchBox({
+wrapperClassName,
+inputClassName,
+boxRef,
+autoFocus,
+id,
+query,
+setQuery,
+setSearchOpen,
+ensureSearchData,
+searchOpen,
+searchLoading,
+searchFailed,
+searchLoaded,
+allInterns,
+allTasks,
+allPrograms,
+onNavigate,
+}: {
+wrapperClassName?: string;
+inputClassName?: string;
+boxRef: React.RefObject<HTMLDivElement | null>;
+autoFocus?: boolean;
+id: string;
+query: string;
+setQuery: (v: string) => void;
+setSearchOpen: (v: boolean) => void;
+ensureSearchData: () => void;
+searchOpen: boolean;
+searchLoading: boolean;
+searchFailed: boolean;
+searchLoaded: boolean;
+allInterns: Intern[];
+allTasks: Task[];
+allPrograms: Program[];
+onNavigate: () => void;
+}) {
+return (
+  <div className={`relative ${wrapperClassName || ''}`} ref={boxRef}>
+    <Search
+      size={16}
+      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+    />
+    <input
+      id={id}
+      type="text"
+      placeholder="Search interns, tasks..."
+      value={query}
+      autoFocus={autoFocus}
+      onChange={(e) => {
+        setQuery(e.target.value);
+        setSearchOpen(true);
+      }}
+      onFocus={() => {
+        ensureSearchData();
+        if (query.trim()) setSearchOpen(true);
+      }}
+      className={`rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-600 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 ${inputClassName || ''}`}
+    />
+    {searchOpen && query.trim() && (
+      <SearchResults
+        query={query}
+        loading={searchLoading}
+        failed={searchFailed && !searchLoaded}
+        interns={allInterns}
+        tasks={allTasks}
+        programs={allPrograms}
+        onNavigate={onNavigate}
+      />
+    )}
+  </div>
+);
+}
+
 type TopBarProps = {
   title: string;
   actions?: React.ReactNode;
@@ -153,7 +226,6 @@ export default function TopBar({
 }: TopBarProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { toggleSidebar } = useAdminShell();
   const currentCompany = useAppSelector((s) => s.company.currentCompany);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -171,6 +243,8 @@ export default function TopBar({
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [allPrograms, setAllPrograms] = useState<Program[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -182,6 +256,9 @@ export default function TopBar({
       }
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setSearchOpen(false);
+      }
+      if (mobileSearchRef.current && !mobileSearchRef.current.contains(e.target as Node)) {
+        setMobileSearchOpen(false);
       }
     }
     function keyHandler(e: KeyboardEvent) {
@@ -303,14 +380,6 @@ export default function TopBar({
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            aria-label="Open menu"
-            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
-          >
-            <Menu size={20} />
-          </button>
           <h1 className="truncate text-base font-semibold text-slate-900 sm:text-lg lg:text-xl">{title}</h1>
         </div>
 
@@ -318,40 +387,40 @@ export default function TopBar({
           {/* Actions inline on tablet+ */}
           {actions && <div className="hidden sm:block">{actions}</div>}
 
-          <div className="relative hidden md:block" ref={searchRef}>
-            <Search
-              size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type="text"
-              placeholder="Search interns, tasks..."
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setSearchOpen(true);
-              }}
-              onFocus={() => {
-                ensureSearchData();
-                if (query.trim()) setSearchOpen(true);
-              }}
-              className="w-48 rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-600 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 lg:w-64"
-            />
-            {searchOpen && query.trim() && (
-              <SearchResults
-                query={query}
-                loading={searchLoading}
-                failed={searchFailed && !searchLoaded}
-                interns={allInterns}
-                tasks={allTasks}
-                programs={allPrograms}
-                onNavigate={() => {
-                  setSearchOpen(false);
-                  setQuery('');
-                }}
-              />
-            )}
-          </div>
+          {/* Mobile search toggle — expands a full-width field below */}
+          <button
+            type="button"
+            onClick={() => setMobileSearchOpen((o) => !o)}
+            aria-label={mobileSearchOpen ? 'Close search' : 'Open search'}
+            aria-expanded={mobileSearchOpen}
+            className={`rounded-lg p-2 transition-colors md:hidden ${
+              mobileSearchOpen ? 'bg-emerald-50 text-emerald-600' : 'text-slate-500 hover:bg-slate-100'
+            }`}
+          >
+            <Search size={18} />
+          </button>
+
+          <SearchBox
+            wrapperClassName="hidden md:block"
+            inputClassName="w-48 lg:w-64"
+            boxRef={searchRef}
+            id="topbar-search"
+            query={query}
+            setQuery={setQuery}
+            setSearchOpen={setSearchOpen}
+            ensureSearchData={ensureSearchData}
+            searchOpen={searchOpen}
+            searchLoading={searchLoading}
+            searchFailed={searchFailed}
+            searchLoaded={searchLoaded}
+            allInterns={allInterns}
+            allTasks={allTasks}
+            allPrograms={allPrograms}
+            onNavigate={() => {
+              setSearchOpen(false);
+              setQuery('');
+            }}
+          />
 
           <div className="relative" ref={notifRef}>
             <button
@@ -444,6 +513,26 @@ export default function TopBar({
                   {l.label}
                 </Link>
               ))}
+              <div className="mx-4 mb-1 mt-2 border-t border-slate-100 pt-2">
+                <p className="px-0 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  Browse site
+                </p>
+              </div>
+              {[
+                { href: '/internships', label: 'Internships', icon: 'fa-search' },
+                { href: '/companies', label: 'Companies', icon: 'fa-building' },
+                { href: '/how-it-works', label: 'How it works', icon: 'fa-circle-question' },
+              ].map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-600"
+                >
+                  <i className={`fas ${l.icon} w-4 text-center text-slate-400`} />
+                  {l.label}
+                </Link>
+              ))}
               <div className="mt-1 border-t border-slate-100 pt-1">
                 <button
                   type="button"
@@ -460,8 +549,34 @@ export default function TopBar({
         </div>
       </div>
 
-      {/* Actions on mobile — full-width second row below the icons */}
-      {actions && <div className="mt-3 flex w-full items-center gap-3 sm:hidden">{actions}</div>}
+          {/* Actions on mobile — full-width second row below the icons */}
+          {mobileSearchOpen && (
+            <div className="mt-3 md:hidden">
+              <SearchBox
+                inputClassName="w-full"
+                boxRef={mobileSearchRef}
+                autoFocus
+                id="topbar-search-mobile"
+                query={query}
+                setQuery={setQuery}
+                setSearchOpen={setSearchOpen}
+                ensureSearchData={ensureSearchData}
+                searchOpen={searchOpen}
+                searchLoading={searchLoading}
+                searchFailed={searchFailed}
+                searchLoaded={searchLoaded}
+                allInterns={allInterns}
+                allTasks={allTasks}
+                allPrograms={allPrograms}
+                onNavigate={() => {
+                  setSearchOpen(false);
+                  setQuery('');
+                  setMobileSearchOpen(false);
+                }}
+              />
+            </div>
+          )}
+          {actions && <div className="mt-3 flex w-full items-center gap-3 sm:hidden">{actions}</div>}
     </header>
   );
 }
