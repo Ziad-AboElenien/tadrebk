@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { Check, Filter, Loader2 } from 'lucide-react';
 import type { Application } from '@/features/student/services/application.service';
 
 export type AppTab = 'All' | 'pending' | 'accepted' | 'rejected' | 'completed';
@@ -15,17 +15,9 @@ const TABS: { key: AppTab; label: string }[] = [
   { key: 'completed', label: 'Completed' },
 ];
 
-export interface ActivityItem {
-  title: string;
-  source: string;
-  points?: string;
-  time: string;
-}
-
 interface MyApplicationsSectionProps {
   applications: Application[];
   loading?: boolean;
-  activity?: ActivityItem[];
   cancellingId?: string | null;
   onCancel?: (app: Application) => void;
   onBrowse?: () => void;
@@ -56,24 +48,78 @@ const STATUS_CHIP: Record<string, string> = {
   completed: 'bg-blue-50 text-blue-600',
 };
 
+const STATUS_DOT: Record<string, string> = {
+  pending: 'bg-amber-500',
+  accepted: 'bg-emerald-500',
+  rejected: 'bg-rose-500',
+  completed: 'bg-blue-500',
+};
+
 export default function MyApplicationsSection({
   applications,
   loading = false,
-  activity = [],
   cancellingId = null,
   onCancel,
   onBrowse,
 }: MyApplicationsSectionProps) {
   const [active, setActive] = useState<AppTab>('All');
+  const [filterOpen, setFilterOpen] = useState(false);
   const visible =
     active === 'All' ? applications : applications.filter((a) => statusOf(a) === active);
+  const activeLabel = TABS.find((t) => t.key === active)?.label ?? 'All';
 
   return (
     <section>
       <h3 className="text-lg font-bold text-slate-900">My Applications</h3>
       <p className="text-sm text-slate-400">Track and manage your internship applications</p>
 
-      <div className="mt-4 grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-white p-2 sm:grid-cols-5">
+      {/* Mobile: filter icon + dropdown menu */}
+      <div className="relative mt-4 sm:hidden">
+        <button
+          type="button"
+          onClick={() => setFilterOpen((o) => !o)}
+          className={`flex w-full items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm transition-colors ${
+            active !== 'All' ? 'border-emerald-300 text-emerald-600' : 'border-slate-200 text-slate-600'
+          }`}
+        >
+          <Filter size={15} />
+          <span className="font-medium">{activeLabel}</span>
+          <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">
+            {visible.length}
+          </span>
+        </button>
+        {filterOpen && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={() => setFilterOpen(false)} />
+            <div className="absolute inset-x-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl shadow-slate-200/60">
+              {TABS.map((tab) => {
+                const count = tab.key === 'All' ? applications.length : applications.filter((a) => statusOf(a) === tab.key).length;
+                const selected = active === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => { setActive(tab.key); setFilterOpen(false); }}
+                    className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${
+                      selected ? 'bg-emerald-50 font-medium text-emerald-700' : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {tab.key !== 'All' && <span className={`h-2 w-2 rounded-full ${STATUS_DOT[tab.key]}`} />}
+                    <span className="flex-1">{tab.label}</span>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">
+                      {count}
+                    </span>
+                    {selected && <Check size={14} className="shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Desktop: tab pills */}
+      <div className="mt-4 hidden grid-cols-5 gap-1 rounded-2xl border border-slate-200 bg-white p-2 sm:grid">
         {TABS.map((tab) => (
           <button
             key={tab.key}
@@ -90,22 +136,6 @@ export default function MyApplicationsSection({
       </div>
 
       <div className="mt-4 rounded-2xl border border-slate-200 bg-white">
-        {activity.length > 0 && (
-          <div className="divide-y divide-slate-100">
-            {activity.map((a) => (
-              <div key={a.title} className="flex items-center gap-3 px-6 py-4">
-                <CheckCircle2 size={20} className="shrink-0 text-emerald-500" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-slate-900">{a.title}</p>
-                  <p className="text-xs text-slate-400">{a.source}</p>
-                </div>
-                {a.points && <span className="shrink-0 text-sm font-semibold text-emerald-600">{a.points}</span>}
-                <span className="w-12 shrink-0 text-right text-sm text-slate-400">{a.time}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
         {loading ? (
           <div className="space-y-2 border-t border-slate-100 px-6 py-6">
             {[0, 1].map((i) => (
@@ -133,8 +163,9 @@ export default function MyApplicationsSection({
               const st = statusOf(app);
               const internId = typeof app.internshipId === 'string' ? app.internshipId : app.internshipId._id;
               return (
-                <div key={app._id} className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
-                  <div className="min-w-0">
+                <div key={app._id} className="flex flex-wrap items-center gap-3 px-6 py-4">
+                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${STATUS_DOT[st]} ring-4 ring-slate-50`} />
+                  <div className="min-w-0 flex-1 basis-32">
                     <Link
                       href={`/internships/${internId}`}
                       className="block truncate text-sm font-semibold text-slate-900 hover:text-emerald-600"
@@ -143,7 +174,7 @@ export default function MyApplicationsSection({
                     </Link>
                     <p className="truncate text-xs text-slate-400">{internshipCompany(app)}</p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
+                  <div className="ml-auto flex shrink-0 items-center gap-2">
                     <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_CHIP[st]}`}>
                       {st.charAt(0).toUpperCase() + st.slice(1)}
                     </span>

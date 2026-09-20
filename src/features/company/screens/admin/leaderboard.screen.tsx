@@ -145,7 +145,7 @@ export default function LeaderboardScreen() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Internship Leaderboard" />
 
-        <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 space-y-6 overflow-y-auto px-[2.5%] py-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <h2 className="break-words text-2xl font-semibold text-slate-900">Top Talent Ranking</h2>
@@ -194,8 +194,10 @@ export default function LeaderboardScreen() {
                 return (
                   <div
                     key={r.intern._id}
-                    className={`relative rounded-2xl border p-6 text-center ${
-                      place === 1 ? 'border-emerald-200 bg-emerald-50 sm:-translate-y-2' : 'border-slate-200 bg-white'
+                    className={`relative min-w-0 rounded-2xl border p-6 text-center ${
+                      place === 1
+                        ? 'order-first border-emerald-200 bg-emerald-50 sm:order-none sm:-translate-y-2'
+                        : 'border-slate-200 bg-white'
                     }`}
                   >
                     <span className="absolute right-4 top-4">

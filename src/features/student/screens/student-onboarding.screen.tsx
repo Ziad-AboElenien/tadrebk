@@ -49,7 +49,7 @@ export default function StudentOnboardingScreen() {
       const fresh = await userService.getUserProfile(userId);
       dispatch(setUser(fresh));
       toastHelper.success('Profile updated! Welcome to Tadrebk.');
-      router.replace('/dashboard');
+      router.replace('/guide/student?welcome=1');
     } catch {
       toastHelper.error('Something went wrong. Please try again.');
     } finally {

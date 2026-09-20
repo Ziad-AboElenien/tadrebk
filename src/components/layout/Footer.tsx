@@ -20,7 +20,7 @@ const explore: FooterColumn = {
   title: 'Explore',
   links: [
     { label: 'Browse Internships', href: '/internships' },
-    { label: 'How It Works', href: '/how-it-works' },
+    { label: 'How It Works', href: '/guide/student' },
     { label: 'Our Partners', href: '/companies' },
   ],
 };
@@ -66,7 +66,7 @@ const adminColumns: FooterColumn[] = [
     links: [
       { label: 'Browse Internships', href: '/internships' },
       { label: 'Our Partners', href: '/companies' },
-      { label: 'How It Works', href: '/how-it-works' },
+      { label: 'How It Works', href: '/guide/student' },
     ],
   },
 ];
@@ -76,7 +76,7 @@ const guestColumns: FooterColumn[] = [
     title: 'Explore',
     links: [
       { label: 'Browse Internships', href: '/internships' },
-      { label: 'How It Works', href: '/how-it-works' },
+      { label: 'How It Works', href: '/guide/student' },
       { label: 'Our Partners', href: '/companies' },
     ],
   },

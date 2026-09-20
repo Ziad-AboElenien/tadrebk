@@ -10,6 +10,7 @@ import { signupSchema, type SignupFormData } from '@/features/auth/schemas/auth.
 import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage, getErrorStatus } from '@/lib/axios';
 import { LS_PENDING_EMAIL } from '@/lib/constants';
+import { setPendingCredentials } from '@/features/auth/lib/pending-credentials';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
@@ -122,10 +123,12 @@ export default function SignupForm({ role }: SignupFormProps) {
             }]
           : undefined,
       });
-      // Store pending email for the confirm-email page
+      // Store pending email for the confirm-email page + credentials (in-memory
+      // only) so the user is logged in automatically after verifying.
       if (typeof window !== 'undefined') {
         localStorage.setItem(LS_PENDING_EMAIL, data.email);
       }
+      setPendingCredentials({ email: data.email, password: data.password });
       toastHelper.success('Account created! Please check your email for the OTP.');
       router.push('/confirm-email');
     } catch (err) {
@@ -141,6 +144,7 @@ export default function SignupForm({ role }: SignupFormProps) {
           if (typeof window !== 'undefined') {
             localStorage.setItem(LS_PENDING_EMAIL, data.email);
           }
+          setPendingCredentials({ email: data.email, password: data.password });
           toastHelper.info('This email is already registered but not confirmed. We sent you a new code.');
           router.push('/confirm-email');
           return;

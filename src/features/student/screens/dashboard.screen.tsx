@@ -20,7 +20,7 @@ import CheckInCard, { CheckInVariant } from '@/features/student/components/dashb
 import StudentProfileCard from '@/features/student/components/dashboard/StudentProfileCard';
 import DashboardSidebar from '@/features/student/components/dashboard/DashboardSidebar';
 import MyTasksSection from '@/features/student/components/dashboard/MyTasksSection';
-import MyApplicationsSection, { ActivityItem } from '@/features/student/components/dashboard/MyApplicationsSection';
+import MyApplicationsSection from '@/features/student/components/dashboard/MyApplicationsSection';
 import InternshipPanel, {
   PanelFeedback,
   PanelRequirement,
@@ -253,14 +253,14 @@ export default function StudentDashboardScreen() {
   );
 
   const handleTaskAction = useCallback(
-    async (taskId: string, action: 'start' | 'submit') => {
+    async (taskId: string, action: 'start' | 'submit', note?: string) => {
       if (!companyId) return;
       setActingId(taskId);
       try {
         const updated =
           action === 'start'
             ? await internTaskService.startTask(companyId, taskId)
-            : await internTaskService.submitTask(companyId, taskId);
+            : await internTaskService.submitTask(companyId, taskId, note);
         setTasks((prev) => prev.map((t) => (t._id === taskId ? updated : t)));
         toastHelper.success(action === 'start' ? 'Task started' : 'Task submitted for review');
       } catch (err) {
@@ -283,15 +283,6 @@ export default function StudentDashboardScreen() {
   const education = user?.education?.[0];
   const doneCount = applications.filter((a) => a.status === 'accepted' && a.completed).length;
 
-  const activity: { title: string; source: string; time: string }[] = applications.slice(0, 3).map((a) => ({
-    title:
-      a.status === 'accepted'
-        ? `Accepted — ${typeof a.internshipId === 'object' ? a.internshipId.title : 'Internship'}`
-        : `Applied — ${typeof a.internshipId === 'object' ? a.internshipId.title : 'Internship'}`,
-    source: 'Application activity',
-    time: formatTime(a.updatedAt || a.createdAt),
-  }));
-
   const requirements: PanelRequirement[] = tasks
     .filter((t) => t.status === 'todo' || t.status === 'in_review')
     .slice(0, 5)
@@ -307,7 +298,7 @@ export default function StudentDashboardScreen() {
   if (hydrating) {
     return (
       <div className="min-h-screen bg-slate-50">
-        <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-6 py-10">
+        <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-[2.5%] py-6 sm:px-6 sm:py-10">
           <div className="h-8 w-64 animate-pulse rounded-full bg-slate-200" />
           <div className="h-64 animate-pulse rounded-2xl bg-slate-100" />
           <div className="h-64 animate-pulse rounded-2xl bg-slate-100" />
@@ -336,7 +327,7 @@ export default function StudentDashboardScreen() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
-      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-6 py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 px-[2.5%] py-6 sm:px-6 sm:py-10">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-slate-900">Welcome back, {firstName}!</h2>
@@ -394,14 +385,13 @@ export default function StudentDashboardScreen() {
             loading={loadingTasks}
             actingId={actingId}
             onStart={(id) => handleTaskAction(id, 'start')}
-            onSubmit={(id) => handleTaskAction(id, 'submit')}
+            onSubmit={(id, note) => handleTaskAction(id, 'submit', note)}
           />
         )}
 
         <MyApplicationsSection
           applications={applications}
           loading={loadingApps}
-          activity={activity}
           cancellingId={cancellingId}
           onCancel={handleCancel}
           onBrowse={() => router.push('/internships')}

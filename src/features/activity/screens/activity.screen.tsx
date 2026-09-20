@@ -10,7 +10,6 @@ import { syncInternshipsClosedState } from '@/features/internship/utils/closedIn
 import { getCompanyImgUrl, CloudinaryResource } from '@/features/company/types';
 import { CATEGORY_LABELS } from '@/features/student/types';
 import MediaImage from '@/components/ui/MediaImage';
-import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
@@ -126,7 +125,24 @@ function StudentActivity() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-24"><Spinner /></div>
+        <div className="relative">
+          <div className="absolute left-[15px] top-3 bottom-3 w-0.5 bg-slate-100" />
+          <div className="space-y-5">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="relative pl-12">
+                <span className="absolute left-[7px] top-7 h-[18px] w-[18px] animate-pulse rounded-full bg-slate-200" />
+                <div className="animate-pulse rounded-3xl border border-slate-100 bg-white p-5 sm:p-6">
+                  <div className="h-5 w-24 rounded-full bg-slate-100" />
+                  <div className="mt-3 h-6 w-3/4 rounded-lg bg-slate-100" />
+                  <div className="mt-2 flex gap-2">
+                    <div className="h-4 w-28 rounded-full bg-slate-100" />
+                    <div className="h-4 w-20 rounded-full bg-slate-100" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : applications.length === 0 ? (
         <div className="bg-white border border-slate-100 rounded-3xl p-16 text-center shadow-sm">
           <div className="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-5">
@@ -286,7 +302,23 @@ function CompanyActivity() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-24"><Spinner /></div>
+        <div className="space-y-6">
+          {[0, 1].map((i) => (
+            <div key={i} className="animate-pulse overflow-hidden rounded-3xl border border-slate-100 bg-white">
+              <div className="flex items-center gap-3 p-5 sm:p-6">
+                <div className="h-12 w-12 shrink-0 rounded-2xl bg-slate-100" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-40 rounded-full bg-slate-100" />
+                  <div className="h-3 w-24 rounded-full bg-slate-100" />
+                </div>
+              </div>
+              <div className="space-y-2 px-5 pb-6 sm:px-6">
+                <div className="h-5 w-2/3 rounded-lg bg-slate-100" />
+                <div className="h-4 w-1/2 rounded-lg bg-slate-100" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : internships.length === 0 ? (
         <div className="bg-white border border-slate-100 rounded-3xl p-16 text-center shadow-sm">
           <div className="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-5">

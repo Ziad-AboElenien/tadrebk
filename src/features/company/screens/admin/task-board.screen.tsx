@@ -20,6 +20,9 @@ import {
   MoreHorizontal,
   Trash2,
   GripVertical,
+  LayoutGrid,
+  List,
+  X,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
@@ -422,6 +425,135 @@ export default function TaskBoardScreen() {
 
   const activeIntern = internFilter ? internMap.get(internFilter) : undefined;
 
+  const filterPanel = (
+    <>
+      <div className="flex items-center justify-between bg-slate-50/80 px-4 py-3">
+        <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+          <Filter size={14} className="text-emerald-500" /> Filters
+        </p>
+        {activeFilterCount > 0 && (
+          <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+            {activeFilterCount} active
+          </span>
+        )}
+      </div>
+      <div className="max-h-[60vh] space-y-4 overflow-y-auto p-4">
+        <div>
+          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <Users2 size={12} /> Intern
+          </p>
+          <Select
+            value={internFilter}
+            onChange={(e) => setInternFilter(e.target.value)}
+            placeholder="All interns"
+            className="mt-2"
+          >
+            <option value="">All interns</option>
+            {interns.map((i) => (
+              <option key={i._id} value={i._id}>
+                {`${i.firstName} ${i.lastName}`.trim() || i.email}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Priority</p>
+          <div className="mt-2 grid grid-cols-3 gap-1.5">
+            {['high', 'medium', 'low'].map((p) => (
+              <button
+                key={p}
+                onClick={() =>
+                  setPriorityFilter((prev) =>
+                    prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p],
+                  )
+                }
+                className={`rounded-xl border px-3 py-2 text-sm capitalize transition-all ${
+                  priorityFilter.includes(p)
+                    ? 'border-emerald-300 bg-emerald-50 font-medium text-emerald-700 shadow-sm'
+                    : 'border-slate-100 bg-white text-slate-600 hover:border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <span className="flex items-center justify-center gap-1">
+                  {p}
+                  {priorityFilter.includes(p) && <Check size={13} className="shrink-0" />}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Status</p>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            {STATUS_ORDER.map((s) => (
+              <button
+                key={s.key}
+                onClick={() =>
+                  setStatusFilter((prev) =>
+                    prev.includes(s.key) ? prev.filter((x) => x !== s.key) : [...prev, s.key],
+                  )
+                }
+                className={`rounded-xl border px-3 py-2 text-sm transition-all ${
+                  statusFilter.includes(s.key)
+                    ? 'border-emerald-300 bg-emerald-50 font-medium text-emerald-700 shadow-sm'
+                    : 'border-slate-100 bg-white text-slate-600 hover:border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                <span className="flex items-center justify-center gap-1">
+                  {s.title}
+                  {statusFilter.includes(s.key) && <Check size={13} className="shrink-0" />}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <ArrowUpDown size={12} /> Sort by
+          </p>
+          <div className="mt-2 space-y-1">
+            {[
+              { key: 'default', label: 'Default order' },
+              { key: 'due', label: 'Due date' },
+              { key: 'title', label: 'Title A–Z' },
+              { key: 'priority', label: 'Priority' },
+            ].map((o) => (
+              <button
+                key={o.key}
+                onClick={() => setSortBy(o.key as typeof sortBy)}
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                  sortBy === o.key ? 'bg-emerald-50 font-medium text-emerald-700' : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {o.label}
+                {sortBy === o.key && <Check size={14} className="shrink-0" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-4 py-3">
+        <button
+          onClick={() => {
+            setPriorityFilter([]);
+            setStatusFilter([]);
+            setInternFilter('');
+            setSortBy('default');
+          }}
+          disabled={activeFilterCount === 0}
+          className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-rose-500 disabled:opacity-40"
+        >
+          Clear all
+        </button>
+        <button
+          onClick={() => setFilterOpen(false)}
+          className="rounded-lg bg-emerald-500 px-5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-emerald-600"
+        >
+          Apply
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Tasks" />
@@ -429,7 +561,7 @@ export default function TaskBoardScreen() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Task Board" />
 
-        <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 space-y-6 overflow-y-auto px-[2.5%] py-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
               <h2 className="truncate text-2xl font-semibold text-slate-900">
@@ -439,16 +571,90 @@ export default function TaskBoardScreen() {
               </h2>
               <p className="text-sm text-slate-500">Track intern contributions and project milestones in real-time.</p>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="relative">
-                <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  placeholder="Filter tasks..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-                />
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+              {/* Mobile: one row — open search + filter icon + view icons. Desktop: inline field + full buttons. */}
+              <div className="relative flex items-center gap-2 sm:contents">
+                <div className="relative min-w-0 flex-1 sm:hidden">
+                  <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    placeholder="Filter tasks..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-9 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch('')}
+                      aria-label="Clear search"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                <div className="relative hidden sm:block">
+                  <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    placeholder="Filter tasks..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                  />
+                </div>
+                <Link
+                  href="/company/admin/tasks/new"
+                  className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-600 sm:flex"
+                >
+                  <Plus size={16} className="shrink-0" />
+                  <span>New Task</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setFilterOpen((o) => !o)}
+                  aria-label="Open filters"
+                  className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border bg-white transition-colors sm:hidden ${
+                    activeFilterCount > 0 ? 'border-emerald-300 text-emerald-600' : 'border-slate-200 text-slate-500'
+                  }`}
+                >
+                  <Filter size={15} />
+                  {activeFilterCount > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-semibold text-white">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+                <div className="flex shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 sm:hidden" role="group" aria-label="Switch view">
+                  <button
+                    type="button"
+                    onClick={() => setView('board')}
+                    aria-label="Board view"
+                    title="Board view"
+                    className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
+                      view === 'board' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                    }`}
+                  >
+                    <LayoutGrid size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setView('list')}
+                    aria-label="List view"
+                    title="List view"
+                    className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
+                      view === 'list' ? 'bg-emerald-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                    }`}
+                  >
+                    <List size={14} />
+                  </button>
+                </div>
+                {filterOpen && (
+                  <div className="absolute inset-x-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/60 sm:hidden">
+                    {filterPanel}
+                  </div>
+                )}
               </div>
+              <div className="hidden items-center gap-2.5 sm:flex sm:flex-wrap">
               <GlassFilter
                 options={[
                   { key: 'board', label: 'Board View' },
@@ -604,12 +810,7 @@ export default function TaskBoardScreen() {
                   </>
                 )}
               </div>
-              <Link
-                href="/company/admin/tasks/new"
-                className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600"
-              >
-                <Plus size={16} /> Create Task
-              </Link>
+              </div>
             </div>
           </div>
 

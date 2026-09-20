@@ -6,12 +6,16 @@ import { toastHelper } from '@/lib/toast';
 import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage, getErrorStatus } from '@/lib/axios';
 import { LS_PENDING_EMAIL, LS_INTENDED_ROLE } from '@/lib/constants';
+import { takePendingCredentials } from '@/features/auth/lib/pending-credentials';
+import { completeLogin } from '@/features/auth/lib/complete-login';
+import { useAppDispatch } from '@/store/store';
 import OTPInput from '@/features/auth/components/OTPInput';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 
 function ConfirmEmailInner() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
@@ -51,13 +55,38 @@ function ConfirmEmailInner() {
     setIsSubmitting(true);
     try {
       await authService.confirmEmail({ email, otp });
-      toastHelper.success('Email confirmed! Welcome to Tadrebk!');
       localStorage.removeItem(LS_PENDING_EMAIL);
 
       // Route based on intended role
       const intendedRole = localStorage.getItem(LS_INTENDED_ROLE);
       localStorage.removeItem(LS_INTENDED_ROLE);
-      if (intendedRole === 'company') {
+      const formRole = intendedRole === 'company' ? 'company' : 'student';
+
+      // Auto-login: the signup form stashed the credentials in memory so the
+      // user lands straight in their account after verifying.
+      const creds = takePendingCredentials();
+      if (creds && creds.email.toLowerCase() === email.toLowerCase()) {
+        try {
+          const { tokens } = await authService.login(creds);
+          const { redirect, needsConfirmation } = await completeLogin(dispatch, {
+            tokens,
+            formRole,
+            next: formRole === 'company' ? '/company/onboarding' : null,
+          });
+          if (needsConfirmation) {
+            router.push('/login/student');
+            return;
+          }
+          toastHelper.success('Email confirmed! Welcome to Tadrebk!');
+          router.push(redirect);
+          return;
+        } catch {
+          // Auto-login failed (e.g. page refreshed) — fall back to manual login.
+        }
+      }
+
+      toastHelper.success('Email confirmed! Welcome to Tadrebk!');
+      if (formRole === 'company') {
         router.push('/login/company?next=/company/onboarding');
       } else {
         router.push('/login/student');

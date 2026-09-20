@@ -1,6 +1,7 @@
 'use client';
 
-import { Clock, Search, FileText, Flame } from 'lucide-react';
+import { useState } from 'react';
+import { Clock, Search, FileText, Flame, Check } from 'lucide-react';
 
 export type CheckInVariant = 'prompt' | 'completed' | 'streak-broken';
 
@@ -44,9 +45,118 @@ export default function CheckInCard({
   onFreshStart,
 }: CheckInCardProps) {
   const s: CheckInStreak = { ...DEFAULT_STREAK, ...streak };
+  const [open, setOpen] = useState(false);
+  const weekDone = s.weeklyProgress.filter(Boolean).length;
+
+  const mobileTitle =
+    variant === 'completed' ? 'Checked in' : variant === 'streak-broken' ? 'Streak broken' : 'Daily check-in';
+  const mobileStatus =
+    variant === 'completed'
+      ? `Today at ${checkedAt || ''}`.trim() || result
+      : variant === 'streak-broken'
+        ? `${s.beforeBreak}-day streak at risk`
+        : s.todayStatus;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+    <>
+      {/* ── Mobile: floating streak circle ── */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:hidden">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-label="Toggle streak details"
+            className={`relative flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-full text-white shadow-lg transition-transform duration-500 ease-out ${
+              variant === 'streak-broken'
+                ? 'bg-gradient-to-br from-slate-400 to-slate-500 shadow-slate-200'
+                : 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-orange-200'
+            } ${open ? 'rotate-[360deg] scale-105' : ''}`}
+          >
+            <Flame size={18} />
+            <span className="text-lg font-bold leading-none">{variant === 'streak-broken' ? s.beforeBreak : s.current}</span>
+            <span className="text-[9px] font-medium uppercase leading-none opacity-90">days</span>
+          </button>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold text-slate-900">{mobileTitle}</p>
+            <p className="truncate text-xs text-slate-400">{mobileStatus}</p>
+          </div>
+          {variant === 'completed' ? (
+            <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-600">
+              <Check size={13} /> Done
+            </span>
+          ) : (
+            <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-medium text-slate-500">
+              Tap the circle
+            </span>
+          )}
+        </div>
+
+        {/* Satellite stats — spin open around the circle */}
+        <div
+          className={`grid transition-all duration-500 ease-out ${
+            open ? 'mt-3 grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+          }`}
+        >
+          <div className="overflow-hidden">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-xl bg-slate-50 px-2 py-2.5 text-center">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Today</p>
+                <p className="mt-0.5 truncate text-xs font-bold text-slate-900">
+                  {variant === 'completed' ? 'Present' : variant === 'streak-broken' ? 'Missed' : 'Pending'}
+                </p>
+              </div>
+              <div className="rounded-xl bg-slate-50 px-2 py-2.5 text-center">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">This week</p>
+                <p className="mt-0.5 text-xs font-bold text-slate-900">{weekDone}/7 days</p>
+              </div>
+              <div className="rounded-xl bg-slate-50 px-2 py-2.5 text-center">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                  {variant === 'streak-broken' ? 'Recovery' : 'Streak'}
+                </p>
+                <p className="mt-0.5 text-xs font-bold text-slate-900">
+                  {variant === 'streak-broken' ? `${s.recoveryHours}h left` : `${s.current} days`}
+                </p>
+              </div>
+            </div>
+
+            {variant === 'prompt' && (
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={() => onCheckIn?.('Looking for internships')}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2.5 text-xs font-semibold text-white hover:bg-emerald-600"
+                >
+                  <Search size={13} /> Looking
+                </button>
+                <button
+                  onClick={() => onCheckIn?.('Applying for internships')}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2.5 text-xs font-semibold text-white hover:bg-emerald-600"
+                >
+                  <FileText size={13} /> Applying
+                </button>
+              </div>
+            )}
+            {variant === 'streak-broken' && (
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={onRecover}
+                  className="flex-1 rounded-xl bg-emerald-500 px-3 py-2.5 text-xs font-semibold text-white hover:bg-emerald-600"
+                >
+                  Recover Streak
+                </button>
+                <button
+                  onClick={onFreshStart}
+                  className="flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Start new
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Desktop / tablet: full card ── */}
+      <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white sm:block">
       <div className="h-1 bg-emerald-500" />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto]">
@@ -146,6 +256,7 @@ export default function CheckInCard({
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

@@ -230,7 +230,7 @@ export default function ProjectDetailScreen() {
         <Sidebar active="Projects" />
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar title="Project Details" />
-        <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8 animate-pulse">
+        <main className="flex-1 space-y-6 px-[2.5%] py-4 sm:p-6 lg:p-8 animate-pulse">
           <div className="h-36 rounded-2xl bg-slate-200 sm:h-44" />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
@@ -386,7 +386,7 @@ export default function ProjectDetailScreen() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Project Details" />
 
-        <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 space-y-6 overflow-y-auto px-[2.5%] py-4 sm:p-6 lg:p-8">
           <div
             className="relative overflow-hidden rounded-2xl p-6 shadow-lg shadow-slate-200/60 sm:p-8"
             style={{ background: `linear-gradient(120deg, ${project.color ?? '#10B981'} 0%, ${project.color ?? '#10B981'}b3 55%, ${project.color ?? '#10B981'}80 100%)` }}
@@ -400,15 +400,15 @@ export default function ProjectDetailScreen() {
               style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)', backgroundSize: '18px 18px' }}
             />
             <div className="relative flex flex-wrap items-end justify-between gap-4">
-              <div className="flex min-w-0 items-center gap-4">
+              <div className="flex min-w-0 flex-1 items-center gap-4">
                 <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/25 text-white shadow-lg backdrop-blur-sm">
                   <FolderKanban size={26} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-white/80">
+                  <p className="truncate text-xs font-semibold uppercase tracking-widest text-white/80">
                     Project{program ? ` · ${program.name}` : ''}
                   </p>
-                  <h2 className="truncate text-2xl font-bold text-white sm:text-3xl">{project.name}</h2>
+                  <h2 className="break-words text-xl font-bold text-white sm:text-3xl">{project.name}</h2>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -427,9 +427,6 @@ export default function ProjectDetailScreen() {
               <Link href="/company/admin/projects" className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
                 <ArrowLeft size={15} /> Back to Projects
               </Link>
-              <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${STATUS_STYLES[project.status] || 'bg-slate-100 text-slate-500'}`}>
-                {project.status}
-              </span>
             </div>
             <div className="relative flex flex-wrap items-center gap-3">
               <div className="relative">

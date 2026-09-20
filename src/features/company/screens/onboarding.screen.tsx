@@ -85,7 +85,7 @@ export default function CompanyOnboardingScreen() {
       await refreshAuthTokens();
       localStorage.removeItem(LS_PENDING_ONBOARDING);
       toastHelper.success('Company profile created successfully!');
-      router.push('/company/admin');
+      router.push('/guide/company?welcome=1');
     } catch (err) {
       setFormError(getErrorMessage(err));
     }

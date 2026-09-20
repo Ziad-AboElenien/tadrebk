@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  Search,
   Plus,
   MoreHorizontal,
   Calendar,
@@ -17,6 +16,7 @@ import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import ExpandableSearch from '@/components/ui/ExpandableSearch';
 import GlassFilter from '@/components/ui/GlassFilter';
 import { programService } from '@/features/company/services/program.service';
 import { Program } from '@/features/company/types/management';
@@ -119,7 +119,7 @@ export default function ProgramsScreen() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopBar title="Programs" />
 
-        <main className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 space-y-6 overflow-y-auto px-[2.5%] py-4 sm:p-6 lg:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-2xl font-semibold text-slate-900">Internship Programs</h2>
@@ -133,38 +133,38 @@ export default function ProgramsScreen() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <p className="text-xs uppercase tracking-wide text-slate-400">Total Programs</p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">{total}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <p className="text-xs uppercase tracking-wide text-slate-400">Active</p>
-              <p className="mt-2 text-2xl font-bold text-emerald-600">{activeCount}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <p className="text-xs uppercase tracking-wide text-slate-400">Upcoming</p>
-              <p className="mt-2 text-2xl font-bold text-blue-600">{upcomingCount}</p>
+          <div className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
+            <div className="grid grid-cols-3 divide-x divide-slate-200/70">
+              <div className="px-2 text-center">
+                <p className="text-[11px] uppercase tracking-wide text-slate-400 sm:text-xs">Total Programs</p>
+                <p className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">{total}</p>
+              </div>
+              <div className="px-2 text-center">
+                <p className="text-[11px] uppercase tracking-wide text-slate-400 sm:text-xs">Active</p>
+                <p className="mt-1 text-xl font-bold text-emerald-600 sm:text-2xl">{activeCount}</p>
+              </div>
+              <div className="px-2 text-center">
+                <p className="text-[11px] uppercase tracking-wide text-slate-400 sm:text-xs">Upcoming</p>
+                <p className="mt-1 text-xl font-bold text-blue-600 sm:text-2xl">{upcomingCount}</p>
+              </div>
             </div>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-3">
+              <ExpandableSearch
+                value={search}
+                onChange={setSearch}
+                placeholder="Search programs..."
+                id="programs-search"
+              />
+              <div className="flex min-w-0 flex-wrap gap-2">
                 <GlassFilter
                   options={FILTERS}
                   value={filter}
                   onChange={(key) => setFilter(key)}
                   ariaLabel="Filter programs by status"
-                />
-              </div>
-              <div className="relative">
-                <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  placeholder="Search programs..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                  compact
                 />
               </div>
             </div>

@@ -9,31 +9,13 @@ import Link from 'next/link';
 import { loginSchema, type LoginFormData } from '@/features/auth/schemas/auth.schemas';
 import * as authService from '@/features/auth/server/auth.service';
 import { getErrorMessage } from '@/lib/axios';
-import { LS_COMPANY_ID, LS_PENDING_ONBOARDING, LS_PENDING_EMAIL } from '@/lib/constants';
 import { useAppDispatch } from '@/store/store';
-import { setTokens, setRole } from '@/store/authSlice';
-import { setUser } from '@/store/userSlice';
-import { setCompany } from '@/store/companySlice';
+import { completeLogin } from '@/features/auth/lib/complete-login';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import AuthSplit from '@/features/auth/components/AuthSplit';
 import { GraduationCap, Building2, ShieldCheck, BadgeCheck, Zap } from 'lucide-react';
-import { companyService } from '@/features/company/services/company.service';
-import { userService } from '@/features/student/services/user.service';
 import { useGoogleAuth } from '@/features/auth/hooks/useGoogleAuth';
-
-function parseJwt(token: string) {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
-      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    ).join(''));
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
-}
 
 interface LoginFormProps {
   role: 'student' | 'company' | 'admin';
@@ -57,89 +39,21 @@ export default function LoginForm({ role }: LoginFormProps) {
   async function onSubmit(data: LoginFormData) {
     try {
       const { tokens } = await authService.login(data);
-
-      const decoded = parseJwt(tokens.accessToken);
-      const userId: string = decoded?.id;
-      if (!userId) {
-        throw new Error('Could not read session from server response. Please try again.');
-      }
-
-      // Persist the fresh tokens immediately so any authenticated call after
-      // this uses them instead of a stale token left in localStorage.
-      dispatch(setTokens({ tokens, userId, role: 'student' }));
-
-      const user = await userService.getUserProfile(userId);
-
-      // Check if JWT says admin, OR user profile has admin role
-      if (decoded?.role === 'admin' || (user as { role?: string }).role === 'admin') {
-        dispatch(setRole('admin'));
-        dispatch(setUser(user));
-        toastHelper.success(`Welcome back, ${user.firstName}!`);
-        router.push('/admin/dashboard');
-        return;
-      }
-
-      const { companies } = await companyService.listCompanies({ limit: 50 });
-
-      let userRole: 'student' | 'company' = 'student';
-      const owned = companies.find((c) => {
-        const createdBy =
-          typeof c.createdBy === 'object' && c.createdBy !== null
-            ? (c.createdBy as { _id: string })._id
-            : (c.createdBy as string);
-        return createdBy === userId;
-      });
-      if (owned) {
-        userRole = 'company';
-        const full = await companyService.getCompanyById(owned._id);
-        dispatch(setCompany(full));
-      } else {
-        // Fallback: check if companyId saved in localStorage actually exists
-        const savedCompanyId = localStorage.getItem(LS_COMPANY_ID);
-        if (savedCompanyId) {
-          try {
-            const savedCompany = await companyService.getCompanyById(savedCompanyId);
-            if (savedCompany) {
-              userRole = 'company';
-              dispatch(setCompany(savedCompany));
-            }
-          } catch { /* saved company no longer exists */ }
-        }
-      }
-
-      dispatch(setRole(userRole));
-      dispatch(setUser(user));
-
-      if (user.isConfirmed === false) {
-        localStorage.setItem(LS_PENDING_EMAIL, user.email);
-        toastHelper.info('Please verify your email to continue.');
-        router.push('/confirm-email?resend=true');
-        return;
-      }
-
-      toastHelper.success(`Welcome back, ${user.firstName}!`);
-
       const next = searchParams.get('next');
-      // Only allow same-origin relative paths — reject "//evil.com" and "\evil.com"
-      if (next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\')) {
-        // Company-intent user without a company must complete onboarding first
-        if (userRole !== 'company' && next.startsWith('/company/')) {
-          localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
-        }
-        router.push(next);
+      const { redirect, needsConfirmation } = await completeLogin(dispatch, {
+        tokens,
+        formRole: role,
+        next,
+      });
+
+      if (needsConfirmation) {
+        toastHelper.info('Please verify your email to continue.');
+        router.push(redirect);
         return;
       }
 
-      if (userRole === 'company') {
-        router.push('/company/admin');
-      } else if (role === 'company') {
-        localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
-        router.push('/company/onboarding');
-      } else if (!user.categories || user.categories.length === 0) {
-        router.push('/onboarding');
-      } else {
-        router.push('/dashboard');
-      }
+      toastHelper.success('Welcome back!');
+      router.push(redirect);
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     }

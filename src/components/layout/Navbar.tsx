@@ -123,7 +123,6 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-8">
           {[
             { href: '/internships', label: 'Internships' },
-            { href: '/how-it-works', label: 'How it works' },
             { href: '/companies', label: 'Our Partners' },
           ].map((link) => (
             <Link
@@ -453,9 +452,6 @@ export default function Navbar() {
               <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-3">Browse</p>
               <Link href="/internships" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                 <i className="fas fa-search w-5 text-center text-gray-400" /> Internships
-              </Link>
-              <Link href="/how-it-works" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
-                <i className="fas fa-circle-question w-5 text-center text-gray-400" /> How it works
               </Link>
               <Link href="/companies" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-primary transition-all">
                 <i className="fas fa-handshake w-5 text-center text-gray-400" /> Our Partners
