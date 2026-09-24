@@ -8,11 +8,13 @@ import {
   Calendar,
   Paperclip,
   FileText,
+  Filter,
   UploadCloud,
   X,
   Trash2,
   CheckCircle2,
   Save,
+  Send,
   Layers,
   Users2,
   MoreHorizontal,
@@ -37,6 +39,7 @@ import {
 } from '@/features/company/types/management';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
+import { parseFeedbackThread } from '@/features/intern/utils/student-task';
 
 const STATUS_LABEL: Record<TaskStatus, string> = {
   todo: 'To Do',
@@ -80,6 +83,12 @@ function formatDate(dateStr?: string | null): string {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function formatDateTime(dateStr?: string | null): string {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+}
+
 function formatBytes(bytes: number): string {
   if (!bytes) return '';
   if (bytes < 1024) return `${bytes} B`;
@@ -94,6 +103,16 @@ function initials(name: string): string {
     .slice(0, 2)
     .join('')
     .toUpperCase();
+}
+
+/** Join first/last name without repeating a duplicated part (bad data shows "Ziad Elsayed Ziad Elsayed"). */
+function displayInternName(firstName?: string | null, lastName?: string | null, email?: string | null): string {
+  const first = (firstName || '').trim();
+  const last = (lastName || '').trim();
+  if (first && first.toLowerCase() === last.toLowerCase()) return first;
+  const words = `${first} ${last}`.trim().split(/\s+/).filter(Boolean);
+  const deduped = words.filter((w, i) => w.toLowerCase() !== (words[i - 1] || '').toLowerCase());
+  return deduped.join(' ') || email || '';
 }
 
 const SUGGESTED_TAGS = ['Programming', 'Design', 'Documentation', 'Research', 'QA Testing'];
@@ -139,6 +158,12 @@ export default function TaskDetailScreen() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const bulkPanelRef = useRef<HTMLElement>(null);
   const [bulkTitle, setBulkTitle] = useState('');
+  // Assigned-students panel: submitted-only filter + bulk feedback selection
+  const [submittedOnly, setSubmittedOnly] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkFb, setBulkFb] = useState('');
+  const [bulkPoints, setBulkPoints] = useState('');
+  const [savingBulkFb, setSavingBulkFb] = useState(false);
   const [bulkDescription, setBulkDescription] = useState('');
   const [bulkPriority, setBulkPriority] = useState<TaskPriority | ''>('');
   const [bulkDueDate, setBulkDueDate] = useState('');
@@ -271,7 +296,7 @@ export default function TaskDetailScreen() {
           { label: 'Created', date: task.createdAt, done: true },
           { label: 'Submitted by intern', date: task.submittedAt, done: !!task.submittedAt },
           {
-            label: task.pointsAwarded != null ? `Reviewed · ${task.pointsAwarded} pts` : 'Reviewed',
+            label: task.pointsAwarded != null ? `Reviewed · ${task.pointsAwarded}/10` : 'Reviewed',
             date: task.reviewedAt,
             done: !!task.reviewedAt,
           },
@@ -300,10 +325,10 @@ export default function TaskDetailScreen() {
       </h3>
 
       <div className="mt-4 space-y-2">
-        {task.attachments.length === 0 ? (
+        {(task.attachments ?? []).length === 0 ? (
           <p className="text-sm text-slate-400">No attachments yet.</p>
         ) : (
-          task.attachments.map((att) => (
+          (task.attachments ?? []).map((att) => (
             <div key={att.public_id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5 text-sm">
               <a href={att.secure_url} target="_blank" rel="noreferrer" className="flex min-w-0 items-center gap-2 text-slate-700 hover:text-emerald-600">
                 <Paperclip size={14} className="shrink-0 text-slate-400" />
@@ -383,7 +408,7 @@ export default function TaskDetailScreen() {
       const updated = await taskService.transitionTask(companyId, activeTaskId, {
         to,
         reviewerFeedback: feedback.trim() || undefined,
-        pointsAwarded: to === 'complete' && points ? Number(points) : undefined,
+        pointsAwarded: to === 'complete' && points ? Math.min(10, Math.max(0, Number(points))) : undefined,
       });
       syncGroupRow(updated);
       toastHelper.success(`Task moved to ${STATUS_LABEL[to]}`);
@@ -405,6 +430,48 @@ export default function TaskDetailScreen() {
       toastHelper.error(getErrorMessage(err));
     } finally {
       setSavingFeedback(false);
+    }
+  };
+
+  const handleBulkFeedback = async () => {
+    if (!companyId || !groupId || selectedIds.length === 0) return;
+    const fb = bulkFb.trim();
+    const pts = bulkPoints ? Math.min(10, Math.max(0, Number(bulkPoints))) : undefined;
+    if (!fb && pts === undefined) {
+      toastHelper.error('Write feedback or set points first.');
+      return;
+    }
+    setSavingBulkFb(true);
+    try {
+      const results = await Promise.all(
+        selectedIds.map(async (id) => {
+          const row = groupRows.find((r) => r._id === id);
+          if (!row || row.status === 'archived') return null;
+          if (row.status !== 'complete') {
+            return taskService.transitionTask(companyId, id, {
+              to: 'complete',
+              reviewerFeedback: fb || undefined,
+              pointsAwarded: pts,
+            });
+          }
+          if (fb) return taskService.saveFeedback(companyId, id, fb);
+          return null;
+        }),
+      );
+      const updated = results.filter((r): r is Task => r !== null);
+      if (updated.length > 0) {
+        setGroupRows((prev) => prev.map((r) => updated.find((u) => u._id === r._id) ?? r));
+        const current = updated.find((u) => u._id === activeTaskId);
+        if (current) applyTask(current);
+        toastHelper.success(`Feedback sent to ${updated.length} student${updated.length > 1 ? 's' : ''}`);
+      }
+      setSelectedIds([]);
+      setBulkFb('');
+      setBulkPoints('');
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setSavingBulkFb(false);
     }
   };
 
@@ -756,24 +823,74 @@ export default function TaskDetailScreen() {
 
           {groupId && groupRows.length > 0 && (
             <section className="rounded-2xl border border-slate-200 bg-white p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="flex items-center gap-2 font-semibold text-slate-900">
                   <Users2 size={18} className="text-emerald-500" /> Assigned Students
                   <span className="text-sm font-normal text-slate-400">({groupRows.length})</span>
                 </h3>
-                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {groupRows.map((r) => {
-                    const iid = rowInternId(r.internId);
-                    const f = interns.find((i) => i._id === iid);
-                    const selected = r._id === task._id;
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSubmittedOnly((v) => !v)}
+                    className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      submittedOnly
+                        ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                        : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Filter size={12} /> Submitted only
+                  </button>
+                  {(() => {
+                    const visible = submittedOnly ? groupRows.filter((r) => r.submittedAt) : groupRows;
+                    const selectable = visible.filter((r) => r.status !== 'archived');
+                    const allChecked = selectable.length > 0 && selectable.every((r) => selectedIds.includes(r._id));
                     return (
                       <button
-                        key={r._id}
-                        onClick={() => applyTask(r)}
-                        className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
-                          selected
-                            ? 'border-emerald-300 bg-emerald-50/50'
+                        type="button"
+                        onClick={() =>
+                          setSelectedIds(allChecked ? [] : selectable.map((r) => r._id))
+                        }
+                        className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                      >
+                        {allChecked ? 'Deselect all' : `Select all (${selectable.length})`}
+                      </button>
+                    );
+                  })()}
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {(submittedOnly ? groupRows.filter((r) => r.submittedAt) : groupRows).map((r) => {
+                  const iid = rowInternId(r.internId);
+                  const f = interns.find((i) => i._id === iid);
+                  const selected = r._id === task._id;
+                  const checked = selectedIds.includes(r._id);
+                  const name = f ? displayInternName(f.firstName, f.lastName, f.email) : iid.slice(-6).toUpperCase();
+                  return (
+                    <div
+                      key={r._id}
+                      className={`flex items-center gap-2.5 rounded-xl border p-3 transition-colors ${
+                        selected
+                          ? 'border-emerald-300 bg-emerald-50/50'
+                          : checked
+                            ? 'border-blue-200 bg-blue-50/40'
                             : 'border-slate-100 hover:bg-slate-50'
-                        }`}
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={r.status === 'archived'}
+                        onChange={() =>
+                          setSelectedIds((prev) =>
+                            checked ? prev.filter((id) => id !== r._id) : [...prev, r._id],
+                          )
+                        }
+                        aria-label={`Select ${name}`}
+                        className="h-4 w-4 shrink-0 accent-emerald-500"
+                      />
+                      <button
+                        onClick={() => applyTask(r)}
+                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
                       >
                         <InternAvatar
                           src={f?.profilePicture?.secure_url}
@@ -783,19 +900,72 @@ export default function TaskDetailScreen() {
                         />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-medium text-slate-800">
-                            {f ? `${f.firstName} ${f.lastName}`.trim() || f.email : iid.slice(-6).toUpperCase()}
+                            {name}
                           </span>
-                          <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${STATUS_CHIP[r.status] || 'bg-slate-100 text-slate-500'}`}>
-                            {r.status.replace('_', ' ')}
+                          <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                            <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${STATUS_CHIP[r.status] || 'bg-slate-100 text-slate-500'}`}>
+                              {r.status.replace('_', ' ')}
+                            </span>
+                            {r.submittedAt && (
+                              <span className="text-[10px] text-slate-400">{formatDate(r.submittedAt)}</span>
+                            )}
                           </span>
                         </span>
                         {selected && <CheckCircle2 size={16} className="shrink-0 text-emerald-500" />}
                       </button>
-                    );
-                  })}
+                    </div>
+                  );
+                })}
+              </div>
+              {submittedOnly && groupRows.filter((r) => r.submittedAt).length === 0 && (
+                <p className="mt-3 text-sm text-slate-400">Nobody submitted this task yet.</p>
+              )}
+              {selectedIds.length > 0 && (
+                <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4">
+                  <p className="text-sm font-semibold text-slate-900">
+                    Feedback for {selectedIds.length} selected student{selectedIds.length > 1 ? 's' : ''}
+                  </p>
+                  <textarea
+                    rows={3}
+                    value={bulkFb}
+                    onChange={(e) => setBulkFb(e.target.value)}
+                    placeholder="Write review feedback for all selected students..."
+                    className="mt-3 w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                  />
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <label className="flex items-center gap-2 text-sm text-slate-600">
+                      Rating <span className="text-slate-400">/10</span>:
+                      <input
+                        type="number"
+                        min={0}
+                        max={10}
+                        value={bulkPoints}
+                        onChange={(e) => setBulkPoints(e.target.value)}
+                        placeholder="0"
+                        className="w-20 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                      />
+                    </label>
+                    <button
+                      onClick={() => { setSelectedIds([]); setBulkFb(''); setBulkPoints(''); }}
+                      className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleBulkFeedback}
+                      disabled={savingBulkFb}
+                      className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-60"
+                    >
+                      <Send size={14} /> {savingBulkFb ? 'Sending...' : `Send to ${selectedIds.length}`}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-400">
+                    Students move to Reviewed with this feedback and rating.
+                  </p>
                 </div>
-              </section>
-            )}
+              )}
+            </section>
+          )}
 
             {bulkOpen && task?.taskGroupId && (
               <section ref={bulkPanelRef} className="scroll-mt-4 rounded-2xl border border-indigo-200 bg-indigo-50/40 p-6">
@@ -887,22 +1057,64 @@ export default function TaskDetailScreen() {
               <section className="rounded-2xl border border-slate-200 bg-white p-6">
                 <h3 className="font-semibold text-slate-900">Assignee</h3>
                 {intern ? (
-<div className="mt-4 flex items-center gap-3">
-<Link href={`/company/admin/interns/${intern._id}`} title="View profile">
-<InternAvatar src={intern.profilePicture?.secure_url} firstName={intern.firstName} lastName={intern.lastName} email={intern.email} className="h-10 w-10" />
-</Link>
-<div className="min-w-0">
-<Link href={`/company/admin/interns/${intern._id}`} className="truncate text-sm font-medium text-slate-900 hover:text-emerald-600 hover:underline">
-{`${intern.firstName} ${intern.lastName}`.trim() || intern.email}
-</Link>
-<p className="truncate text-xs text-slate-400">{intern.email}</p>
-</div>
-                    <Link
-                      href={`/company/admin/interns/${intern._id}`}
-                      className="ml-auto rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
-                    >
-                      View
-                    </Link>
+                  <div className="mt-4">
+                    <div className="flex items-center gap-3">
+                      <Link href={`/company/admin/interns/${intern._id}`} title="View profile">
+                        <InternAvatar src={intern.profilePicture?.secure_url} firstName={intern.firstName} lastName={intern.lastName} email={intern.email} className="h-10 w-10" />
+                      </Link>
+                      <div className="min-w-0">
+                        {(() => {
+                          const fullName = `${intern.firstName} ${intern.lastName}`.trim();
+                          const displayName = fullName || intern.email;
+                          return (
+                            <>
+                              <Link href={`/company/admin/interns/${intern._id}`} className="block truncate text-sm font-medium text-slate-900 hover:text-emerald-600 hover:underline">
+                                {displayName}
+                              </Link>
+                              {intern.email && intern.email !== displayName && (
+                                <p className="truncate text-xs text-slate-400">{intern.email}</p>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                      <Link
+                        href={`/company/admin/interns/${intern._id}`}
+                        className="ml-auto shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                      >
+                        View
+                      </Link>
+                    </div>
+                    {/* Student submission — note + attachments the intern sent */}
+                    <div className="mt-4 border-t border-slate-100 pt-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Submission</p>
+                      {!task.submittedAt ? (
+                        <p className="mt-2 text-sm text-slate-400">Not submitted yet.</p>
+                      ) : (
+                        <div className="mt-2">
+                          <p className="text-xs text-slate-400">
+                            Submitted {formatDateTime(task.submittedAt)}
+                            {(task.attachments ?? []).length > 0 && ` · ${(task.attachments ?? []).length} attachment${(task.attachments ?? []).length > 1 ? 's' : ''}`}
+                          </p>
+                          {(() => {
+                            const { internNotes } = parseFeedbackThread(task.reviewerFeedback);
+                            if (internNotes.length === 0) {
+                              return <p className="mt-2 text-sm text-slate-500">Submitted without a note.</p>;
+                            }
+                            return (
+                              <div className="mt-2 space-y-2">
+                                {internNotes.map((n, i) => (
+                                  <div key={i} className="rounded-xl bg-slate-50 p-3">
+                                    <p className="whitespace-pre-line break-words text-sm text-slate-600">{n.text}</p>
+                                    {n.date && <p className="mt-1 text-[11px] text-slate-400">{formatDateTime(n.date)}</p>}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <p className="mt-3 text-sm text-slate-400">Not assigned to a current intern.</p>
@@ -926,10 +1138,11 @@ export default function TaskDetailScreen() {
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   {nexts.some((n) => n.to === 'complete') && (
                     <div className="flex items-center gap-2">
-                      <label className="text-sm text-slate-600">Points:</label>
+                      <label className="text-sm text-slate-600">Points <span className="text-slate-400">/10</span>:</label>
                       <input
                         type="number"
                         min={0}
+                        max={10}
                         value={points}
                         onChange={(e) => setPoints(e.target.value)}
                         placeholder="0"

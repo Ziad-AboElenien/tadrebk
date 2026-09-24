@@ -21,7 +21,9 @@ import { companyService, type CompanyRatings } from '@/features/company/services
 import { getInternshipTracks, type Internship } from '@/features/internship/types';
 import { CATEGORY_LABELS } from '@/features/student/types';
 import { getErrorMessage } from '@/lib/axios';
+import api from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
+import ReportModal from '@/components/ui/ReportModal';
 import {
   Pill,
   ProfileEmptyState,
@@ -43,6 +45,7 @@ export default function CompanyProfileViewer({ company, postings, totalPostings,
   const isStudent = role === 'student';
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const logoUrl = getCompanyImgUrl(company.logo);
   const coverUrl = getCompanyImgUrl(company.coverPicture);
   const openPostings = postings.filter((p) => !p.closed);
@@ -413,11 +416,25 @@ export default function CompanyProfileViewer({ company, postings, totalPostings,
 
           <button
             type="button"
-            onClick={() => toastHelper.info('Reports are reviewed by our team')}
+            onClick={() => setReportOpen(true)}
             className="flex w-full items-center justify-center gap-1.5 py-2 text-sm text-slate-400 hover:text-rose-500"
           >
             <Flag size={14} /> Report this company
           </button>
+          <ReportModal
+            open={reportOpen}
+            title={`Report ${company.name}`}
+            onClose={() => setReportOpen(false)}
+            onConfirm={async (reason) => {
+              try {
+                await api.post('/reports', { targetType: 'company', targetId: company._id, reason });
+                toastHelper.success('Report received. Our team will review it.');
+              } catch (err) {
+                toastHelper.error(getErrorMessage(err));
+                throw err;
+              }
+            }}
+          />
         </div>
       </div>
     </main>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { toastHelper } from '@/lib/toast';
+import api, { getErrorMessage } from '@/lib/axios';
 
 export default function ContactForm() {
 const [name, setName] = useState('');
@@ -22,14 +23,22 @@ if (!message.trim()) errs.message = 'Please write your message.';
 setErrors(errs);
 if (Object.keys(errs).length > 0) return;
 setSending(true);
-// No backend endpoint yet — simulate a successful send for now.
-await new Promise((resolve) => setTimeout(resolve, 600));
-setSending(false);
-setName('');
-setEmail('');
-setMessage('');
-setErrors({});
-toastHelper.success('Message sent! We will get back to you within 24 hours.');
+try {
+  await api.post('/contact', {
+    name: name.trim(),
+    email: email.trim(),
+    message: message.trim(),
+  });
+  setName('');
+  setEmail('');
+  setMessage('');
+  setErrors({});
+  toastHelper.success('Message sent! We will get back to you within 24 hours.');
+} catch (err) {
+  toastHelper.error(getErrorMessage(err));
+} finally {
+  setSending(false);
+}
 }
 
   return (

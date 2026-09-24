@@ -8,8 +8,88 @@ import { getCompanyImgUrl } from '@/features/company/types';
 import type { Internship } from '@/features/internship/types';
 import Spinner from '@/components/ui/Spinner';
 import { useBlankImage } from '@/lib/use-blank-image';
+import api from '@/lib/axios';
+
+interface VerifiedCertificate {
+  valid: true;
+  student: { firstName: string; lastInitial: string };
+  internship: { title: string };
+  company: { name: string; logo?: string | null };
+  completedAt: string;
+}
+
+function CertificateVerify({ code }: { code: string }) {
+  const [state, setState] = useState<'loading' | 'valid' | 'invalid'>('loading');
+  const [cert, setCert] = useState<VerifiedCertificate | null>(null);
+
+  useEffect(() => {
+    api
+      .get<{ data: { valid: boolean } & Partial<VerifiedCertificate>; msg: string }>(
+        `/certificates/${encodeURIComponent(code)}`,
+      )
+      .then((res) => {
+        if (res.data?.data?.valid) {
+          setCert(res.data.data as VerifiedCertificate);
+          setState('valid');
+        } else {
+          setState('invalid');
+        }
+      })
+      .catch(() => setState('invalid'));
+  }, [code]);
+
+  if (state === 'loading') return <div className="flex justify-center py-20"><Spinner size="lg" /></div>;
+
+  if (state === 'invalid' || !cert) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-rose-50">
+            <i className="fas fa-circle-xmark text-3xl text-rose-400" />
+          </div>
+          <h1 className="text-xl font-bold text-slate-900">Certificate not verified</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            This code doesn&apos;t match any completed internship. Check the link and try again.
+          </p>
+          <Link
+            href="/"
+            className="mt-6 inline-block rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-bold text-white hover:bg-emerald-600"
+          >
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <div className="w-full max-w-md rounded-3xl border border-emerald-200 bg-white p-10 text-center shadow-sm">
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+          <i className="fas fa-circle-check text-3xl text-emerald-500" />
+        </div>
+        <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">Verified certificate</p>
+        <h1 className="mt-2 text-2xl font-bold text-slate-900">
+          {cert.student.firstName} {cert.student.lastInitial}
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">completed <span className="font-semibold text-slate-800">{cert.internship.title}</span></p>
+        <p className="text-sm text-slate-500">at <span className="font-semibold text-slate-800">{cert.company.name}</span></p>
+        <p className="mt-4 text-xs text-slate-400">
+          Completed {new Date(cert.completedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function CertificateScreen() {
+  const searchParams = useSearchParams();
+  const code = searchParams.get('code') || '';
+  if (code) return <CertificateVerify code={code} />;
+  return <LegacyCertificate />;
+}
+
+function LegacyCertificate() {
   const searchParams = useSearchParams();
   const studentName = searchParams.get('name') || 'Student';
   const internshipId = searchParams.get('internshipId') || '';

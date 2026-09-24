@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Check, Filter, Loader2 } from 'lucide-react';
+import { Award, Check, Filter, Loader2 } from 'lucide-react';
 import type { Application } from '@/features/student/services/application.service';
+import { useAppSelector } from '@/store/store';
 
 export type AppTab = 'All' | 'pending' | 'accepted' | 'rejected' | 'completed';
 
@@ -64,6 +65,7 @@ export default function MyApplicationsSection({
 }: MyApplicationsSectionProps) {
   const [active, setActive] = useState<AppTab>('All');
   const [filterOpen, setFilterOpen] = useState(false);
+  const user = useAppSelector((s) => s.user.currentUser);
   const visible =
     active === 'All' ? applications : applications.filter((a) => statusOf(a) === active);
   const activeLabel = TABS.find((t) => t.key === active)?.label ?? 'All';
@@ -162,6 +164,11 @@ export default function MyApplicationsSection({
             {visible.map((app) => {
               const st = statusOf(app);
               const internId = typeof app.internshipId === 'string' ? app.internshipId : app.internshipId._id;
+              const certCode = (app as unknown as { certificate?: { code?: string } }).certificate?.code;
+              const studentName = user ? `${user.firstName} ${user.lastName}`.trim() : '';
+              const certHref = certCode
+                ? `/certificate?code=${encodeURIComponent(certCode)}`
+                : `/certificate?name=${encodeURIComponent(studentName)}&internshipId=${internId}`;
               return (
                 <div key={app._id} className="flex flex-wrap items-center gap-3 px-6 py-4">
                   <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${STATUS_DOT[st]} ring-4 ring-slate-50`} />
@@ -178,6 +185,14 @@ export default function MyApplicationsSection({
                     <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_CHIP[st]}`}>
                       {st.charAt(0).toUpperCase() + st.slice(1)}
                     </span>
+                    {st === 'completed' && (
+                      <Link
+                        href={certHref}
+                        className="flex items-center gap-1 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"
+                      >
+                        <Award size={12} /> Certificate
+                      </Link>
+                    )}
                     {app.status === 'pending' && onCancel && (
                       <button
                         onClick={() => onCancel(app)}

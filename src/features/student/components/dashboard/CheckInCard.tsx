@@ -204,7 +204,7 @@ export default function CheckInCard({
                   <FileText size={15} /> Applying for internships
                 </button>
               </div>
-              <p className="mt-3 text-xs text-slate-400">1 check-in per day · tracked on this device</p>
+              <p className="mt-3 text-xs text-slate-400">1 check-in per day · streak syncs to your account</p>
             </>
           )}
 

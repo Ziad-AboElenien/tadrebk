@@ -129,8 +129,17 @@ export const attendanceService = {
     payload: { internId: string; date: string; status: AttendanceStatus; note?: string },
   ): Promise<AttendanceRecord> {
     const { internId, ...body } = payload;
-    // NOTE: single-mark route (POST /interns/{id}/attendance) is documented but
-    // not deployed (404) — go through bulk-mark with one row, which works.
+    // Prefer the single-mark route; fall back to bulk-mark with one row.
+    try {
+      const { data } = await api.post<{ data: AttendanceRecord }>(
+        `/company/${companyId}/interns/${internId}/attendance`,
+        { date: body.date, status: body.status, ...(body.note ? { note: body.note } : {}) },
+      );
+      if (data?.data) return data.data;
+    } catch (err) {
+      if (getErrorStatus(err) !== 404) throw err;
+      // single-mark not deployed — fall through to bulk-mark
+    }
     const res = await attendanceService.bulkMark(companyId, {
       rows: [{ internId, date: body.date, status: body.status, note: body.note }],
     });

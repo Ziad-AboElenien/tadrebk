@@ -75,6 +75,13 @@ export const internshipService = {
     return data.data.internship;
   },
 
+  async getStatsByCategory(): Promise<Record<string, number>> {
+    const { data } = await api.get<{ data: { counts: Record<string, number> }; msg: string }>(
+      '/internships/stats/by-category',
+    );
+    return data.data.counts ?? {};
+  },
+
   async createInternship(
     companyId: string,
     payload: CreateInternshipPayload

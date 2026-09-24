@@ -10,6 +10,8 @@ import {
   FolderKanban,
   Layers,
   Trophy,
+  Coins,
+  ChevronDown,
   MessageSquare,
   BarChart3,
   Settings,
@@ -17,15 +19,33 @@ import {
   PanelLeftOpen,
   type LucideIcon,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useAdminShell } from '@/components/tadrebk/admin-shell';
 
-const NAV_ITEMS: { label: string; icon: LucideIcon; href?: string }[] = [
+interface NavChild {
+  label: string;
+  href: string;
+}
+
+interface NavItem {
+  label: string;
+  icon: LucideIcon;
+  href?: string;
+  children?: NavChild[];
+}
+
+const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: LayoutGrid, href: '/company/admin' },
   { label: 'Interns', icon: Users, href: '/company/admin/interns' },
-  { label: 'Tasks', icon: CheckSquare, href: '/company/admin/tasks' },
   { label: 'Programs', icon: Layers, href: '/company/admin/programs' },
   { label: 'Projects', icon: FolderKanban, href: '/company/admin/projects' },
-  { label: 'Leaderboard', icon: Trophy, href: '/company/admin/leaderboard' },
+  { label: 'Tasks', icon: CheckSquare, href: '/company/admin/tasks' },
+  {
+    label: 'Leaderboard',
+    icon: Trophy,
+    href: '/company/admin/leaderboard',
+    children: [{ label: 'Points', href: '/company/admin/points' }],
+  },
   { label: 'Messages', icon: MessageSquare },
   { label: 'Reports', icon: BarChart3, href: '/company/admin/reports' },
   { label: 'Settings', icon: Settings, href: '/company/settings' },
@@ -56,6 +76,7 @@ export default function Sidebar({ active, adminName, adminRole }: SidebarProps) 
   const pathname = usePathname();
   const { sidebarOpen, setSidebarOpen, collapsed, toggleCollapsed } = useAdminShell();
   const isMobile = useIsMobile();
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   // Icon-only rail on desktop when collapsed; on mobile/tablet the rail is
   // always visible and the toggle opens the full drawer overlay instead.
@@ -78,7 +99,7 @@ export default function Sidebar({ active, adminName, adminRole }: SidebarProps) 
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
-  const renderItem = ({ label, icon: Icon, href }: { label: string; icon: LucideIcon; href?: string }) => {
+  const renderItem = ({ label, icon: Icon, href, children }: NavItem) => {
     const selected = isActive(label, href);
     // Rail mode: no colored box — the icon itself carries the active color.
     const cls = iconOnly
@@ -94,7 +115,7 @@ export default function Sidebar({ active, adminName, adminRole }: SidebarProps) 
         <span className={iconOnly ? 'hidden' : ''}>{label}</span>
       </>
     );
-    return href ? (
+    const item = href ? (
       <Link
         key={label}
         href={href}
@@ -115,6 +136,57 @@ export default function Sidebar({ active, adminName, adminRole }: SidebarProps) 
       >
         {content}
       </button>
+    );
+    if (!children || children.length === 0 || iconOnly) return item;
+    const childActive = children.some((c) => isActive(c.label, c.href));
+    const isOpen = expanded[label] ?? childActive;
+    return (
+      <div key={label}>
+        <div className="flex items-center gap-1">
+          <div className="min-w-0 flex-1">{item}</div>
+          <button
+            type="button"
+            onClick={() => setExpanded((prev) => ({ ...prev, [label]: !(prev[label] ?? childActive) }))}
+            aria-label={isOpen ? `Collapse ${label}` : `Expand ${label}`}
+            aria-expanded={isOpen}
+            className="shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          >
+            <ChevronDown
+              size={14}
+              className={`transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+        </div>
+        <div
+          className={`grid transition-all duration-300 ease-out ${
+            isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+          }`}
+        >
+          <div className="overflow-hidden">
+            <div className="ml-9 mt-0.5 space-y-0.5 border-l border-slate-100 pl-1">
+              {children.map((child) => {
+                const childSelected = isActive(child.label, child.href);
+                return (
+                  <Link
+                    key={child.label}
+                    href={child.href}
+                    aria-label={child.label}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] transition-colors ${
+                      childSelected
+                        ? 'bg-emerald-50 font-medium text-emerald-600'
+                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                    }`}
+                  >
+                    <Coins size={13} className="shrink-0" />
+                    {child.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 

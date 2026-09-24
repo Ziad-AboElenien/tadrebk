@@ -10,6 +10,7 @@ import { applicationService, Application } from '@/features/student/services/app
 import { internshipService } from '@/features/internship/services/internship.service';
 import { internMeService } from '@/features/intern/services/intern-me.service';
 import { internTaskService } from '@/features/intern/services/intern-task.service';
+import type { InternAttendance } from '@/features/intern/types';
 import { Internship } from '@/features/internship/types';
 import { Task } from '@/features/company/types/management';
 import { Program } from '@/features/company/types/management';
@@ -17,9 +18,11 @@ import { getUserImgUrl } from '@/features/student/types';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 import CheckInCard, { CheckInVariant } from '@/features/student/components/dashboard/CheckInCard';
+import { checkinService, utcDay } from '@/features/student/services/checkin.service';
 import StudentProfileCard from '@/features/student/components/dashboard/StudentProfileCard';
 import DashboardSidebar from '@/features/student/components/dashboard/DashboardSidebar';
 import MyTasksSection from '@/features/student/components/dashboard/MyTasksSection';
+import StudentAttendanceSection from '@/features/student/components/dashboard/StudentAttendanceSection';
 import MyApplicationsSection from '@/features/student/components/dashboard/MyApplicationsSection';
 import InternshipPanel, {
   PanelFeedback,
@@ -88,22 +91,11 @@ export default function StudentDashboardScreen() {
 
   const [feedbacks, setFeedbacks] = useState<PanelFeedback[]>([]);
 
+  const [attendance, setAttendance] = useState<InternAttendance[]>([]);
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
+
   const [checkVariant, setCheckVariant] = useState<CheckInVariant>('prompt');
   const [checkState, setCheckState] = useState<CheckinState>({ last: '', streak: 0, result: '' });
-
-  useEffect(() => {
-    const st = loadCheckin();
-    const today = localToday();
-    const yesterday = shiftDate(today, -1);
-    setCheckState(st);
-    if (st.last === today) {
-      setCheckVariant('completed');
-    } else if (st.last && st.last !== yesterday && st.streak > 0) {
-      setCheckVariant('streak-broken');
-    } else {
-      setCheckVariant('prompt');
-    }
-  }, []);
 
   const persistCheckin = (st: CheckinState) => {
     setCheckState(st);
@@ -114,21 +106,85 @@ export default function StudentDashboardScreen() {
     }
   };
 
+  useEffect(() => {
+    // Server streak wins; localStorage is the offline fallback.
+    const applyState = (streak: number, last: string, result: string) => {
+      setCheckState({ last, streak, result });
+      const today = localToday();
+      const yesterday = shiftDate(today, -1);
+      if (last === today) {
+        setCheckVariant('completed');
+      } else if (last && last !== yesterday && streak > 0) {
+        setCheckVariant('streak-broken');
+      } else {
+        setCheckVariant('prompt');
+      }
+    };
+    if (!userId) {
+      const st = loadCheckin();
+      applyState(st.streak, st.last, st.result);
+      return;
+    }
+    checkinService
+      .getCheckin(userId)
+      .then((s) => {
+        const last = s.last ? utcDay(s.last) : '';
+        const prev = loadCheckin();
+        const st = { last, streak: s.count, result: prev.result || 'Looking for internships' };
+        persistCheckin(st);
+        applyState(st.streak, st.last, st.result);
+      })
+      .catch(() => {
+        const st = loadCheckin();
+        applyState(st.streak, st.last, st.result);
+      });
+  }, [userId]);
+
   const handleCheckIn = (answer?: string) => {
-    const today = localToday();
-    const yesterday = shiftDate(today, -1);
-    const continued = checkState.last === yesterday;
-    persistCheckin({
-      last: today,
-      streak: continued ? checkState.streak + 1 : 1,
-      result: answer || 'Looking for internships',
-    });
-    setCheckVariant('completed');
+    const result = answer || checkState.result || 'Looking for internships';
+    if (!userId) {
+      const today = localToday();
+      const yesterday = shiftDate(today, -1);
+      const continued = checkState.last === yesterday;
+      persistCheckin({ last: today, streak: continued ? checkState.streak + 1 : 1, result });
+      setCheckVariant('completed');
+      return;
+    }
+    checkinService
+      .postCheckin(userId)
+      .then((s) => {
+        const st = { last: s.last ? utcDay(s.last) : localToday(), streak: s.count, result };
+        persistCheckin(st);
+        setCheckState(st);
+        setCheckVariant('completed');
+      })
+      .catch(() => {
+        const today = localToday();
+        const yesterday = shiftDate(today, -1);
+        const continued = checkState.last === yesterday;
+        persistCheckin({ last: today, streak: continued ? checkState.streak + 1 : 1, result });
+        setCheckVariant('completed');
+      });
   };
 
   const handleRecover = () => {
-    persistCheckin({ last: localToday(), streak: checkState.streak, result: checkState.result });
-    setCheckVariant('completed');
+    if (!userId) {
+      persistCheckin({ last: localToday(), streak: checkState.streak, result: checkState.result });
+      setCheckVariant('completed');
+      return;
+    }
+    checkinService
+      .postCheckin(userId)
+      .then((s) => {
+        const st = { last: s.last ? utcDay(s.last) : localToday(), streak: s.count, result: checkState.result };
+        persistCheckin(st);
+        setCheckState(st);
+        setCheckVariant('completed');
+      })
+      .catch(() => {
+        persistCheckin({ last: localToday(), streak: checkState.streak, result: checkState.result });
+        setCheckVariant('completed');
+      });
   };
 
   const handleFreshStart = () => {
@@ -234,6 +290,16 @@ export default function StudentDashboardScreen() {
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
+
+  useEffect(() => {
+    if (!companyId) return;
+    setLoadingAttendance(true);
+    internMeService
+      .getAttendance(companyId, { limit: 30 })
+      .then((res) => setAttendance(res.attendance))
+      .catch(() => {})
+      .finally(() => setLoadingAttendance(false));
+  }, [companyId]);
 
   const handleCancel = useCallback(
     async (app: Application) => {
@@ -396,6 +462,10 @@ export default function StudentDashboardScreen() {
           onCancel={handleCancel}
           onBrowse={() => router.push('/internships')}
         />
+
+        {companyId && (
+          <StudentAttendanceSection records={attendance} loading={loadingAttendance} />
+        )}
 
         {companyId && (
           <InternshipPanel

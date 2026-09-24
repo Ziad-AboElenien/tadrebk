@@ -6,12 +6,36 @@
 > `GET https://tadreebak-e285.onbelmo.uk/api/v1/docs/swagger.json` (102 مسار) —
 > منسوخ محليًا في `live_swagger.json`.
 >
+> ## ✅ تحديث 2026-09-24 — الباك سلّم P3 وP5 (#11 تحقق الشهادات، #12 تشيك-إن)
+> الـ spec الحي أصبح **108 مسارات** (`live_swagger.json` محدّث من السيرفر).
+> الفرونت توصّل بكل الجديد: فورم التواصل (`POST /contact`)، النشرة
+> (`POST /newsletter/subscribe`)، الإبلاغ (`POST /reports` مع مودال سبب)،
+> عدّادات الأقسام (`GET /internships/stats/by-category`)، التحقق العلني من
+> الشهادات (`GET /certificates/:code` عبر `?code=` في `/certificate`)،
+> التشيك-إن (`GET/POST /user/:id/checkin` مع fallback محلي)، والـ single-mark
+> للحضور (محاولة أولًا ثم fallback على bulk-mark).
+> المتبقي من الباك: **#10 المراسلة (مؤجل حسب الـ spec)** + أسئلة دلالية
+> (ح، ط) + تأكيد إغلاق البنود أ، ب، ج، د، هـ، و، ز (كلها تعمل اليوم).
+>
 > الـ envelope المتبع: `{ data: {...}, msg: "..." }` مع pagination بشكل
 > `{ page, limit, total, pages }`.
 
 ---
 
 # القسم الأول: لينكات ناقصة تمامًا (UI جاهز ومنتظر الباك)
+
+## 0. رفع مرفق مع تسليم التاسك (الطالب) — `POST /intern/me/:companyId/tasks/:taskId/attachments` ⬅ أولوية عالية
+- **فين في الفرونت:** مودال السبميت (`SubmitTaskModal.tsx`) + صفحة دييتيلز التاسك
+  للطالب — الـ file picker موجود وشغال UI، لكن الملف **لا يُرسل** لانعدام endpoint.
+- **الحالي:** `POST .../submit` يقبل `{ note }` فقط (الملف المختار يُتجاهل).
+- **المطلوب (multipart/form-data):**
+```
+POST /intern/me/:companyId/tasks/:taskId/attachments
+Body (multipart): file (≤ 10MB: pdf/jpg/png/docx/zip)
+→ 201 { data: { attachment: { public_id, secure_url, name, mimeType, size } } }
+```
+- البديل المقبول: قبول `attachments` ضمن `POST .../submit` نفسه كـ multipart.
+- الفورنت سيُرسل الملف فور توفر اللينك (الكود جاهز، ينقصه سطر الإرسال فقط).
 
 ## 1. تجميع تقييمات الشركة — `GET /company/:id/ratings` ⬅ أولوية عالية
 - **فين في الفرونت:** صفحة الشركة للطالب (`/companies/[companyId]`) وصفحة الشركة
@@ -93,37 +117,26 @@ DELETE /companies/:id/save   → 204
 GET    /companies/saved?page=&limit= → { data: { companies: [...], pagination } }
 ```
 
-## 6. فورم التواصل — `POST /contact` ⬅ أولوية متوسطة
-- **فين:** صفحة `/contact` — الفورم يعرض toast نجاح وهمي ولا يرسل شيئًا.
-- **المطلوب:**
-```
-POST /contact
-Body: { "name": "John Doe", "email": "you@example.com", "subject?": "…", "message": "…" }
-→ 201 { msg: "Message received" }
-```
+## 6. فورم التواصل — `POST /contact` ✅ مُسلَّم وموصول
+- **فين:** صفحة `/contact` — الفورم يرسل `{ name, email, message }` للباك مباشرة
+  (`ContactForm.tsx`).
+- ~~يعرض toast نجاح وهمي ولا يرسل شيئًا~~ — اتوصل 2026-09-24.
 
-## 7. النشرة البريدية — `POST /newsletter/subscribe` ⬅ أولوية منخفضة
-- **فين:** فوتر الموقع (حقل الإيميل + زر Subscribe) — الزر **بدون أي handler**.
-- **المطلوب:**
-```
-POST /newsletter/subscribe
-Body: { "email": "you@example.com" } → 201 { msg: "Subscribed" }
-```
+## 7. النشرة البريدية — `POST /newsletter/subscribe` ✅ مُسلَّمة وموصولة
+- **فين:** فوتر الموقع — الزر يرسل `{ email }` ويعرض تأكيد (`Footer.tsx`).
+- ~~بدون أي handler~~ — اتوصل 2026-09-24.
 
-## 8. الإبلاغ عن محتوى — `POST /reports` ⬅ أولوية منخفضة
-- **فين:** "Report this company" و"Report profile" — حاليًا toast إعلامي فقط.
-- **المطلوب:**
-```
-POST /reports
-Body: { "targetType": "company" | "user" | "internship", "targetId": "…", "reason": "…" }
-→ 201 { msg: "Report received" }
-```
+## 8. الإبلاغ عن محتوى — `POST /reports` ✅ مُسلَّم وموصول
+- **فين:** "Report this company" (`CompanyProfileViewer.tsx`) و"Report profile"
+  (`StudentProfileViewer.tsx`) — مودال مشترك (`ReportModal.tsx`) يجمع `reason`
+  (≥ 5 أحرف) ويرسل `{ targetType, targetId, reason }`.
+- ~~toast إعلامي فقط~~ — اتوصل 2026-09-24.
 
-## 9. عدّادات الأقسام في الهوم ⬅ أولوية منخفضة
-- **فين:** قسم Browse by Category (أرقام ثابتة: 42، 28، 19…) — مضللة لو تغيرت البيانات.
-- **المطلوب (أحد حلين):** إما `GET /internships/stats/by-category →
-  { data: { counts: { software: 42, marketing: 28, … } } }`، أو نحذف الأرقام من
-  الـ UI (الحل البديل من جهتي لو تأخر الباك).
+## 9. عدّادات الأقسام في الهوم ✅ مُسلَّمة وموصولة
+- **فين:** قسم Browse by Category — يجلب `GET /internships/stats/by-category`
+  ويجمع الـ tracks المرتبطة بكل كارت (`CategoriesSection.jsx`)، مع fallback
+  للأرقام الثابتة عند غياب المفتاح أو فشل الطلب.
+- ~~أرقام ثابتة~~ — اتوصل 2026-09-24.
 
 ## 10. المراسلة داخل المنصة (مستقبلية)
 - **فين:** تاب Messages في داشبورد الطالب — يعرض "coming soon" بتصميم نهائي.
@@ -134,18 +147,17 @@ GET  /conversations/:id/messages?before=  → { data: { messages: [{ _id, sender
 POST /conversations/:id/messages → { body } → 201
 ```
 
-## 11. توثيق الشهادات برابط عام (اختياري)
-- **فين:** صفحة `/certificate` — تُبنى client-side من بيانات التدريب، بدون توثيق.
-- **المطلوب (اختياري):** `GET /certificates/:code → { data: { valid, student, internship, company, completedAt } }`
-  لصفحة تحقق عامة ضد التزوير.
+## 11. توثيق الشهادات برابط عام ✅ مُسلَّم وموصول
+- **فين:** صفحة `/certificate?code=…` — وضع التحقق العلني (`CertificateVerify`)
+  يستدعي `GET /certificates/:code` ويعرض (اسم أول + أول حرف، التدريب، الشركة،
+  التاريخ) أو رسالة "not verified". الوضع القديم (`?name=&internshipId=`) كما هو.
+- ~~بدون توثيق~~ — اتوصل 2026-09-24.
 
-## 12. الحضور اليومي للطالب (gamification — اختياري)
-- **فين:** داشبورد الطالب (streak check-in) — يعمل بالكامل بـ localStorage.
-- **المطلوب (اختياري، ليس عاجلًا):**
-```
-POST /user/:id/checkin → { data: { streak, last } }
-GET  /user/:id/checkin → { data: { streak, last } }
-```
+## 12. الحضور اليومي للطالب ✅ مُسلَّم وموصول
+- **فين:** داشبورد الطالب — التشيك-إن يقرأ/يكتب `GET/POST /user/:id/checkin`
+  (`checkin.service.ts`) مع fallback على localStorage عند غياب الجلسة أو فشل
+  الشبكة. نص "tracked on this device" اتشال.
+- ~~يعمل بالكامل بـ localStorage~~ — اتوصل 2026-09-24.
 
 ---
 
@@ -225,11 +237,10 @@ GET       /company/:id/evaluations/alerts
 - الشاشة تعرض رسالة "Evaluations are not available on the server yet" عند الفشل —
   **برجاء تأكيد نشر هذه اللينكات على السيرفر** (الكود جاهز من جهتي).
 
-## ز. الحضور — تفعيل الـ single-mark ⬅ تحقق
-- `POST /company/:companyId/interns/:internId/attendance` **يرجع 404** رغم توثيقه —
-  الفرونت يلتف عبر `bulk-mark` بصف واحد (يعمل ✅).
-- **المطلوب:** إما نشر الـ single-mark route، أو التأكيد الرسمي أن bulk-only هو
-  التعاقد النهائي (الكود موثق بذلك وسأبقيه).
+## ز. الحضور — الـ single-mark ✅ مُسلَّم وموصول (مع fallback)
+- `POST /company/:companyId/interns/:internId/attendance` يعمل اليوم —
+  `markAttendance` تحاوله أولًا، وعند 404 فقط تلتف عبر `bulk-mark` بصف واحد.
+- ~~يرجع 404 رغم توثيقه~~ — اتوصل 2026-09-24 (الـ fallback باقٍ للأمان).
 
 ## ح. التحقق من الشركات — توضيح دلالي ⬅ سؤال
 - لا يوجد `isVerified` — الفرونت يترجم `approvedByAdmin → شارة Verified`.

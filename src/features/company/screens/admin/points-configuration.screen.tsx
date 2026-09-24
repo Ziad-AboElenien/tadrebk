@@ -149,6 +149,14 @@ export default function PointsConfigurationScreen() {
     setRuleModal({ open: true, rule });
   }
 
+  const refreshStats = useCallback(() => {
+    if (!companyId) return;
+    pointsService
+      .getStats(companyId)
+      .then(setStats)
+      .catch(() => {});
+  }, [companyId]);
+
   async function saveRule() {
     if (!companyId) return;
     const points = Number(ruleForm.points);
@@ -170,14 +178,16 @@ export default function PointsConfigurationScreen() {
         description: ruleForm.description.trim() || undefined,
       };
       if (ruleModal.rule) {
-        await pointsService.updateRule(companyId, ruleModal.rule._id, { ...payload, status: ruleForm.status });
+        const updated = await pointsService.updateRule(companyId, ruleModal.rule._id, { ...payload, status: ruleForm.status });
+        setRules((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
         toastHelper.success('Rule updated!');
       } else {
-        await pointsService.createRule(companyId, payload);
+        const created = await pointsService.createRule(companyId, payload);
+        setRules((prev) => [created, ...prev]);
         toastHelper.success('Rule created!');
       }
       setRuleModal({ open: false });
-      fetchAll();
+      refreshStats();
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     } finally {
@@ -190,9 +200,10 @@ export default function PointsConfigurationScreen() {
     setDeleting(true);
     try {
       await pointsService.deleteRule(companyId, deleteRule._id);
+      setRules((prev) => prev.filter((r) => r._id !== deleteRule._id));
       toastHelper.success('Rule deleted');
       setDeleteRule(null);
-      fetchAll();
+      refreshStats();
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     } finally {
@@ -203,10 +214,11 @@ export default function PointsConfigurationScreen() {
   async function toggleRuleStatus(rule: PointsRule) {
     if (!companyId) return;
     try {
-      await pointsService.updateRule(companyId, rule._id, {
+      const updated = await pointsService.updateRule(companyId, rule._id, {
         status: rule.status === 'active' ? 'inactive' : 'active',
       });
-      fetchAll();
+      setRules((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
+      refreshStats();
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     }
@@ -245,14 +257,15 @@ export default function PointsConfigurationScreen() {
         reward: milestoneForm.reward.trim(),
       };
       if (milestoneModal.milestone) {
-        await pointsService.updateMilestone(companyId, milestoneModal.milestone._id, payload);
+        const updated = await pointsService.updateMilestone(companyId, milestoneModal.milestone._id, payload);
+        setMilestones((prev) => prev.map((m) => (m._id === updated._id ? updated : m)));
         toastHelper.success('Milestone updated!');
       } else {
-        await pointsService.createMilestone(companyId, payload);
+        const created = await pointsService.createMilestone(companyId, payload);
+        setMilestones((prev) => [...prev, created]);
         toastHelper.success('Milestone created!');
       }
       setMilestoneModal({ open: false });
-      fetchAll();
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     } finally {
@@ -265,9 +278,9 @@ export default function PointsConfigurationScreen() {
     setDeleting(true);
     try {
       await pointsService.deleteMilestone(companyId, deleteMilestone._id);
+      setMilestones((prev) => prev.filter((m) => m._id !== deleteMilestone._id));
       toastHelper.success('Milestone deleted');
       setDeleteMilestone(null);
-      fetchAll();
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     } finally {
@@ -343,12 +356,14 @@ export default function PointsConfigurationScreen() {
             ))}
           </div>
 
-          <GlassFilter
-            options={TABS.map((t) => ({ key: t, label: t }))}
-            value={activeTab}
-            onChange={setActiveTab}
-            ariaLabel="Points sections"
-          />
+          <div className="w-fit max-w-full">
+            <GlassFilter
+              options={TABS.map((t) => ({ key: t, label: t }))}
+              value={activeTab}
+              onChange={setActiveTab}
+              ariaLabel="Points sections"
+            />
+          </div>
 
           {activeTab === 'Earning Rules' && (
             <div className="rounded-2xl border border-slate-200 bg-white p-6">

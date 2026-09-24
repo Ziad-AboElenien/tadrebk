@@ -1,16 +1,18 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { scaleIn } from './animations';
+import { internshipService } from '@/features/internship/services/internship.service';
 
 const categories = [
-  { icon: 'fa-code', label: 'Software Engineering', count: 42, query: 'software', color: 'from-blue-400 to-blue-600' },
-  { icon: 'fa-bullhorn', label: 'Marketing & Sales', count: 28, query: 'marketing', color: 'from-emerald-400 to-teal-600' },
-  { icon: 'fa-desktop', label: 'UI/UX Design', count: 19, query: 'design', color: 'from-violet-400 to-purple-600' },
-  { icon: 'fa-chart-line', label: 'Digital Marketing', count: 24, query: 'digital', color: 'from-orange-400 to-red-500' },
-  { icon: 'fa-chart-bar', label: 'Finance & Accounting', count: 15, query: 'finance', color: 'from-amber-400 to-yellow-600' },
-  { icon: 'fa-users', label: 'Human Resources', count: 13, query: 'hr', color: 'from-rose-400 to-pink-600' },
+  { icon: 'fa-code', label: 'Software Engineering', count: 42, query: 'software', tracks: ['frontend', 'backend', 'fullstack', 'mobile', 'devops', 'data_science', 'ai_ml', 'cybersecurity', 'qa_testing', 'software'], color: 'from-blue-400 to-blue-600' },
+  { icon: 'fa-bullhorn', label: 'Marketing & Sales', count: 28, query: 'marketing', tracks: ['marketing', 'sales'], color: 'from-emerald-400 to-teal-600' },
+  { icon: 'fa-desktop', label: 'UI/UX Design', count: 19, query: 'design', tracks: ['uiux', 'design'], color: 'from-violet-400 to-purple-600' },
+  { icon: 'fa-chart-line', label: 'Digital Marketing', count: 24, query: 'digital', tracks: ['digital', 'content_writing'], color: 'from-orange-400 to-red-500' },
+  { icon: 'fa-chart-bar', label: 'Finance & Accounting', count: 15, query: 'finance', tracks: ['finance'], color: 'from-amber-400 to-yellow-600' },
+  { icon: 'fa-users', label: 'Human Resources', count: 13, query: 'hr', tracks: ['hr'], color: 'from-rose-400 to-pink-600' },
 ];
 
 export default function CategoriesSection({
@@ -19,6 +21,18 @@ export default function CategoriesSection({
   actionLabel = 'View All Internships',
   actionHref = '/internships',
 }) {
+  const [liveCounts, setLiveCounts] = useState(null);
+
+  useEffect(() => {
+    internshipService.getStatsByCategory().then(setLiveCounts).catch(() => {});
+  }, []);
+
+  const countFor = (cat) => {
+    if (!liveCounts) return cat.count;
+    const keys = cat.tracks.filter((t) => typeof liveCounts[t] === 'number');
+    if (keys.length === 0) return cat.count;
+    return keys.reduce((sum, t) => sum + liveCounts[t], 0);
+  };
   return (
     <section className="py-16 bg-transparent overflow-hidden">
       <div className="max-w-5xl mx-auto px-4 sm:px-8">
@@ -61,7 +75,7 @@ export default function CategoriesSection({
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">{cat.label}</p>
-                  <p className="text-xs text-slate-400">{cat.count} opportunities &rarr;</p>
+                  <p className="text-xs text-slate-400">{countFor(cat)} opportunities &rarr;</p>
                 </div>
               </Link>
             </motion.div>

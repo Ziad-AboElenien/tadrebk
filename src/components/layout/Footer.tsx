@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAppSelector } from '@/store/store';
 import type { UserRole } from '@/features/auth/types';
+import api, { getErrorMessage } from '@/lib/axios';
+import { toastHelper } from '@/lib/toast';
 
 interface FooterLink {
   label: string;
@@ -119,7 +121,27 @@ function columnsFor(role: UserRole | 'guest'): FooterColumn[] {
 export default function Footer() {
   const { isAuthenticated, role } = useAppSelector((s) => s.auth);
   const [mounted, setMounted] = useState(false);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [subscribing, setSubscribing] = useState(false);
   const year = new Date().getFullYear();
+
+  async function handleSubscribe() {
+    const email = newsletterEmail.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toastHelper.error('Enter a valid email address.');
+      return;
+    }
+    setSubscribing(true);
+    try {
+      await api.post('/newsletter/subscribe', { email });
+      setNewsletterEmail('');
+      toastHelper.success('Subscribed! Check your inbox for confirmation.');
+    } catch (err) {
+      toastHelper.error(getErrorMessage(err));
+    } finally {
+      setSubscribing(false);
+    }
+  }
 
   useEffect(() => {
     setMounted(true);
@@ -203,11 +225,18 @@ export default function Footer() {
             <div className="flex w-full sm:w-auto">
               <input
                 type="email"
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSubscribe(); }}
                 placeholder="Enter your email"
                 className="flex-1 sm:w-64 px-4 py-2.5 rounded-l-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
-              <button className="px-5 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-semibold rounded-r-xl transition-all">
-                Subscribe
+              <button
+                onClick={handleSubscribe}
+                disabled={subscribing}
+                className="px-5 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-semibold rounded-r-xl transition-all disabled:opacity-60"
+              >
+                {subscribing ? '...' : 'Subscribe'}
               </button>
             </div>
           </div>

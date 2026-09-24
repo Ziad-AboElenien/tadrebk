@@ -19,7 +19,9 @@ import {
 } from 'lucide-react';
 import { CATEGORY_LABELS, getUserImgUrl, skillName, type User } from '@/features/student/types';
 import { openFileProxy } from '@/lib/file-proxy';
+import api, { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
+import ReportModal from '@/components/ui/ReportModal';
 import { getProfileMeta } from '@/features/profiles/services/profile-meta.store';
 import {
   Pill,
@@ -62,6 +64,7 @@ export default function StudentProfileViewer({
 }: StudentProfileViewerProps) {
   const fullName = `${user.firstName} ${user.lastName}`.trim();
   const [saved, setSaved] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const avatarUrl = getUserImgUrl(user.profilePicture);
   const coverUrl = getUserImgUrl(user.coverPicture);
   const resumeUrl = getUserImgUrl(user.resume);
@@ -408,11 +411,25 @@ export default function StudentProfileViewer({
               </button>
               <button
                 type="button"
-                onClick={() => toastHelper.info('Reports are reviewed by our team')}
+                onClick={() => setReportOpen(true)}
                 className="flex w-full items-center justify-center gap-1.5 py-2 text-sm text-slate-400 hover:text-rose-500"
               >
                 <Flag size={14} /> Report profile
               </button>
+              <ReportModal
+                open={reportOpen}
+                title={`Report ${fullName || 'this profile'}`}
+                onClose={() => setReportOpen(false)}
+                onConfirm={async (reason) => {
+                  try {
+                    await api.post('/reports', { targetType: 'user', targetId: user._id, reason });
+                    toastHelper.success('Report received. Our team will review it.');
+                  } catch (err) {
+                    toastHelper.error(getErrorMessage(err));
+                    throw err;
+                  }
+                }}
+              />
             </div>
           </SectionCard>
         </div>
