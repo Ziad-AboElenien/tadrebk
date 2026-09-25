@@ -116,7 +116,6 @@ export default function FaqPage() {
                         <a
                           href={`#${anchor}`}
                           aria-label={`Link to: ${item.q}`}
-                          onClick={(e) => e.stopPropagation()}
                           className="text-slate-300 opacity-0 transition-opacity hover:text-emerald-500 group-hover:opacity-100"
                         >
                           <i className="fas fa-link text-xs" />
