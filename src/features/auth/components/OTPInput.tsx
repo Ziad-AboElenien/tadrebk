@@ -72,6 +72,7 @@ export default function OTPInput({
             inputMode="numeric"
             pattern="\d*"
             maxLength={1}
+            aria-label={`Digit ${i + 1} of ${length}`}
             value={digits[i] || ''}
             disabled={disabled}
             onChange={(e) => handleChange(i, e.target.value)}

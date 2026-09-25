@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Flag, Loader2, X } from 'lucide-react';
+import { useFocusTrap } from '@/components/ui/use-focus-trap';
 
 interface ReportModalProps {
   open: boolean;
@@ -14,6 +15,17 @@ export default function ReportModal({ open, title, onClose, onConfirm }: ReportM
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [open, onClose]);
+
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
 
   if (!open) return null;
 
@@ -36,7 +48,7 @@ export default function ReportModal({ open, title, onClose, onConfirm }: ReportM
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+    <div ref={trapRef} className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center" role="dialog" aria-modal="true" aria-label={title}>
       <div className="absolute inset-0 bg-slate-900/40" onClick={onClose} />
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
         <div className="flex items-center justify-between bg-slate-50/80 px-5 py-4">

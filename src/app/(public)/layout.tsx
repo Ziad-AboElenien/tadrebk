@@ -3,7 +3,12 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'Tadrebak - Internship Platform',
+  title: {
+    default: 'Tadrebk — Internship Platform',
+    template: '%s | Tadrebk',
+  },
+  description:
+    'Browse verified internships, companies and guides on Tadrebk — Egypt’s internship platform for students.',
 };
 
 export default function PublicLayout({

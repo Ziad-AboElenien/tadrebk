@@ -40,12 +40,11 @@ export default function GroupedBarChart({ data, colors, height = 224 }: GroupedB
       .range([0, x.bandwidth()])
       .padding(0.08);
 
+    const peak = d3.max(data, (d) => d3.max(keys, (k) => d.values[k] ?? 0)) ?? 0;
     const y = d3
       .scaleLinear()
-      .domain([
-        0,
-        d3.max(data, (d) => d3.max(keys, (k) => d.values[k] ?? 0)) ?? 0,
-      ])
+      // Rate charts (0–100) keep a stable axis; larger values grow it.
+      .domain([0, Math.max(100, peak)])
       .range([innerHeight, 0])
       .nice();
 

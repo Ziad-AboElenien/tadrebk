@@ -271,7 +271,7 @@ export default function ApplyInternshipScreen() {
             <p className="text-sm font-medium text-slate-700">Application Questions</p>
             {internship.questions!.map((q, qi) => (
               <div key={qi}>
-                <label className="block text-sm font-semibold text-slate-600">
+                <label id={`apply-q-${qi}`} className="block text-sm font-semibold text-slate-600">
                   {qi + 1}. {q.prompt} <span className="text-rose-500">*</span>
                 </label>
                 {q.type === 'mcq' ? (
@@ -303,6 +303,7 @@ export default function ApplyInternshipScreen() {
                   </div>
                 ) : (
                   <textarea
+                    aria-labelledby={`apply-q-${qi}`}
                     value={answers[qi]?.type === 'writing' ? (answers[qi] as { text: string }).text : ''}
                     onChange={(e) => setAnswer(qi, e.target.value)}
                     rows={3}

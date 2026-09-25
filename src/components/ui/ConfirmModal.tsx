@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Button from '@/components/ui/Button';
+import { useFocusTrap } from '@/components/ui/use-focus-trap';
 
 interface ConfirmModalProps {
   open: boolean;
@@ -33,14 +34,16 @@ export default function ConfirmModal({
     return () => document.removeEventListener('keydown', handleKey);
   }, [open, onCancel]);
 
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
+
   if (!open) return null;
 
   const danger = confirmVariant !== 'primary';
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
+    <div ref={trapRef} className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4" role="dialog" aria-modal="true" aria-label={title}>
       <div className="absolute inset-0 animate-fade-in bg-black/40 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full max-w-sm animate-scale-in rounded-3xl bg-white p-5 shadow-2xl sm:p-8">
+      <div className="relative w-full max-w-sm animate-scale-in rounded-3xl bg-white p-5 shadow-2xl sm:p-8" role="document">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className={`flex h-14 w-14 items-center justify-center rounded-full ${danger ? 'bg-red-50' : 'bg-emerald-50'}`}>
             <i className={`fas fa-exclamation-triangle text-2xl ${danger ? 'text-red-500' : 'text-emerald-500'}`} />

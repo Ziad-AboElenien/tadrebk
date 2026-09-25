@@ -8,7 +8,8 @@ import { setCompany } from '@/store/companySlice';
 import { setRole, setStatus } from '@/store/authSlice';
 import { userService } from '@/features/student/services/user.service';
 import { companyService } from '@/features/company/services/company.service';
-import { LS_USER_ROLE } from '@/lib/constants';
+import type { Company } from '@/features/company/types';
+import { LS_USER_ROLE, LS_PENDING_ONBOARDING, LS_COMPANY_ID } from '@/lib/constants';
 
 /**
  * On mount, if auth tokens exist but currentUser / currentCompany are null,
@@ -55,6 +56,8 @@ export default function SessionLoader({ children }: { children: React.ReactNode 
         }
 
         const { companies } = await companyService.listCompanies({ limit: 50 });
+        const backendRole = (user as { role?: string }).role || '';
+        const isCompanyByRole = /company/i.test(backendRole);
         const owned = companies.find((c) => {
           const createdBy =
             typeof c.createdBy === 'object' && c.createdBy !== null
@@ -63,15 +66,41 @@ export default function SessionLoader({ children }: { children: React.ReactNode 
           return createdBy === id;
         });
         if (owned) {
-          const full = await companyService.getCompanyById(owned._id);
-          dispatch(setCompany(full));
+          try {
+            const full = await companyService.getCompanyById(owned._id);
+            dispatch(setCompany(full));
+            localStorage.setItem(LS_COMPANY_ID, full._id);
+          } catch {
+            // LIST sees it but GET 404s — use the list object, don't strand the user.
+            dispatch(setCompany(owned as Company));
+            localStorage.setItem(LS_COMPANY_ID, owned._id);
+          }
           dispatch(setRole('company'));
+          localStorage.setItem(LS_COMPANY_ID, owned._id);
+        } else if (isCompanyByRole) {
+          // Backend says company — trust it even before a profile exists.
+          // Try the saved id so refresh lands with the company in store.
+          dispatch(setRole('company'));
+          const savedCompanyId = localStorage.getItem(LS_COMPANY_ID);
+          if (savedCompanyId) {
+            try {
+              const savedCompany = await companyService.getCompanyById(savedCompanyId);
+              dispatch(setCompany(savedCompany));
+            } catch {
+              localStorage.removeItem(LS_COMPANY_ID);
+            }
+          }
         } else {
-          // Student with no categories → redirect to onboarding
-          const isOnOnboarding = pathname === '/onboarding';
+          // No owned company. Students without tracks go to THEIR onboarding.
+          // A bare pending flag is ignored here (always another account's
+          // leftover) — company users never reach this branch: the backend
+          // role puts them in the company branch above, and company pages
+          // are exempt below, so no ping-pong with OnboardingGate is possible.
+          const isOnStudentOnboarding = pathname === '/student/onboarding';
+          const onCompanySide = pathname.startsWith('/company/');
           const hasCategories = user.categories && user.categories.length > 0;
-          if (!hasCategories && !isOnOnboarding) {
-            router.replace('/onboarding');
+          if (!hasCategories && !isOnStudentOnboarding && !onCompanySide) {
+            router.replace('/student/onboarding');
           }
         }
       } catch {
@@ -88,12 +117,13 @@ export default function SessionLoader({ children }: { children: React.ReactNode 
     }
   }, [isAuthenticated, userId, currentUser, currentCompany, dispatch, pathname, router]);
 
-  // Guard: if a student has no categories, keep them on /onboarding
+  // Guard: a student with no tracks stays on THEIR onboarding.
+  // Company pages are exempt, and a bare pending flag is ignored (stale).
   useEffect(() => {
     if (!isAuthenticated || !currentUser || role === 'company' || role === 'admin') return;
-    if (pathname === '/onboarding') return;
+    if (pathname === '/student/onboarding' || pathname.startsWith('/company/')) return;
     if (!currentUser.categories || currentUser.categories.length === 0) {
-      router.replace('/onboarding');
+      router.replace('/student/onboarding');
     }
   }, [isAuthenticated, currentUser, role, pathname, router]);
 

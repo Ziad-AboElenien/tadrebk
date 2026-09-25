@@ -45,7 +45,7 @@ export default function ChipInput({ label, error, hint, placeholder = 'Type and 
           {value.map((item) => (
             <span key={item} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm">
               {item}
-              <button type="button" onClick={() => removeItem(item)} className="w-4 h-4 rounded-full bg-emerald-200/50 hover:bg-emerald-300/50 flex items-center justify-center transition-colors cursor-pointer">
+              <button type="button" onClick={() => removeItem(item)} aria-label={`Remove ${item}`} className="w-4 h-4 rounded-full bg-emerald-200/50 hover:bg-emerald-300/50 flex items-center justify-center transition-colors cursor-pointer">
                 <i className="fas fa-xmark text-[10px] text-emerald-600" />
               </button>
             </span>
@@ -61,6 +61,7 @@ export default function ChipInput({ label, error, hint, placeholder = 'Type and 
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
+          aria-label={label || placeholder || 'Add item'}
           disabled={maxItems ? value.length >= maxItems : false}
           className={`flex-1 border rounded-xl bg-white text-gray-800 placeholder:text-gray-400 px-4 py-3 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
             error ? 'border-red-400 focus:ring-red-200 focus:border-red-400' : 'border-gray-200 hover:border-gray-300'

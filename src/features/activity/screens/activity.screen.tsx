@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useAppSelector } from '@/store/store';
 import { applicationService, Application } from '@/features/student/services/application.service';
@@ -81,15 +81,17 @@ function StudentActivity() {
 
   useEffect(() => { fetchApplications(); }, [fetchApplications]);
 
-  const filtered =
-    filter === 'all' ? applications : applications.filter((a) => a.status === filter);
+  const filtered = useMemo(
+    () => (filter === 'all' ? applications : applications.filter((a) => a.status === filter)),
+    [applications, filter],
+  );
 
-  const counts = {
+  const counts = useMemo(() => ({
     all: applications.length,
     pending: applications.filter((a) => a.status === 'pending').length,
     accepted: applications.filter((a) => a.status === 'accepted').length,
     rejected: applications.filter((a) => a.status === 'rejected').length,
-  };
+  }), [applications]);
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">

@@ -55,7 +55,7 @@ export default function MapPickerModal({ initialLat, initialLng, onConfirm, onCl
       <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="font-bold text-dark text-lg">Pick your location</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-colors">
+          <button onClick={onClose} aria-label="Close map picker" className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 transition-colors">
             <i className="fas fa-xmark text-sm" />
           </button>
         </div>

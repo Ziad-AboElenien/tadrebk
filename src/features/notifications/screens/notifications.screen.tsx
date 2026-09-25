@@ -132,7 +132,7 @@ export default function NotificationsScreen() {
           <Link href={dashboardHref} className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:underline">
             <i className="fas fa-arrow-left text-xs" /> Back to Dashboard
           </Link>
-          <h1 className="text-3xl font-bold text-slate-900">Notifications</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Notifications</h1>
           <p className="mt-1 text-sm text-slate-400">
             {unreadCount > 0 ? `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up!'}
           </p>

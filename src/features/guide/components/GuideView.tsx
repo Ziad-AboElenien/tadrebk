@@ -55,7 +55,7 @@ export default function GuideView({ role, welcome = false, onGotIt }: GuideViewP
           <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-6">
             Guide
           </span>
-          <h1 className="text-5xl md:text-6xl font-bold text-[#1a2e35] tracking-tight mb-5">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#1a2e35] tracking-tight mb-5">
             {welcome
               ? isStudent
                 ? 'You\'re in! Here\'s how it works'
@@ -117,7 +117,7 @@ export default function GuideView({ role, welcome = false, onGotIt }: GuideViewP
       <section className="py-14 md:py-20">
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-14">
-            <h2 className="text-4xl md:text-5xl font-bold text-[#1a2e35] tracking-tight mb-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1a2e35] tracking-tight mb-4">
               {isStudent ? 'Your Journey, Step by Step' : 'From Registration to Hiring'}
             </h2>
             <p className="text-slate-400 text-lg max-w-2xl mx-auto">
@@ -187,7 +187,7 @@ export default function GuideView({ role, welcome = false, onGotIt }: GuideViewP
             <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-4">
               Pro Tips
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#1a2e35] tracking-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#1a2e35] tracking-tight">
               {isStudent ? 'Make the Most of Tadrebk' : 'Hire Better, Faster'}
             </h2>
           </div>
@@ -212,7 +212,7 @@ export default function GuideView({ role, welcome = false, onGotIt }: GuideViewP
             <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-4">
               FAQ
             </span>
-            <h2 className="text-4xl md:text-5xl font-bold text-[#1a2e35] tracking-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1a2e35] tracking-tight">
               {isStudent ? 'Students Ask Us' : 'Companies Ask Us'}
             </h2>
           </div>
@@ -242,7 +242,7 @@ export default function GuideView({ role, welcome = false, onGotIt }: GuideViewP
         <div className="max-w-4xl mx-auto px-4 text-center">
           {welcome ? (
             <>
-              <h2 className="text-white text-3xl md:text-4xl font-bold mb-4 tracking-tight">
+              <h2 className="text-white text-2xl sm:text-3xl md:text-4xl font-bold mb-4 tracking-tight">
                 {isStudent ? 'Ready to land your internship?' : 'Ready to build your team?'}
               </h2>
               <p className="text-emerald-200/80 mb-8 max-w-xl mx-auto">
@@ -256,7 +256,7 @@ export default function GuideView({ role, welcome = false, onGotIt }: GuideViewP
             </>
           ) : (
             <>
-              <h2 className="text-white text-3xl md:text-4xl font-bold mb-4 tracking-tight">
+              <h2 className="text-white text-2xl sm:text-3xl md:text-4xl font-bold mb-4 tracking-tight">
                 {isStudent ? 'Ready to Land Your Internship?' : 'Ready to Build Your Team?'}
               </h2>
               <p className="text-emerald-200/80 mb-8 max-w-xl mx-auto">
@@ -283,3 +283,4 @@ export default function GuideView({ role, welcome = false, onGotIt }: GuideViewP
     </div>
   );
 }
+

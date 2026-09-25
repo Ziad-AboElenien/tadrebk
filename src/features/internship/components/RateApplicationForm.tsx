@@ -72,10 +72,11 @@ export default function RateApplicationForm({
       </div>
 
       <div className="mt-5">
-        <label className="text-sm font-medium text-slate-700">
+        <label htmlFor="rating-comment" className="text-sm font-medium text-slate-700">
           Comment <span className="font-normal text-slate-400">(optional)</span>
         </label>
         <textarea
+          id="rating-comment"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           rows={4}

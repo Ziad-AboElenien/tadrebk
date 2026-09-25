@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search, Bell, ChevronDown } from 'lucide-react';
@@ -51,17 +51,17 @@ function SearchResults({
   onNavigate: () => void;
 }) {
   const q = query.trim().toLowerCase();
-  const matchedInterns = q
-    ? interns
+  const matched = useMemo(() => {
+    if (!q) return { interns: [] as Intern[], tasks: [] as Task[], programs: [] as Program[] };
+    return {
+      interns: interns
         .filter((i) => `${i.firstName} ${i.lastName} ${i.email}`.toLowerCase().includes(q))
-        .slice(0, 4)
-    : [];
-  const matchedTasks = q
-    ? tasks.filter((t) => `${t.title} ${t.description || ''}`.toLowerCase().includes(q)).slice(0, 4)
-    : [];
-  const matchedPrograms = q
-    ? programs.filter((p) => `${p.name} ${p.description || ''}`.toLowerCase().includes(q)).slice(0, 3)
-    : [];
+        .slice(0, 4),
+      tasks: tasks.filter((t) => `${t.title} ${t.description || ''}`.toLowerCase().includes(q)).slice(0, 4),
+      programs: programs.filter((p) => `${p.name} ${p.description || ''}`.toLowerCase().includes(q)).slice(0, 3),
+    };
+  }, [q, interns, tasks, programs]);
+  const { interns: matchedInterns, tasks: matchedTasks, programs: matchedPrograms } = matched;
   const empty = matchedInterns.length + matchedTasks.length + matchedPrograms.length === 0;
 
   return (
@@ -188,6 +188,7 @@ return (
       id={id}
       type="text"
       placeholder="Search interns, tasks..."
+      aria-label="Search interns and tasks"
       value={query}
       autoFocus={autoFocus}
       onChange={(e) => {
@@ -426,6 +427,8 @@ export default function TopBar({
             <button
               type="button"
               aria-label="Notifications"
+              aria-haspopup="menu"
+              aria-expanded={notifOpen}
               onClick={openNotifications}
               className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100"
             >

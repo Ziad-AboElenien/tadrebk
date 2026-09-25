@@ -52,6 +52,7 @@ export default function HeroSection() {
                 </span>
                 <input
                   type="text"
+                  aria-label="Search internships by title or skill"
                   placeholder="Try 'Frontend Intern'..."
                   className="w-full text-[13px] text-slate-800 placeholder:text-slate-400 bg-transparent outline-none border-0 ring-0 focus:ring-0 focus:outline-none focus:border-0"
                   style={{ fontSize: 'max(16px, 1rem)' }}
@@ -66,6 +67,7 @@ export default function HeroSection() {
                 </span>
                 <input
                   type="text"
+                  aria-label="Search internships by location"
                   placeholder="Where? e.g. Cairo"
                   className="w-full text-[13px] text-slate-800 placeholder:text-slate-400 bg-transparent outline-none border-0 ring-0 focus:ring-0 focus:outline-none focus:border-0"
                   style={{ fontSize: 'max(16px, 1rem)' }}

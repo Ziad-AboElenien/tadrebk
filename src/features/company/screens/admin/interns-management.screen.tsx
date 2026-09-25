@@ -190,7 +190,7 @@ export default function InternsManagementScreen() {
               <p className="text-sm text-slate-400">Manage and monitor all your internships.</p>
             </div>
             <div className="flex items-center gap-2">
-              <div className="min-w-0 flex-1">
+              <div className="w-fit min-w-0 max-w-full">
                 <GlassFilter
                   options={FILTERS}
                   value={filter}
@@ -317,7 +317,10 @@ export default function InternsManagementScreen() {
                                   e.stopPropagation();
                                   setMenuOpenId((v) => (v === i._id ? null : i._id));
                                 }}
+                                onKeyDown={(e) => { if (e.key === 'Escape') setMenuOpenId(null); }}
                                 aria-label={`Actions for ${i.title}`}
+                                aria-haspopup="menu"
+                                aria-expanded={menuOpenId === i._id}
                                 className="inline-flex items-center rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                               >
                                 <MoreHorizontal size={16} />
@@ -326,7 +329,7 @@ export default function InternsManagementScreen() {
                               {menuOpenId === i._id && (
                                 <>
                                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
-                                  <div className="absolute right-0 top-12 z-20 w-44 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">
+                                  <div role="menu" aria-label={`Actions for ${i.title}`} className="absolute right-0 top-12 z-20 w-44 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();

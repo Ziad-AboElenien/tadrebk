@@ -29,14 +29,6 @@ import { Intern } from '@/features/company/types/management';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
-const SKILLS = [
-  { label: 'Frontend Architecture', pct: 85 },
-  { label: 'Node.js Backend', pct: 92 },
-  { label: 'UI/UX Design Systems', pct: 78 },
-  { label: 'Problem Solving', pct: 95 },
-  { label: 'Teamwork & Communication', pct: 88 },
-];
-
 const TABS = ['Performance Overview', 'Task History', 'Feedback & Reviews'];
 
 function formatDate(dateStr?: string | null): string {
@@ -188,12 +180,15 @@ export default function InternProfileScreen() {
   const initials = (name || intern.email).split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   const email = intern.email;
   const phone = intern.phoneNumber;
-  const skillList = intern.skills && intern.skills.length > 0
-    ? intern.skills.slice(0, 5).map((s) => {
-        const label = typeof s === 'string' ? s : s.name;
-        return { label, pct: 70 + (Math.abs(label.length * 7) % 26) };
-      })
-    : SKILLS;
+  // Skills come straight from the intern's profile — shown as-is, no invented scores.
+  const skillLabels = (intern.skills || [])
+    .slice(0, 8)
+    .map((s) => (typeof s === 'string' ? s : s.name))
+    .filter(Boolean);
+  const avgRating =
+    intern.ratingCount != null && intern.ratingCount > 0
+      ? (intern.ratingSum || 0) / intern.ratingCount
+      : null;
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -321,8 +316,12 @@ export default function InternProfileScreen() {
                     <p className="text-xs uppercase tracking-wide text-slate-400">Performance Score</p>
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600"><TrendingUp size={15} /></span>
                   </div>
-                  <p className="mt-2 text-2xl font-bold text-slate-900">{intern.totalPoints}</p>
-                  <p className="text-xs text-emerald-600">Points earned</p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900">
+                    {avgRating != null ? `${avgRating.toFixed(1)}/5` : '—'}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {avgRating != null ? `From ${intern.ratingCount} rating${intern.ratingCount === 1 ? '' : 's'}` : 'No ratings yet'}
+                  </p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-white p-5">
                   <div className="flex items-start justify-between">
@@ -363,25 +362,30 @@ export default function InternProfileScreen() {
                   <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <div>
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-slate-900">Skill Distribution</h4>
-                        <span className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-500">Real</span>
+                        <h4 className="font-medium text-slate-900">Skills</h4>
+                        <span className="rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-500">
+                          {skillLabels.length} listed
+                        </span>
                       </div>
-                      <div className="mt-4 space-y-3">
-                        {skillList.map((s) => (
-                          <div key={s.label}>
-                            <div className="flex justify-between gap-2 text-xs">
-                              <span className="min-w-0 flex-1 break-words text-slate-600">{s.label}</span>
-                              <span className="shrink-0 font-medium text-slate-900">{s.pct}%</span>
-                            </div>
-                            <div className="mt-1 h-1.5 rounded-full bg-slate-100">
-                              <div className="h-1.5 rounded-full bg-emerald-500" style={{ width: `${s.pct}%` }} />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      {skillLabels.length === 0 ? (
+                        <p className="mt-4 text-sm text-slate-400">No skills listed on this profile.</p>
+                      ) : (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {skillLabels.map((label) => (
+                            <span key={label} className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
+                              {label}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <div className="mt-4 flex gap-2 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-700">
                         <Info size={14} className="mt-0.5 shrink-0" />
-                        <p><span className="font-semibold">Insight:</span> Fast-moving intern with growing points across completed tasks.</p>
+                        <p>
+                          <span className="font-semibold">Insight:</span>{' '}
+                          {avgRating != null
+                            ? `Rated ${avgRating.toFixed(1)}/5 across ${intern.ratingCount} review${intern.ratingCount === 1 ? '' : 's'} with ${intern.totalPoints ?? 0} points earned.`
+                            : `No reviews yet · ${intern.totalPoints ?? 0} points earned so far.`}
+                        </p>
                       </div>
                     </div>
                   </div>

@@ -83,7 +83,7 @@ export default function CompanyProfileOwn({ company, postings, totalApplicants, 
       {/* ---------- cover + identity ---------- */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div className="relative h-44 bg-gradient-to-r from-slate-900 to-slate-700">
-          {coverUrl && <img src={coverUrl} alt="" className="h-full w-full object-cover" />}
+          {coverUrl && <img src={coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />}
           <Link
             href="/company/settings"
             className="absolute right-4 top-4 flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 backdrop-blur hover:bg-white"
@@ -366,3 +366,4 @@ export default function CompanyProfileOwn({ company, postings, totalApplicants, 
     </main>
   );
 }
+

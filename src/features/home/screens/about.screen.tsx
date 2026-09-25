@@ -98,7 +98,7 @@ function TeamCard({ member, index }: { member: (typeof team)[number]; index: num
       style={{ transitionDelay: `${index * 150}ms` }}
     >
       {/* Image full-height with info overlay at bottom */}
-      <div className="relative h-[540px] rounded-3xl overflow-hidden bg-slate-100">
+      <div className="relative h-80 rounded-3xl overflow-hidden bg-slate-100 sm:h-[440px] lg:h-[540px]">
         <Image
           src={member.image}
           alt={member.name}

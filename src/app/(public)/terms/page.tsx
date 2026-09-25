@@ -98,7 +98,7 @@ export default function TermsPage() {
           <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-6">
             Legal
           </span>
-          <h1 className="text-5xl md:text-6xl font-bold text-[#1a2e35] tracking-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#1a2e35] tracking-tight mb-6">
             Terms of Service
           </h1>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
@@ -131,3 +131,4 @@ export default function TermsPage() {
     </div>
   );
 }
+

@@ -224,13 +224,16 @@ export default function ProjectsScreen() {
                               e.stopPropagation();
                               setOpenMenuId((cur) => (cur === p._id ? null : p._id));
                             }}
+                            onKeyDown={(e) => { if (e.key === 'Escape') setOpenMenuId(null); }}
                             aria-label={`Actions for ${p.name}`}
+                            aria-haspopup="menu"
+                            aria-expanded={openMenuId === p._id}
                             className="inline-flex items-center rounded-lg p-2 text-white/90 hover:bg-white/20 hover:text-white"
                           >
                             <MoreHorizontal size={16} />
                           </button>
                           {openMenuId === p._id && (
-                            <div data-row-menu className="absolute right-0 top-10 z-10 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-sm text-slate-600 shadow-lg">
+                            <div data-row-menu role="menu" aria-label={`Actions for ${p.name}`} className="absolute right-0 top-10 z-10 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-sm text-slate-600 shadow-lg">
                               <Link
                                 href={`/company/admin/projects/${p._id}`}
                                 onClick={() => setOpenMenuId(null)}

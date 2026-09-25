@@ -6,7 +6,6 @@ import { adminService } from '@/features/admin/services/admin.service';
 import { Company, getCompanyImgUrl } from '@/features/company/types';
 import MediaImage from '@/components/ui/MediaImage';
 import Button from '@/components/ui/Button';
-import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import Pagination from '@/components/ui/Pagination';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -138,7 +137,18 @@ ariaLabel="Filter companies"
 </div>
 
       {loading ? (
-        <div className="flex justify-center py-20"><Spinner /></div>
+        <div className="space-y-3 animate-pulse">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white p-4">
+              <div className="h-12 w-12 shrink-0 rounded-2xl bg-slate-100" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-1/2 rounded-full bg-slate-100" />
+                <div className="h-3 w-1/3 rounded-full bg-slate-100" />
+              </div>
+              <div className="h-8 w-20 shrink-0 rounded-lg bg-slate-100" />
+            </div>
+          ))}
+        </div>
       ) : companies.length === 0 ? (
         <div className="bg-white border border-slate-100 rounded-3xl shadow-sm text-center py-16 text-slate-400">
           <i className="fas fa-building text-3xl mb-3 block" />
@@ -165,6 +175,25 @@ ariaLabel="Filter companies"
                         {company.industry && <span className="mr-3">{company.industry}</span>}
                         {company.companyEmail && <span>{company.companyEmail}</span>}
                       </p>
+                      {(() => {
+                        const legal = company.legalAttachment;
+                        const url =
+                          typeof legal === 'string'
+                            ? legal
+                            : legal && typeof legal.secure_url === 'string'
+                              ? legal.secure_url
+                              : null;
+                        return url ? (
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:underline"
+                          >
+                            <i className="fas fa-file-contract" /> View legal document
+                          </a>
+                        ) : null;
+                      })()}
                       {company.createdAt && (
                         <p className="text-xs text-slate-400 mt-0.5">
                           Created {new Date(company.createdAt).toLocaleDateString('en-US', {
@@ -249,3 +278,4 @@ ariaLabel="Filter companies"
     </div>
   );
 }
+

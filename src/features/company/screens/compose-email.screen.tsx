@@ -8,7 +8,6 @@ import { internshipService } from '@/features/internship/services/internship.ser
 import { applicationService, Application } from '@/features/student/services/application.service';
 import { Internship } from '@/features/internship/types';
 import Button from '@/components/ui/Button';
-import Spinner from '@/components/ui/Spinner';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
 
@@ -95,8 +94,19 @@ export default function ComposeEmailScreen() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Spinner />
+      <div className="min-h-screen bg-slate-50">
+        <main className="mx-auto w-full max-w-3xl space-y-4 px-4 py-8 animate-pulse">
+          <div className="h-8 w-64 rounded-lg bg-slate-200" />
+          <div className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6">
+            <div className="h-4 w-32 rounded-full bg-slate-100" />
+            <div className="h-11 rounded-xl bg-slate-100" />
+            <div className="h-4 w-32 rounded-full bg-slate-100" />
+            <div className="h-11 rounded-xl bg-slate-100" />
+            <div className="h-4 w-32 rounded-full bg-slate-100" />
+            <div className="h-40 rounded-xl bg-slate-100" />
+            <div className="h-11 w-40 rounded-xl bg-slate-100" />
+          </div>
+        </main>
       </div>
     );
   }

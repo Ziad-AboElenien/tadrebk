@@ -191,8 +191,9 @@ export default function EvaluationNewScreen() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700">Strengths</label>
+                <label htmlFor="eval-strengths" className="text-sm font-medium text-slate-700">Strengths</label>
                 <textarea
+                  id="eval-strengths"
                   rows={3}
                   value={strengths}
                   onChange={(e) => setStrengths(e.target.value)}
@@ -200,8 +201,9 @@ export default function EvaluationNewScreen() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-slate-700">Areas to improve</label>
+                <label htmlFor="eval-improvements" className="text-sm font-medium text-slate-700">Areas to improve</label>
                 <textarea
+                  id="eval-improvements"
                   rows={3}
                   value={improvements}
                   onChange={(e) => setImprovements(e.target.value)}
@@ -209,8 +211,9 @@ export default function EvaluationNewScreen() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-slate-700">Private notes (admin only)</label>
+                <label htmlFor="eval-private-notes" className="text-sm font-medium text-slate-700">Private notes (admin only)</label>
                 <textarea
+                  id="eval-private-notes"
                   rows={3}
                   value={privateNotes}
                   onChange={(e) => setPrivateNotes(e.target.value)}

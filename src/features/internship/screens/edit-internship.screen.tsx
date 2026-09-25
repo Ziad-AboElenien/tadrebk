@@ -14,7 +14,6 @@ import Input from '@/components/ui/Input';
 import ChipInput from '@/components/ui/ChipInput';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
-import Spinner from '@/components/ui/Spinner';
 import dynamic from 'next/dynamic';
 const UniversityAutocomplete = dynamic(() => import('@/components/ui/UniversityAutocomplete'), { ssr: false });
 import { getErrorMessage } from '@/lib/axios';
@@ -211,7 +210,21 @@ export default function EditInternshipScreen() {
   }
 
   if (loading) {
-    return <div className="flex justify-center py-20"><Spinner /></div>;
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 py-8 animate-pulse">
+        <div className="mb-6 h-8 w-64 rounded-lg bg-slate-200" />
+        <div className="space-y-4 rounded-3xl border border-slate-100 bg-white p-6">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="space-y-2">
+              <div className="h-3 w-28 rounded-full bg-slate-100" />
+              <div className="h-11 rounded-xl bg-slate-100" />
+            </div>
+          ))}
+          <div className="h-32 rounded-xl bg-slate-100" />
+          <div className="h-11 w-40 rounded-xl bg-slate-100" />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -533,3 +546,4 @@ export default function EditInternshipScreen() {
     </div>
   );
 }
+

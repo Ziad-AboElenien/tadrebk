@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import type { Category } from '@/features/student/types';
@@ -30,12 +30,12 @@ const TRACK_ICONS: Record<string, string> = {
   other: 'fa-ellipsis',
 };
 
-const CARD_GRADIENTS = [
-  'from-emerald-500 to-teal-400',
-  'from-blue-500 to-indigo-400',
-  'from-amber-400 to-orange-400',
-  'from-pink-400 to-rose-400',
-  'from-violet-500 to-purple-400',
+const CARD_TINTS = [
+  'from-emerald-500 to-teal-500',
+  'from-blue-500 to-indigo-500',
+  'from-amber-400 to-orange-500',
+  'from-pink-500 to-rose-500',
+  'from-violet-500 to-purple-500',
 ];
 
 interface Props {
@@ -69,7 +69,7 @@ export default function Step3Recommendations({
             (t) => tracks.includes(t) || cats.includes(t)
           );
         });
-        setInternships(matched.length > 0 ? matched.slice(0, 6) : all.slice(0, 6));
+        setInternships(matched.length > 0 ? matched.slice(0, 5) : all.slice(0, 5));
       } catch {
         // silently fail
       } finally {
@@ -80,74 +80,70 @@ export default function Step3Recommendations({
   }, [selectedTracks]);
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto scrollbar-none -mx-2 px-2">
-        {/* Success Header */}
-        <div className="text-center mb-6">
+    <div className="flex h-full flex-col overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-[0_24px_70px_-24px_rgba(16,185,129,0.4)]">
+      <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {/* Celebration */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 px-6 pb-8 pt-8 text-center sm:px-8">
+          <div className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-white/15 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-14 -right-8 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
           <motion.div
-            initial={{ scale: 0, rotate: -180 }}
+            initial={{ scale: 0, rotate: -120 }}
             animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.1 }}
-            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-200"
+            transition={{ type: 'spring', stiffness: 220, damping: 13, delay: 0.1 }}
+            className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white text-emerald-500 shadow-xl shadow-emerald-900/20"
           >
-            <i className="fas fa-check text-2xl" />
+            <i className="fas fa-check text-3xl" />
+            <motion.span
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: [0, 1.4, 1], opacity: [0, 0.6, 0] }}
+              transition={{ duration: 1.2, delay: 0.4 }}
+              className="absolute inset-0 rounded-full border-4 border-white"
+            />
           </motion.div>
-          <motion.h2
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-xl sm:text-2xl font-bold text-slate-900"
-          >
-            You&apos;re all set, {userName}!
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mt-2 text-sm text-slate-400"
-          >
-            Here are tracks we recommend for you
-          </motion.p>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+            <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-100">
+              Step 3 of 3 · All set
+            </p>
+            <h2 className="mt-1.5 text-2xl font-black text-white sm:text-[28px]">
+              Welcome aboard{userName && userName !== 'there' ? `, ${userName}` : ''}!
+            </h2>
+            <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+              {selectedTracks.map((cat, i) => (
+                <motion.span
+                  key={cat}
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 + i * 0.05 }}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[11px] font-bold text-white backdrop-blur"
+                >
+                  <i className={`fas ${TRACK_ICONS[cat] || 'fa-tag'} text-[9px]`} />
+                  {CATEGORY_LABELS[cat] || cat}
+                </motion.span>
+              ))}
+            </div>
+          </motion.div>
         </div>
 
-        {/* Recommended Tracks */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="flex flex-wrap gap-2 justify-center mb-6"
-        >
-          {selectedTracks.map((cat, i) => (
-            <motion.span
-              key={cat}
-              initial={{ opacity: 0, scale: 0.7 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6 + i * 0.05, type: 'spring', stiffness: 400, damping: 20 }}
-              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-700"
-            >
-              <i className={`fas ${TRACK_ICONS[cat] || 'fa-tag'} text-[10px]`} />
-              {CATEGORY_LABELS[cat] || cat}
-            </motion.span>
-          ))}
-        </motion.div>
-
-        {/* Matching Internships */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-        >
-          <p className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wide">
-            {loading ? 'Finding matches...' : 'Matching internships for you'}
-          </p>
+        {/* Matches */}
+        <div className="px-4 py-5 sm:px-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-black text-slate-900">
+              {loading ? 'Finding your matches…' : 'Top matches for you'}
+            </p>
+            {!loading && internships.length > 0 && (
+              <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-600">
+                {internships.length} found
+              </span>
+            )}
+          </div>
           {loading ? (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {[1, 2, 3].map((n) => (
-                <div key={n} className="animate-pulse flex gap-3 rounded-xl bg-slate-50 p-3">
-                  <div className="h-12 w-12 rounded-lg bg-slate-200" />
-                  <div className="flex-1 space-y-2 py-1">
-                    <div className="h-3 bg-slate-200 rounded w-3/4" />
-                    <div className="h-2.5 bg-slate-200 rounded w-1/2" />
+                <div key={n} className="flex animate-pulse items-center gap-3 rounded-2xl bg-slate-50 p-3.5">
+                  <div className="h-12 w-12 rounded-2xl bg-slate-200" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-3/4 rounded-full bg-slate-200" />
+                    <div className="h-2.5 w-1/2 rounded-full bg-slate-200" />
                   </div>
                 </div>
               ))}
@@ -166,59 +162,57 @@ export default function Step3Recommendations({
                 return (
                   <motion.div
                     key={intern._id}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 + i * 0.06 }}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.55 + i * 0.07 }}
                   >
                     <Link
                       href={`/internships/${intern._id}`}
-                      className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 hover:bg-white hover:border-emerald-200 hover:shadow-sm transition-all duration-200 group"
+                      className="group flex items-center gap-3 rounded-2xl bg-slate-50 p-3.5 shadow-[inset_0_0_0_1.5px_transparent] transition-all duration-200 hover:bg-white hover:shadow-[inset_0_0_0_1.5px_#a7f3d0,0_10px_24px_-12px_rgba(16,185,129,0.5)]"
                     >
-                      <div
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${
-                          CARD_GRADIENTS[i % CARD_GRADIENTS.length]
-                        } text-white text-xs shadow-sm`}
+                      <span
+                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${CARD_TINTS[i % CARD_TINTS.length]} text-sm text-white shadow-md`}
                       >
                         <i className="fas fa-briefcase" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-slate-900 truncate group-hover:text-emerald-600 transition-colors">
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-bold text-slate-900 group-hover:text-emerald-700">
                           {intern.title}
-                        </p>
-                        <p className="text-[10px] text-slate-400 truncate">
-                          {companyName} &middot; {intern.location || 'Remote'}
-                        </p>
-                      </div>
-                      <i className="fas fa-chevron-right text-[10px] text-slate-300 group-hover:text-emerald-500 transition-colors shrink-0" />
+                        </span>
+                        <span className="mt-0.5 block truncate text-xs text-slate-400">
+                          {companyName} · {intern.location || 'Remote'}
+                        </span>
+                      </span>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-slate-300 shadow-sm transition-all group-hover:bg-emerald-500 group-hover:text-white">
+                        <i className="fas fa-arrow-right text-[11px]" />
+                      </span>
                     </Link>
                   </motion.div>
                 );
               })}
             </div>
           ) : (
-            <p className="text-xs text-slate-400 text-center py-4">
-              No matching internships found right now. Check back later!
-            </p>
+            <div className="rounded-2xl bg-slate-50 px-4 py-8 text-center">
+              <i className="fas fa-magnifying-glass mb-2 block text-xl text-slate-300" />
+              <p className="text-xs text-slate-400">No matches yet — new internships land daily.</p>
+            </div>
           )}
-        </motion.div>
+        </div>
       </div>
 
-      {/* Actions */}
-      <div className="mt-4 pt-4 border-t border-slate-100 flex gap-3">
-        <Button variant="secondary" onClick={onBack} className="flex-1" disabled={saving}>
-          <i className="fas fa-arrow-left text-xs mr-2" />
-          Back
+      {/* Footer */}
+      <div className="flex items-center gap-3 border-t border-slate-100 bg-white/90 px-4 py-3.5 backdrop-blur sm:px-5">
+        <Button variant="secondary" onClick={onBack} className="!w-auto px-6" disabled={saving}>
+          <i className="fas fa-arrow-left mr-2 text-xs" /> Back
         </Button>
         <Button onClick={onFinish} className="flex-1" disabled={saving}>
           {saving ? (
             <>
-              <i className="fas fa-spinner fa-spin text-xs mr-2" />
-              Saving...
+              <i className="fas fa-spinner fa-spin mr-2 text-xs" /> Saving…
             </>
           ) : (
             <>
-              Go to Dashboard
-              <i className="fas fa-arrow-right text-xs ml-2" />
+              Take the tour <i className="fas fa-route ml-2 text-xs" />
             </>
           )}
         </Button>

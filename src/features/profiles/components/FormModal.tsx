@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { X, type LucideIcon } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { useFocusTrap } from '@/components/ui/use-focus-trap';
 
 interface FormModalProps {
   open: boolean;
@@ -43,12 +44,15 @@ export default function FormModal({
     return () => document.removeEventListener('keydown', handleKey);
   }, [open, onClose]);
 
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
+    <div ref={trapRef} className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4" role="dialog" aria-modal="true" aria-label={title}>
       <div className="absolute inset-0 animate-fade-in bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div
+        role="document"
         className={`relative my-auto w-full animate-scale-in rounded-3xl bg-white shadow-2xl ${
           wide ? 'max-w-2xl' : 'max-w-lg'
         }`}

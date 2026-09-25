@@ -38,9 +38,11 @@ export default function PerformanceChart({
       .range([0, innerWidth])
       .padding(0.25);
 
+    const peak = d3.max(data, (d) => d.value) ?? 0;
     const y = d3
       .scaleLinear()
-      .domain([0, d3.max(data, (d) => d.value) ?? 0])
+      // Never a degenerate [0,0] domain on empty/all-zero data.
+      .domain([0, Math.max(1, peak)])
       .range([innerHeight, 0])
       .nice();
 

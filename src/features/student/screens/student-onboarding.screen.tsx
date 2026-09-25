@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppDispatch, useAppSelector } from '@/store/store';
@@ -12,13 +12,23 @@ import Step1Tracks from '@/features/student/components/onboarding/Step1Tracks';
 import Step2Preferences from '@/features/student/components/onboarding/Step2Preferences';
 import Step3Recommendations from '@/features/student/components/onboarding/Step3Recommendations';
 
-const STEPS = [1, 2, 3];
+const STEPS = [
+  { n: 1, label: 'Interests', icon: 'fa-layer-group' },
+  { n: 2, label: 'Preferences', icon: 'fa-sliders' },
+  { n: 3, label: 'Matches', icon: 'fa-sparkles' },
+];
 
 export default function StudentOnboardingScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const userId = useAppSelector((s) => s.auth.userId);
+  const role = useAppSelector((s) => s.auth.role);
   const currentUser = useAppSelector((s) => s.user.currentUser);
+
+  // Company accounts never belong here — bounce them to their own track.
+  useEffect(() => {
+    if (role === 'company') router.replace('/company/admin');
+  }, [role, router]);
 
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
@@ -59,9 +69,9 @@ export default function StudentOnboardingScreen() {
 
   const slideVariants = {
     enter: (dir: number) => ({
-      x: dir > 0 ? 300 : -300,
+      x: dir > 0 ? 120 : -120,
       opacity: 0,
-      scale: 0.96,
+      scale: 0.98,
     }),
     center: {
       x: 0,
@@ -69,61 +79,83 @@ export default function StudentOnboardingScreen() {
       scale: 1,
     },
     exit: (dir: number) => ({
-      x: dir > 0 ? -300 : 300,
+      x: dir > 0 ? -120 : 120,
       opacity: 0,
-      scale: 0.96,
+      scale: 0.98,
     }),
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex flex-col">
-      {/* Top Progress */}
-      <div className="w-full max-w-xl mx-auto px-6 pt-10 pb-4">
-        <div className="flex items-center justify-between mb-2">
-          {STEPS.map((s) => (
-            <div key={s} className="flex items-center gap-2">
-              <motion.div
-                className={`flex items-center justify-center rounded-full text-xs font-bold transition-colors duration-500 ${
-                  s <= step
-                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
-                    : 'bg-slate-200 text-slate-400'
-                }`}
-                animate={{
-                  width: s === step ? 40 : 32,
-                  height: s === step ? 40 : 32,
-                  scale: s === step ? 1.1 : 1,
-                }}
-                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-              >
-                {s < step ? (
-                  <i className="fas fa-check text-[11px]" />
-                ) : (
-                  s
-                )}
-              </motion.div>
-              {s < 3 && (
-                <div className="w-12 sm:w-20 h-1 rounded-full bg-slate-200 overflow-hidden">
-                  <motion.div
-                    className="h-full bg-emerald-500 rounded-full"
-                    initial={{ width: '0%' }}
-                    animate={{
-                      width: s < step ? '100%' : s === step ? '50%' : '0%',
-                    }}
-                    transition={{ duration: 0.6, ease: 'easeInOut' }}
-                  />
-                </div>
-              )}
-            </div>
-          ))}
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#f4faf7]">
+      {/* Backdrop decor */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-emerald-200/40 blur-3xl" />
+        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-teal-200/40 blur-3xl" />
+        <div className="absolute left-1/2 top-1/3 h-[30rem] w-[30rem] -translate-x-1/2 rounded-full bg-cyan-100/30 blur-3xl" />
+      </div>
+
+      {/* Top bar */}
+      <div className="relative mx-auto w-full max-w-2xl px-4 pb-2 pt-8 sm:pt-10">
+        <div className="flex items-center justify-center gap-2.5">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-200">
+            <i className="fas fa-graduation-cap text-sm" />
+          </span>
+          <span className="text-lg font-black tracking-tight text-slate-900">Tadrebk</span>
         </div>
-        <p className="text-center text-xs text-slate-400 font-medium">
-          Step {step} of 3
+        <p className="mt-2 text-center text-sm text-slate-500">
+          Let&apos;s set up your profile in <span className="font-bold text-slate-700">3 quick steps</span>
         </p>
+
+        {/* Stepper */}
+        <div className="mt-6">
+          <div className="flex items-start">
+            {STEPS.map((s, i) => {
+              const done = s.n < step;
+              const current = s.n === step;
+              return (
+                <div key={s.n} className={`flex ${i < STEPS.length - 1 ? 'flex-1' : ''}`}>
+                  <div className="flex flex-col items-center">
+                    <motion.div
+                      animate={current ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.4 }}
+                      className={`flex h-11 w-11 items-center justify-center rounded-2xl text-sm transition-all duration-300 ${
+                        done
+                          ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+                          : current
+                            ? 'bg-white text-emerald-600 shadow-[inset_0_0_0_2px_#10b981,0_8px_20px_-8px_rgba(16,185,129,0.6)]'
+                            : 'bg-white text-slate-300 shadow-[inset_0_0_0_2px_#e8eef4]'
+                      }`}
+                    >
+                      {done ? <i className="fas fa-check text-xs" /> : <i className={`fas ${s.icon}`} />}
+                    </motion.div>
+                    <span
+                      className={`mt-1.5 text-[10px] font-bold uppercase tracking-wider ${
+                        current ? 'text-emerald-600' : done ? 'text-slate-500' : 'text-slate-300'
+                      }`}
+                    >
+                      {s.label}
+                    </span>
+                  </div>
+                  {i < STEPS.length - 1 && (
+                    <div className="relative mx-2 mt-[22px] h-0.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+                      <motion.div
+                        className="absolute inset-0 origin-left rounded-full bg-emerald-500"
+                        initial={false}
+                        animate={{ scaleX: s.n < step ? 1 : 0 }}
+                        transition={{ duration: 0.5, ease: 'easeInOut' }}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Step Content */}
-      <div className="flex-1 flex items-center justify-center px-4 pb-10 overflow-hidden">
-        <div className="w-full max-w-xl relative" style={{ minHeight: 480 }}>
+      <div className="relative mx-auto flex w-full max-w-2xl flex-1 items-stretch px-4 pb-8 pt-4 sm:pb-10">
+        <div className="relative max-h-[640px] min-h-[540px] w-full">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={step}
@@ -133,9 +165,9 @@ export default function StudentOnboardingScreen() {
               animate="center"
               exit="exit"
               transition={{
-                x: { type: 'spring', stiffness: 300, damping: 30 },
-                opacity: { duration: 0.3 },
-                scale: { duration: 0.3 },
+                x: { type: 'spring', stiffness: 320, damping: 32 },
+                opacity: { duration: 0.25 },
+                scale: { duration: 0.25 },
               }}
               className="absolute inset-0"
             >

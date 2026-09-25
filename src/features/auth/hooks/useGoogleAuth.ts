@@ -11,7 +11,7 @@ import { setUser } from '@/store/userSlice';
 import { setCompany } from '@/store/companySlice';
 import { companyService } from '@/features/company/services/company.service';
 import { userService } from '@/features/student/services/user.service';
-import { LS_PENDING_ONBOARDING, LS_PENDING_EMAIL } from '@/lib/constants';
+import { LS_PENDING_ONBOARDING, LS_PENDING_EMAIL, LS_INTENDED_ROLE, LS_COMPANY_ID } from '@/lib/constants';
 
 function parseJwt(token: string) {
   try {
@@ -79,7 +79,11 @@ export function useGoogleAuth() {
 
         const { companies } = await companyService.listCompanies({ limit: 50 });
 
-        let role: 'student' | 'company' = 'student';
+        const backendRole = (user as { role?: string }).role || '';
+        const isCompanyByRole = /company/i.test(backendRole);
+
+        let role: 'student' | 'company' = isCompanyByRole ? 'company' : 'student';
+        let companyLoaded = false;
         const owned = companies.find((c) => {
           const createdBy =
             typeof c.createdBy === 'object' && c.createdBy !== null
@@ -91,8 +95,14 @@ export function useGoogleAuth() {
           role = 'company';
           const full = await companyService.getCompanyById(owned._id);
           dispatch(setCompany(full));
+          localStorage.setItem(LS_COMPANY_ID, full._id);
+          companyLoaded = true;
         }
 
+        // Capture signup intent BEFORE setTokens — it clears these flags.
+        const companyIntent =
+          localStorage.getItem(LS_INTENDED_ROLE) === 'company' ||
+          localStorage.getItem(LS_PENDING_ONBOARDING) === 'true';
         dispatch(setTokens({ tokens, userId, role }));
         dispatch(setUser(user));
 
@@ -115,12 +125,19 @@ export function useGoogleAuth() {
           return;
         }
 
-        if (role === 'company') {
+        if (role === 'company' && companyLoaded) {
           router.push('/company/admin');
-        } else if (!user.categories || user.categories.length === 0) {
-          router.push('/onboarding');
+        } else if (role === 'company' || companyIntent) {
+          localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
+          router.push('/company/onboarding');
         } else {
-          router.push('/dashboard');
+          // Student account — a pending flag here belongs to another account.
+          localStorage.removeItem(LS_PENDING_ONBOARDING);
+          if (!user.categories || user.categories.length === 0) {
+            router.push('/student/onboarding');
+          } else {
+            router.push('/dashboard');
+          }
         }
       } catch (err) {
         toastHelper.error(getErrorMessage(err));

@@ -226,6 +226,7 @@ export default function Footer() {
               <input
                 type="email"
                 value={newsletterEmail}
+                aria-label="Email for newsletter"
                 onChange={(e) => setNewsletterEmail(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSubscribe(); }}
                 placeholder="Enter your email"

@@ -93,8 +93,9 @@ export default function CourseModal({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-slate-700">Start date</label>
+          <label htmlFor="course-start-date" className="text-sm font-semibold text-slate-700">Start date</label>
           <input
+            id="course-start-date"
             type="month"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
@@ -102,8 +103,9 @@ export default function CourseModal({
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-slate-700">End date</label>
+          <label htmlFor="course-end-date" className="text-sm font-semibold text-slate-700">End date</label>
           <input
+            id="course-end-date"
             type="month"
             value={present ? '' : endDate}
             onChange={(e) => setEndDate(e.target.value)}
@@ -136,10 +138,11 @@ export default function CourseModal({
       </button>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-slate-700">
+        <label htmlFor="course-description" className="text-sm font-semibold text-slate-700">
           Description <span className="font-normal text-slate-400">(optional)</span>
         </label>
         <textarea
+          id="course-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}

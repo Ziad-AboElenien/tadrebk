@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { CalendarCheck } from 'lucide-react';
 import type { InternAttendance } from '@/features/intern/types';
 
@@ -22,12 +23,15 @@ export default function StudentAttendanceSection({
   records: InternAttendance[];
   loading?: boolean;
 }) {
-  const total = records.length;
-  const present = records.filter((r) => r.status === 'attended' || r.status === 'late').length;
-  const pct = total === 0 ? 0 : Math.round((present / total) * 100);
-  const recent = [...records]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 7);
+  const { total, present, pct, recent } = useMemo(() => {
+    const total = records.length;
+    const present = records.filter((r) => r.status === 'attended' || r.status === 'late').length;
+    const pct = total === 0 ? 0 : Math.round((present / total) * 100);
+    const recent = [...records]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 7);
+    return { total, present, pct, recent };
+  }, [records]);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6">

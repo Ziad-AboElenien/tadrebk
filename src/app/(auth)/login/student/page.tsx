@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import LoginForm from '@/features/auth/components/LoginForm';
-import Spinner from '@/components/ui/Spinner';
+import { AuthFormSkeleton } from '@/components/ui/PageSkeletons';
 
 export const metadata: Metadata = {
   title: 'Student Sign In',
@@ -10,14 +10,9 @@ export const metadata: Metadata = {
 
 export default function StudentLoginPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex justify-center py-12">
-          <Spinner />
-        </div>
-      }
-    >
+    <Suspense fallback={<AuthFormSkeleton />}>
       <LoginForm role="student" />
     </Suspense>
   );
 }
+

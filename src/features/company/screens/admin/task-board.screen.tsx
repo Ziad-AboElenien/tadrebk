@@ -300,9 +300,15 @@ export default function TaskBoardScreen() {
       );
       const ok = results.filter((r) => r.status === 'fulfilled').length;
       const fail = results.length - ok;
-      toastHelper.success(
-        fail > 0 ? `${ok} updated · ${fail} failed` : `${ok} task(s) ${confirmBulk.action === 'archive' ? 'archived' : 'marked complete'}`,
-      );
+      if (fail > 0 && ok === 0) {
+        toastHelper.error('Move not allowed for these tasks');
+      } else if (fail > 0) {
+        toastHelper.warning(`${ok} updated · ${fail} failed`);
+      } else {
+        toastHelper.success(
+          `${ok} task(s) ${confirmBulk.action === 'archive' ? 'archived' : 'marked complete'}`,
+        );
+      }
       setConfirmBulk(null);
       setColMenu(null);
       fetchAll();
@@ -333,8 +339,13 @@ export default function TaskBoardScreen() {
           );
           const ok = results.filter((r) => r.status === 'fulfilled').length;
           const fail = results.length - ok;
-          if (fail > 0) toastHelper.success(`${ok} moved · ${fail} failed`);
-          else toastHelper.success(`Moved to ${STATUS_LABEL[to]}`);
+          if (fail > 0 && ok === 0) {
+            toastHelper.error(`Cannot move to ${STATUS_LABEL[to]}`);
+          } else if (fail > 0) {
+            toastHelper.warning(`${ok} moved · ${fail} failed`);
+          } else {
+            toastHelper.success(`Moved to ${STATUS_LABEL[to]}`);
+          }
         }
         fetchAll();
       } catch (err) {
@@ -859,7 +870,7 @@ export default function TaskBoardScreen() {
                 .flatMap((k) => columns[k]).length === 0 ? (
                 <p className="p-6 text-center text-sm text-slate-400">No tasks found.</p>
               ) : (
-                <div className="divide-y divide-slate-100">
+                <div className="space-y-2.5 p-2.5 sm:p-3">
                   {(Object.keys(columns) as TaskStatus[])
                     .filter((k) => k !== 'archived')
                     .flatMap((k) => columns[k])
@@ -870,7 +881,7 @@ export default function TaskBoardScreen() {
                           onClick={() => openBroadcast(item.card.taskGroupId)}
                           disabled={opening === item.card.taskGroupId}
                           style={{ borderLeftColor: priorityTheme(item.card.priority).banner }}
-                          className={`flex w-full flex-wrap items-center gap-3 border-l-4 px-4 py-3.5 text-left transition-shadow hover:shadow-sm disabled:opacity-60 sm:flex-nowrap ${priorityTheme(item.card.priority).cardBg}`}
+                          className={`flex w-full flex-wrap items-center gap-3 rounded-xl border border-slate-100 border-l-4 px-4 py-3.5 text-left transition-shadow hover:shadow-sm disabled:opacity-60 sm:flex-nowrap ${priorityTheme(item.card.priority).cardBg}`}
                         >
                           <div className="flex min-w-0 flex-1 items-center gap-3">
                             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 font-semibold text-indigo-600">
@@ -923,7 +934,7 @@ export default function TaskBoardScreen() {
                           key={item.task._id}
                           href={`/company/admin/tasks/${item.task._id}?internId=${idOf(item.task.internId)}`}
                           style={{ borderLeftColor: priorityTheme(item.task.priority).banner }}
-                          className={`flex w-full flex-wrap items-center gap-3 border-l-4 px-4 py-3.5 transition-shadow hover:shadow-sm sm:flex-nowrap ${priorityTheme(item.task.priority).cardBg}`}
+                          className={`flex w-full flex-wrap items-center gap-3 rounded-xl border border-slate-100 border-l-4 px-4 py-3.5 transition-shadow hover:shadow-sm sm:flex-nowrap ${priorityTheme(item.task.priority).cardBg}`}
                         >
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold text-slate-900">{item.task.title}</span>
@@ -996,7 +1007,10 @@ export default function TaskBoardScreen() {
                     <div className="relative flex items-center gap-1 text-slate-400">
                       <button
                         aria-label={`More options for ${col.title}`}
+                        aria-haspopup="menu"
+                        aria-expanded={colMenu === col.key}
                         onClick={() => setColMenu((m) => (m === col.key ? null : col.key))}
+                        onKeyDown={(e) => { if (e.key === 'Escape') setColMenu(null); }}
                         className="rounded-md p-1 hover:bg-slate-200/70 hover:text-slate-600"
                       >
                         <MoreHorizontal size={15} />
@@ -1004,7 +1018,7 @@ export default function TaskBoardScreen() {
                       {colMenu === col.key && (
                         <>
                           <div className="fixed inset-0 z-30" onClick={() => setColMenu(null)} />
-                          <div className="absolute right-0 top-full z-40 mt-1.5 w-48 rounded-xl border border-slate-200 bg-white py-1.5 text-left shadow-xl">
+                          <div role="menu" aria-label={`${col.title} options`} className="absolute right-0 top-full z-40 mt-1.5 w-48 rounded-xl border border-slate-200 bg-white py-1.5 text-left shadow-xl">
                             {col.key !== 'complete' && columns[col.key].length > 0 && (
                               <button
                                 onClick={() => {

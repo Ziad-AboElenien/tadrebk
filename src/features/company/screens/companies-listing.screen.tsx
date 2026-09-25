@@ -63,7 +63,7 @@ export default function CompaniesListingScreen() {
           <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-6">
             Our Partners
           </span>
-          <h1 className="text-5xl md:text-6xl font-bold text-[#1a2e35] tracking-tight mb-5">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#1a2e35] tracking-tight mb-5">
             Trusted Companies
           </h1>
           <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-10">
@@ -100,6 +100,7 @@ export default function CompaniesListingScreen() {
             <input
               type="text"
               placeholder="Search by name, industry, or location..."
+              aria-label="Search companies"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               autoComplete="off"
@@ -215,3 +216,4 @@ export default function CompaniesListingScreen() {
     </div>
   );
 }
+

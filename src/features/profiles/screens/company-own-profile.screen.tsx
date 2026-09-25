@@ -10,6 +10,7 @@ import { internshipService } from '@/features/internship/services/internship.ser
 import { applicationService } from '@/features/student/services/application.service';
 import type { Company } from '@/features/company/types';
 import { getErrorMessage } from '@/lib/axios';
+import { LS_PENDING_ONBOARDING } from '@/lib/constants';
 import { toastHelper } from '@/lib/toast';
 import Button from '@/components/ui/Button';
 import CompanyProfileOwn, { type PostingWithApplicants } from '@/features/profiles/components/CompanyProfileOwn';
@@ -20,6 +21,13 @@ export default function CompanyOwnProfileScreen() {
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const storedCompany = useAppSelector((s) => s.company.currentCompany);
+  const backendRole =
+    useAppSelector((s) => s.user.currentUser as { role?: string } | null)?.role || '';
+  const isPendingCompany = /company/i.test(backendRole);
+  // The onboarding form is reachable ONLY from a fresh signup holding its
+  // flag — everywhere else shows the under-review state, never the form.
+  const freshSignup =
+    typeof window !== 'undefined' && localStorage.getItem(LS_PENDING_ONBOARDING) === 'true';
   const [company, setLocalCompany] = useState<Company | null>(storedCompany);
   const [postings, setPostings] = useState<PostingWithApplicants[]>([]);
   const [totalApplicants, setTotalApplicants] = useState(0);
@@ -86,11 +94,33 @@ export default function CompanyOwnProfileScreen() {
     return (
       <div className="min-h-screen bg-slate-50">
         <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold text-slate-900">No company profile yet</h1>
-          <p className="mt-2 text-sm text-slate-500">Complete onboarding to create your company profile.</p>
-          <Link href="/company/onboarding" className="mt-6 inline-block">
-            <Button>Complete Onboarding</Button>
-          </Link>
+          {freshSignup ? (
+            <>
+              <h1 className="text-2xl font-bold text-slate-900">No company profile yet</h1>
+              <p className="mt-2 text-sm text-slate-500">Complete onboarding to create your company profile.</p>
+              <Link href="/company/onboarding" className="mt-6 inline-block">
+                <Button>Complete Onboarding</Button>
+              </Link>
+            </>
+          ) : isPendingCompany ? (
+            <>
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50">
+                <i className="fas fa-hourglass-half text-2xl text-amber-500" />
+              </div>
+              <h1 className="text-2xl font-bold text-slate-900">Your account is under review</h1>
+              <p className="mt-2 text-sm text-slate-500">
+                Our admin team is reviewing your company profile. It will appear
+                here automatically once you&apos;re approved.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold text-slate-900">No company profile yet</h1>
+              <p className="mt-2 text-sm text-slate-500">
+                We couldn&apos;t load your company profile. Try signing in again.
+              </p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -108,11 +138,33 @@ export default function CompanyOwnProfileScreen() {
     return (
       <div className="min-h-screen bg-slate-50">
         <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold text-slate-900">No company profile yet</h1>
-          <p className="mt-2 text-sm text-slate-500">Complete onboarding to create your company profile.</p>
-          <Link href="/company/onboarding" className="mt-6 inline-block">
-            <Button>Complete Onboarding</Button>
-          </Link>
+          {freshSignup ? (
+            <>
+              <h1 className="text-2xl font-bold text-slate-900">No company profile yet</h1>
+              <p className="mt-2 text-sm text-slate-500">Complete onboarding to create your company profile.</p>
+              <Link href="/company/onboarding" className="mt-6 inline-block">
+                <Button>Complete Onboarding</Button>
+              </Link>
+            </>
+          ) : isPendingCompany ? (
+            <>
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50">
+                <i className="fas fa-hourglass-half text-2xl text-amber-500" />
+              </div>
+              <h1 className="text-2xl font-bold text-slate-900">Your account is under review</h1>
+              <p className="mt-2 text-sm text-slate-500">
+                Our admin team is reviewing your company profile. It will appear
+                here automatically once you&apos;re approved.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold text-slate-900">No company profile yet</h1>
+              <p className="mt-2 text-sm text-slate-500">
+                We couldn&apos;t load your company profile. Try signing in again.
+              </p>
+            </>
+          )}
         </div>
       </div>
     );

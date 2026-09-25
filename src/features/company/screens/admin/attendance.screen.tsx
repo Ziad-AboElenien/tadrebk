@@ -93,7 +93,8 @@ export default function AttendanceScreen() {
       attRes.data.forEach((r) => {
         map[r.internId] = r.status;
       });
-      setRecords((prev) => ({ ...prev, ...map }));
+      // Replace (don't merge) — a fresh date/program must not keep old chips.
+      setRecords(map);
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
     } finally {

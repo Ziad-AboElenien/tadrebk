@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Routes requiring authentication
-const STUDENT_ROUTES = ['/dashboard', '/profile', '/my-applications', '/my-tasks', '/activity', '/onboarding'];
+const STUDENT_ROUTES = ['/dashboard', '/profile', '/my-applications', '/my-tasks', '/activity', '/student/onboarding'];
 const COMPANY_ROUTES = [
   '/company/admin',
   '/company/internships',

@@ -15,133 +15,116 @@ interface Props {
   onBack: () => void;
 }
 
-const LOCATION_OPTIONS = [
-  { value: 'on-site' as const, label: 'On-site', icon: 'fa-building', desc: 'Work from office' },
-  { value: 'remote' as const, label: 'Remote', icon: 'fa-house-laptop', desc: 'Work from anywhere' },
-  { value: 'hybrid' as const, label: 'Hybrid', icon: 'fa-arrows-left-right', desc: 'Mix of both' },
-];
-
-const TYPE_OPTIONS = [
-  { value: 'full-time' as const, label: 'Full-time', icon: 'fa-clock', desc: '40 hours / week' },
-  { value: 'part-time' as const, label: 'Part-time', icon: 'fa-hourglass-half', desc: 'Less hours' },
+const GROUPS: {
+  key: 'location' | 'type';
+  title: string;
+  subtitle: string;
+  options: { value: string; label: string; desc: string; icon: string }[];
+}[] = [
+  {
+    key: 'location',
+    title: 'Where do you want to work?',
+    subtitle: 'Choose the setup that fits your life',
+    options: [
+      { value: 'on-site', label: 'On-site', desc: 'At the office every day', icon: 'fa-building' },
+      { value: 'hybrid', label: 'Hybrid', desc: 'Split office & home', icon: 'fa-arrows-left-right-to-line' },
+      { value: 'remote', label: 'Remote', desc: 'Work from anywhere', icon: 'fa-house-laptop' },
+    ],
+  },
+  {
+    key: 'type',
+    title: 'How much time can you give?',
+    subtitle: 'Match internships to your schedule',
+    options: [
+      { value: 'full-time', label: 'Full-time', desc: 'Around 40 hrs / week', icon: 'fa-briefcase' },
+      { value: 'part-time', label: 'Part-time', desc: 'Flexible fewer hours', icon: 'fa-hourglass-half' },
+    ],
+  },
 ];
 
 export default function Step2Preferences({ preferences, onChange, onNext, onBack }: Props) {
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 h-full flex flex-col">
-      <div className="mb-6">
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.1 }}
-          className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600"
-        >
-          <i className="fas fa-sliders text-lg" />
-        </motion.div>
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-          Any preferences?
+    <div className="flex h-full flex-col overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-[0_24px_70px_-24px_rgba(59,130,246,0.35)]">
+      {/* Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#1a2e35] via-slate-800 to-slate-700 px-6 pb-7 pt-7 sm:px-8">
+        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-400/20 blur-2xl" />
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Step 2 of 3 · Preferences</p>
+        <h2 className="mt-2 text-2xl font-black text-white sm:text-[28px] sm:leading-snug">
+          Fine-tune your matches
         </h2>
-        <p className="mt-2 text-sm text-slate-400 leading-relaxed">
-          Help us narrow down the best internships for you.
+        <p className="mt-1.5 max-w-md text-sm leading-relaxed text-slate-300">
+          Optional — skip anything you&apos;re flexible about.
         </p>
       </div>
 
-      <div className="flex-1 space-y-6 overflow-y-auto scrollbar-none">
-        {/* Location */}
-        <div>
-          <p className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wide">
-            Work Location
-          </p>
-          <div className="grid grid-cols-3 gap-2.5">
-            {LOCATION_OPTIONS.map((opt, i) => {
-              const isSelected = preferences.location === opt.value;
-              return (
-                <motion.button
-                  key={opt.value}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08, duration: 0.3 }}
-                  onClick={() =>
-                    onChange({
-                      ...preferences,
-                      location: isSelected ? undefined : opt.value,
-                    })
-                  }
-                  className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition-all duration-300 ${
-                    isSelected
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100'
-                      : 'border-slate-100 bg-slate-50 hover:border-slate-200 hover:bg-white'
-                  }`}
-                >
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+      {/* Options */}
+      <div className="flex-1 space-y-6 overflow-y-auto px-4 py-5 sm:px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {GROUPS.map((group, gi) => (
+          <div key={group.key}>
+            <p className="text-sm font-black text-slate-900">{group.title}</p>
+            <p className="mb-3 mt-0.5 text-xs text-slate-400">{group.subtitle}</p>
+            <div className="space-y-2">
+              {group.options.map((opt, i) => {
+                const current = preferences[group.key];
+                const isSelected = current === opt.value;
+                return (
+                  <motion.button
+                    key={opt.value}
+                    type="button"
+                    initial={{ opacity: 0, x: -14 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: gi * 0.12 + i * 0.07, duration: 0.3 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      if (group.key === 'location') {
+                        const v = opt.value as Preferences['location'];
+                        onChange({ ...preferences, location: isSelected ? undefined : v });
+                      } else {
+                        const v = opt.value as Preferences['type'];
+                        onChange({ ...preferences, type: isSelected ? undefined : v });
+                      }
+                    }}
+                    className={`flex w-full items-center gap-3.5 rounded-2xl p-3.5 text-left transition-all duration-200 ${
                       isSelected
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-slate-200 text-slate-500'
-                    } transition-colors duration-300`}
+                        ? 'bg-emerald-500/[0.07] shadow-[inset_0_0_0_2px_#10b981]'
+                        : 'bg-slate-50 shadow-[inset_0_0_0_1.5px_#eef2f7] hover:bg-white hover:shadow-[inset_0_0_0_1.5px_#cbd5e1]'
+                    }`}
                   >
-                    <i className={`fas ${opt.icon} text-sm`} />
-                  </div>
-                  <span className="text-xs font-bold text-slate-700">{opt.label}</span>
-                  <span className="text-[10px] text-slate-400">{opt.desc}</span>
-                </motion.button>
-              );
-            })}
+                    <span
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm transition-colors duration-200 ${
+                        isSelected ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-white text-slate-400 shadow-sm'
+                      }`}
+                    >
+                      <i className={`fas ${opt.icon}`} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className={`block text-sm font-bold ${isSelected ? 'text-emerald-900' : 'text-slate-800'}`}>
+                        {opt.label}
+                      </span>
+                      <span className="block truncate text-xs text-slate-400">{opt.desc}</span>
+                    </span>
+                    <span
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ${
+                        isSelected ? 'border-emerald-500 bg-emerald-500' : 'border-slate-200 bg-white'
+                      }`}
+                    >
+                      {isSelected && <i className="fas fa-check text-[9px] text-white" />}
+                    </span>
+                  </motion.button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-
-        {/* Type */}
-        <div>
-          <p className="text-xs font-bold text-slate-700 mb-3 uppercase tracking-wide">
-            Internship Type
-          </p>
-          <div className="grid grid-cols-2 gap-2.5">
-            {TYPE_OPTIONS.map((opt, i) => {
-              const isSelected = preferences.type === opt.value;
-              return (
-                <motion.button
-                  key={opt.value}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 + i * 0.08, duration: 0.3 }}
-                  onClick={() =>
-                    onChange({
-                      ...preferences,
-                      type: isSelected ? undefined : opt.value,
-                    })
-                  }
-                  className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-4 text-center transition-all duration-300 ${
-                    isSelected
-                      ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100'
-                      : 'border-slate-100 bg-slate-50 hover:border-slate-200 hover:bg-white'
-                  }`}
-                >
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                      isSelected
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-slate-200 text-slate-500'
-                    } transition-colors duration-300`}
-                  >
-                    <i className={`fas ${opt.icon} text-sm`} />
-                  </div>
-                  <span className="text-xs font-bold text-slate-700">{opt.label}</span>
-                  <span className="text-[10px] text-slate-400">{opt.desc}</span>
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
+        ))}
       </div>
 
-      <div className="mt-4 pt-4 border-t border-slate-100 flex gap-3">
-        <Button variant="secondary" onClick={onBack} className="flex-1">
-          <i className="fas fa-arrow-left text-xs mr-2" />
-          Back
+      {/* Footer */}
+      <div className="flex items-center gap-3 border-t border-slate-100 bg-white/90 px-4 py-3.5 backdrop-blur sm:px-5">
+        <Button variant="secondary" onClick={onBack} className="!w-auto px-6">
+          <i className="fas fa-arrow-left mr-2 text-xs" /> Back
         </Button>
         <Button onClick={onNext} className="flex-1">
-          Finish
-          <i className="fas fa-check text-xs ml-2" />
+          See my matches <i className="fas fa-sparkles ml-2 text-xs" />
         </Button>
       </div>
     </div>

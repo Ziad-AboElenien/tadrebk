@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="w-full max-w-md">
+    <div className="mx-auto flex min-h-[60vh] w-full max-w-md flex-col justify-center px-4 py-12">
       <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6">
         <i className="fas fa-shield-alt text-2xl text-primary" />
       </div>

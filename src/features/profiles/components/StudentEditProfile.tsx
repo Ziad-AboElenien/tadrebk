@@ -467,7 +467,7 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
 
         <div className="relative h-32 overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 sm:h-36">
           {coverBlank.showImage && coverUrl ? (
-            <img src={coverUrl} alt="" className="h-full w-full object-cover" onLoad={coverBlank.onImgLoad} />
+            <img src={coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" onLoad={coverBlank.onImgLoad} />
           ) : null}
           <input
             ref={coverRef}
@@ -951,3 +951,4 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
     </div>
   );
 }
+

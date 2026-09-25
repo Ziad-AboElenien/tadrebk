@@ -6,7 +6,6 @@ import Link from 'next/link';
 import type { Company } from '@/features/company/types';
 import type { Internship } from '@/features/internship/types';
 import Button from '@/components/ui/Button';
-import Spinner from '@/components/ui/Spinner';
 import EmptyState from '@/components/ui/EmptyState';
 import { companyService, type CompanyRatings } from '@/features/company/services/company.service';
 import { internshipService } from '@/features/internship/services/internship.service';
@@ -48,8 +47,18 @@ export default function CompanyDetailsScreen() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <Spinner />
+      <div className="mx-auto w-full max-w-4xl px-4 py-8 animate-pulse">
+        <div className="h-40 rounded-3xl bg-slate-100" />
+        <div className="-mt-10 px-6">
+          <div className="h-20 w-20 rounded-2xl bg-slate-200" />
+          <div className="mt-3 h-6 w-56 rounded-full bg-slate-100" />
+          <div className="mt-2 h-4 w-40 rounded-full bg-slate-100" />
+        </div>
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-28 rounded-2xl bg-slate-100" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -75,6 +84,7 @@ export default function CompanyDetailsScreen() {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6">
+        <h1 className="sr-only">{company.name} — internships and company profile</h1>
         <Link
           href="/internships"
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:underline"
@@ -99,3 +109,4 @@ export default function CompanyDetailsScreen() {
     </div>
   );
 }
+

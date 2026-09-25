@@ -69,6 +69,7 @@ export default function UniversityAutocomplete({  label,
   const [results, setResults] = useState<string[]>([]);
   const [customMode, setCustomMode] = useState(false);
   const [customName, setCustomName] = useState('');
+  const [highlight, setHighlight] = useState(-1);
   const ref = useRef<HTMLDivElement>(null);
 
   const selected = multiple ? values : value ? [value] : [];
@@ -111,6 +112,7 @@ export default function UniversityAutocomplete({  label,
       setOpen(false);
     }
     setQuery('');
+    setHighlight(-1);
   }
 
   function removeChip(chip: string) {
@@ -186,6 +188,11 @@ export default function UniversityAutocomplete({  label,
           id={id}
           type="text"
           disabled={disabled}
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={open ? `${id}-listbox` : undefined}
+          aria-activedescendant={highlight >= 0 ? `${id}-opt-${highlight}` : undefined}
+          aria-label={label || placeholder}
           value={focused ? query : multiple ? '' : selected[0] || ''}
           placeholder={multiple && selected.length > 0 ? '' : placeholder}
           onFocus={() => {
@@ -196,16 +203,28 @@ export default function UniversityAutocomplete({  label,
           }}
           onChange={(e) => {
             setQuery(e.target.value);
+            setHighlight(-1);
             setOpen(true);
           }}
           onKeyDown={(e) => {
             if (e.key === 'Backspace' && multiple && !query && selected.length > 0) {
               removeChip(selected[selected.length - 1]);
             }
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              setOpen(true);
+              setHighlight((h) => (h + 1) % Math.max(filtered.length, 1));
+            }
+            if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              setHighlight((h) => (h - 1 + filtered.length) % Math.max(filtered.length, 1));
+            }
             if (e.key === 'Enter') {
               e.preventDefault();
-              if (filtered.length === 1) commit(filtered[0]);
+              if (highlight >= 0 && filtered[highlight]) commit(filtered[highlight]);
+              else if (filtered.length === 1) commit(filtered[0]);
               else if (showCustom) commit(query);
+              setHighlight(-1);
             }
           }}
           className={[
@@ -227,7 +246,7 @@ export default function UniversityAutocomplete({  label,
         </span>
 
         {open && (
-          <div className="absolute z-50 mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl shadow-gray-200/50 py-1 max-h-60 overflow-y-auto">
+          <div id={`${id}-listbox`} role="listbox" className="absolute z-50 mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-xl shadow-gray-200/50 py-1 max-h-60 overflow-y-auto">
             {loading && filtered.length === 0 && (
               <div className="px-4 py-3 text-sm text-gray-400 flex items-center gap-2">
                 <i className="fas fa-spinner fa-spin text-xs" /> Loading universities...
@@ -245,11 +264,15 @@ export default function UniversityAutocomplete({  label,
                 </button>
               </div>
             )}
-            {filtered.map((name) => (
+            {filtered.map((name, i) => (
               <button
                 key={name}
                 type="button"
+                id={`${id}-opt-${i}`}
+                role="option"
+                aria-selected={selected.includes(name) || highlight === i}
                 onClick={() => commit(name)}
+                onMouseEnter={() => setHighlight(i)}
                 className={[
                   'w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between',
                   selected.includes(name)
@@ -294,6 +317,7 @@ export default function UniversityAutocomplete({  label,
             <p className="text-xs font-semibold text-gray-500 mb-2">Other university</p>
             <input
               autoFocus
+              aria-label="Other university name"
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
               onKeyDown={(e) => {

@@ -35,7 +35,7 @@ function DashboardCard({ currentUser, stats, recentApps, recommended }: {
           <p className="text-xs text-slate-400">You have {stats.total} pending update{stats.total !== 1 ? 's' : ''} today.</p>
         </div>
         {getUserImgUrl(currentUser.profilePicture) ? (
-          <img src={getUserImgUrl(currentUser.profilePicture) || ''} alt="" loading="lazy" decoding="async" className="h-9 w-9 rounded-full object-cover" />
+          <img src={getUserImgUrl(currentUser.profilePicture) || ''} alt={`${currentUser.firstName} ${currentUser.lastName}`.trim() || 'Student avatar'} loading="lazy" decoding="async" className="h-9 w-9 rounded-full object-cover" />
         ) : (
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-white text-xs font-bold">
             {currentUser.firstName?.[0]}{currentUser.lastName?.[0]}
@@ -119,7 +119,7 @@ function FallbackCard() {
     <div className="w-full max-w-[760px] mx-auto overflow-hidden rounded-[28px] bg-white shadow-[0_20px_50px_-12px_rgba(16,24,17,0.15)]">
       {/* Header */}
       <div className="px-8 pt-7 pb-6 bg-gradient-to-r from-[#E9F7F1] to-[#F6FBF9]">
-        <h1 className="text-[22px] font-bold text-[#16241D]">Welcome <i className="fas fa-hand-sparkles text-[#16A667] text-[18px]" /></h1>
+        <h2 className="text-[22px] font-bold text-[#16241D]">Welcome <i className="fas fa-hand-sparkles text-[#16A667] text-[18px]" /></h2>
         <p className="text-[13.5px] text-[#6B7C74] mt-1">Sign in to see your applications and interviews here.</p>
       </div>
 
@@ -164,7 +164,7 @@ function FallbackCard() {
           <h2 className="text-[15px] font-bold text-[#16241D]">Recommended for you</h2>
           <span className="text-[13px] text-[#16A667] font-semibold">Browse all</span>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-3">
           <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-[#1EC08C] to-[#0F9C6C] p-4 h-[110px] flex flex-col justify-between text-white">
             <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center"><i className="fas fa-briefcase text-white text-[13px]" /></div>
             <div>
@@ -253,6 +253,7 @@ export default function StudentMiniDashboard() {
   }, [isAuthenticated, userId]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     (async () => {
       try {
         const result = await internshipService.listInternships({ limit: 20 });
@@ -269,7 +270,7 @@ export default function StudentMiniDashboard() {
         }
       } catch { /* silently fail */ }
     })();
-  }, [currentUser?.categories]);
+  }, [isAuthenticated, currentUser?.categories]);
 
   const isLoggedIn = isAuthenticated && currentUser;
 

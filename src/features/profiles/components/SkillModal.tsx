@@ -195,10 +195,11 @@ export default function SkillModal({
       )}
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-slate-700">
+        <label htmlFor="skill-description" className="text-sm font-semibold text-slate-700">
           Description <span className="font-normal text-slate-400">(optional)</span>
         </label>
         <textarea
+          id="skill-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}

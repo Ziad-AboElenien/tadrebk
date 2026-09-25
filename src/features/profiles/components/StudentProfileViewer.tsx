@@ -108,7 +108,7 @@ export default function StudentProfileViewer({
       {/* ---------- cover + identity ---------- */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div className="h-40 bg-gradient-to-r from-emerald-500 to-emerald-400">
-          {coverUrl && <img src={coverUrl} alt="" className="h-full w-full object-cover" />}
+          {coverUrl && <img src={coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />}
         </div>
 
         <div className="px-5 pb-6 sm:px-6">
@@ -153,13 +153,15 @@ export default function StudentProfileViewer({
               >
                 <MessageSquare size={15} /> Message
               </button>
-              <button
-                type="button"
-                onClick={() => (onInvite ? onInvite() : toastHelper.info('Invites are coming soon'))}
-                className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
-              >
-                <Send size={15} /> {inviteLabel || 'Invite to internship'}
-              </button>
+              {onInvite && (
+                <button
+                  type="button"
+                  onClick={() => onInvite()}
+                  className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
+                >
+                  <Send size={15} /> {inviteLabel || 'Invite to internship'}
+                </button>
+              )}
             </div>
           </div>
 
@@ -392,13 +394,15 @@ export default function StudentProfileViewer({
 
           <SectionCard title="Actions">
             <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => (onInvite ? onInvite() : toastHelper.info('Invites are coming soon'))}
-                className="w-full rounded-lg bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600"
-              >
-                {inviteLabel || 'Invite to internship'}
-              </button>
+              {onInvite && (
+                <button
+                  type="button"
+                  onClick={() => onInvite()}
+                  className="w-full rounded-lg bg-emerald-500 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600"
+                >
+                  {inviteLabel || 'Invite to internship'}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -437,3 +441,4 @@ export default function StudentProfileViewer({
     </main>
   );
 }
+

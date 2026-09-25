@@ -15,7 +15,7 @@ import { getErrorMessage, refreshAuthTokens } from '@/lib/axios';
 import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setCompany } from '@/store/companySlice';
 import { setRole } from '@/store/authSlice';
-import { LS_PENDING_ONBOARDING, COMPANY_INDUSTRIES } from '@/lib/constants';
+import { LS_PENDING_ONBOARDING, LS_COMPANY_ID, COMPANY_INDUSTRIES } from '@/lib/constants';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
@@ -25,11 +25,30 @@ export default function CompanyOnboardingScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const company = useAppSelector((s) => s.company.currentCompany);
+  const role = useAppSelector((s) => s.auth.role);
+  const currentUser = useAppSelector((s) => s.user.currentUser);
   const [legalFile, setLegalFile] = useState<File | null>(null);
 
-  // Already have a complete company â†’ go to dashboard
+  // Already have a complete company → go to dashboard
   const isProfileComplete = company?._id && company.name && company.industry && company.address && company.companyEmail && company.numberOfEmployees;
-  
+
+  // THE rule: this form renders ONLY for a fresh company account that just
+  // signed up (pending flag set, no complete company yet). Every other case
+  // bounces away — students to their dashboard, everyone else to admin
+  // (which shows the under-review / empty state, never this form).
+  useEffect(() => {
+    if (role === 'student') {
+      router.replace('/dashboard');
+      return;
+    }
+    if (isProfileComplete) return; // handled by the effect below
+    if (typeof window === 'undefined') return;
+    const fresh = localStorage.getItem(LS_PENDING_ONBOARDING) === 'true';
+    if (role === 'company' && !fresh) {
+      router.replace('/company/admin');
+    }
+  }, [role, isProfileComplete, router]);
+
   useEffect(() => {
     if (company?._id && company.name && company.industry && company.address && company.companyEmail && company.numberOfEmployees) {
       localStorage.removeItem(LS_PENDING_ONBOARDING);
@@ -82,12 +101,22 @@ export default function CompanyOnboardingScreen() {
 
       dispatch(setCompany(company));
       dispatch(setRole('company'));
+      localStorage.setItem(LS_COMPANY_ID, company._id);
       await refreshAuthTokens();
       localStorage.removeItem(LS_PENDING_ONBOARDING);
       toastHelper.success('Company profile created successfully!');
       router.push('/guide/company?welcome=1');
     } catch (err) {
-      setFormError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      // Profile already exists on the server (e.g. submitted before approval)
+      // — don't trap the user on this form; the account is under review.
+      if (/already exists|duplicate|already registered|taken/i.test(msg)) {
+        localStorage.removeItem(LS_PENDING_ONBOARDING);
+        toastHelper.info('This company profile was already submitted and is under review.');
+        router.push('/company/admin');
+        return;
+      }
+      setFormError(msg);
     }
   }
 

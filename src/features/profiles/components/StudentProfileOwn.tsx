@@ -187,7 +187,7 @@ export default function StudentProfileOwn({ user }: { user: User }) {
         {/* ---------- cover + identity ---------- */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           <div className="relative h-40 bg-gradient-to-r from-emerald-500 to-emerald-400 sm:h-44">
-            {coverUrl && <img src={coverUrl} alt="" className="h-full w-full object-cover" />}
+            {coverUrl && <img src={coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />}
             <button
               type="button"
               onClick={goSettings}
@@ -569,3 +569,4 @@ export default function StudentProfileOwn({ user }: { user: User }) {
     </div>
   );
 }
+

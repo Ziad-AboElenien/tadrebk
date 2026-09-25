@@ -12,7 +12,6 @@ import { getUserImgUrl } from '@/features/student/types';
 import MediaImage from '@/components/ui/MediaImage';
 import { Internship } from '@/features/internship/types';
 import Button from '@/components/ui/Button';
-import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import { getErrorMessage } from '@/lib/axios';
 import { openFileProxy } from '@/lib/file-proxy';
@@ -164,13 +163,13 @@ const [ratings, setRatings] = useState<Record<string, RatingData | null>>({});
     }
   }
 
-  const filtered = applications.filter((a) => {
+  const filtered = useMemo(() => applications.filter((a) => {
     const statusOk = filter === 'all' || a.status === filter;
     if (!statusOk) return false;
     if (!selectedUniversity) return true;
     const insts = studentUniversities[a.studentId?._id ?? ''] ?? [];
     return insts.some((i) => i.toLowerCase() === selectedUniversity.toLowerCase());
-  });
+  }), [applications, filter, selectedUniversity, studentUniversities]);
 
   function pickUniversity(value: string) {
     if (value === OTHER_VALUE) {
@@ -184,15 +183,31 @@ const [ratings, setRatings] = useState<Record<string, RatingData | null>>({});
     setUniversityOpen(false);
   }
 
-  const statusCounts = {
+  const statusCounts = useMemo(() => ({
     all: applications.length,
     pending: applications.filter((a) => a.status === 'pending').length,
     accepted: applications.filter((a) => a.status === 'accepted').length,
     rejected: applications.filter((a) => a.status === 'rejected').length,
-  };
+  }), [applications]);
 
   if (loading) {
-    return <div className="flex justify-center py-20"><Spinner /></div>;
+    return (
+      <div className="mx-auto w-full max-w-6xl space-y-3 px-4 py-8 animate-pulse">
+        <div className="h-8 w-64 rounded-lg bg-slate-200" />
+        <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center gap-4 border-b border-slate-50 p-4 last:border-0">
+              <div className="h-10 w-10 shrink-0 rounded-full bg-slate-100" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-1/2 rounded-full bg-slate-100" />
+                <div className="h-3 w-1/4 rounded-full bg-slate-100" />
+              </div>
+              <div className="h-7 w-20 shrink-0 rounded-full bg-slate-100" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -242,11 +257,13 @@ const [ratings, setRatings] = useState<Record<string, RatingData | null>>({});
           <label className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
             <i className="fas fa-graduation-cap text-emerald-600" /> University:
           </label>
-          <div ref={universityRef} className="relative">
+          <div ref={universityRef} className="relative w-full sm:w-auto">
             <button
               type="button"
               onClick={() => setUniversityOpen((o) => !o)}
-              className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-emerald-500 hover:border-gray-300 border-slate-200 min-w-[210px]"
+              aria-haspopup="listbox"
+              aria-expanded={universityOpen}
+              className="flex w-full items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-emerald-500 hover:border-gray-300 border-slate-200 sm:w-auto sm:min-w-[210px]"
             >
               <span className={selectedUniversity ? 'text-slate-800 font-medium' : 'text-slate-400'}>
                 {selectedUniversity || 'All universities'}
@@ -258,7 +275,7 @@ const [ratings, setRatings] = useState<Record<string, RatingData | null>>({});
             </button>
 
             {universityOpen && (
-              <div className="absolute z-50 mt-1 w-full min-w-[240px] bg-white border border-slate-100 rounded-xl shadow-xl shadow-gray-200/50 py-1 max-h-60 overflow-y-auto">
+              <div role="listbox" aria-label="Filter by university" className="absolute z-50 mt-1 w-full min-w-0 bg-white border border-slate-100 rounded-xl shadow-xl shadow-gray-200/50 py-1 max-h-60 overflow-y-auto sm:min-w-[240px]">
                 <button
                   type="button"
                   onClick={() => pickUniversity('')}
@@ -518,3 +535,4 @@ className="rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-white shad
     </div>
   );
 }
+

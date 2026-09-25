@@ -235,13 +235,16 @@ export default function ProgramsScreen() {
                                 e.stopPropagation();
                                 setOpenMenuId((cur) => (cur === p._id ? null : p._id));
                               }}
+                              onKeyDown={(e) => { if (e.key === 'Escape') setOpenMenuId(null); }}
                               aria-label={`Actions for ${p.name}`}
+                              aria-haspopup="menu"
+                              aria-expanded={openMenuId === p._id}
                               className="inline-flex items-center rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                             >
                               <MoreHorizontal size={16} />
                             </button>
                             {openMenuId === p._id && (
-                              <div data-row-menu className="absolute right-0 z-10 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg">
+                              <div data-row-menu role="menu" aria-label={`Actions for ${p.name}`} className="absolute right-0 z-10 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg">
                                 <Link
                                   href={`/company/admin/programs/${p._id}`}
                                   onClick={() => setOpenMenuId(null)}

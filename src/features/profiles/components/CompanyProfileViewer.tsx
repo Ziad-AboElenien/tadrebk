@@ -108,7 +108,7 @@ export default function CompanyProfileViewer({ company, postings, totalPostings,
       {/* ---------- cover + identity ---------- */}
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div className="h-44 bg-gradient-to-r from-slate-900 to-slate-700">
-          {coverUrl && <img src={coverUrl} alt="" className="h-full w-full object-cover" />}
+          {coverUrl && <img src={coverUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />}
         </div>
 
         <div className="px-5 pb-6 sm:px-6">
@@ -279,7 +279,7 @@ export default function CompanyProfileViewer({ company, postings, totalPostings,
                     <RatingStars ratingSum={ratingAvg * ratingCount} ratingCount={ratingCount} showCount={false} />
                   </div>
                   {ratings && ratings.histogram.length > 0 && (
-                    <div className="min-w-[180px] flex-1 space-y-1.5">
+                    <div className="w-full min-w-0 flex-1 space-y-1.5 sm:min-w-[180px]">
                       {ratings.histogram.map((r) => (
                         <div key={r.stars} className="flex items-center gap-2 text-xs">
                           <span className="w-3 text-slate-400">{r.stars}</span>
@@ -440,3 +440,4 @@ export default function CompanyProfileViewer({ company, postings, totalPostings,
     </main>
   );
 }
+

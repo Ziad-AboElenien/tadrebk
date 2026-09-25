@@ -41,6 +41,7 @@ export default function ExpandableSearch({ value, onChange, placeholder = 'Searc
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
+            aria-label={placeholder}
             autoFocus={open}
             className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-9 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 sm:pr-3"
           />

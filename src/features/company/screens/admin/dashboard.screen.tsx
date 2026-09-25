@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
+import { LS_PENDING_ONBOARDING } from '@/lib/constants';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import StatCard from '@/components/tadrebk/StatCard';
@@ -48,6 +49,13 @@ function timeAgo(dateStr?: string | null): string {
 export default function AdminDashboardScreen() {
   const router = useRouter();
   const company = useAppSelector((s) => s.company.currentCompany);
+  const authStatus = useAppSelector((s) => s.auth.status);
+  const backendRole = useAppSelector((s) => s.user.currentUser as { role?: string } | null)?.role || '';
+  const isPendingCompany = /company/i.test(backendRole);
+  // Fresh company signup still holding its onboarding flag — the ONLY case
+  // allowed to see (and open) the company onboarding form.
+  const freshSignup =
+    typeof window !== 'undefined' && localStorage.getItem(LS_PENDING_ONBOARDING) === 'true';
   const [internsCount, setInternsCount] = useState(0);
   const [inProgressCount, setInProgressCount] = useState(0);
   const [completedCount, setCompletedCount] = useState(0);
@@ -213,7 +221,42 @@ export default function AdminDashboardScreen() {
             <p className="mt-0.5 text-xs text-slate-500 sm:mt-0 sm:text-sm">Here&apos;s what&apos;s happening with your internship programs today.</p>
           </div>
 
-          {loading ? (
+          {!company?._id && authStatus === 'succeeded' ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
+              {freshSignup ? (
+                <>
+                  <p className="font-semibold text-slate-900">No company profile found</p>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Complete your company profile to unlock the dashboard.
+                  </p>
+                  <Link
+                    href="/company/onboarding"
+                    className="mt-4 inline-block rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-600"
+                  >
+                    Complete Company Profile
+                  </Link>
+                </>
+              ) : isPendingCompany ? (
+                <>
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50">
+                    <i className="fas fa-hourglass-half text-2xl text-amber-500" />
+                  </div>
+                  <p className="font-semibold text-slate-900">Your account is under review</p>
+                  <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
+                    Our admin team is reviewing your company profile. Your dashboard
+                    will unlock automatically once you&apos;re approved.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold text-slate-900">No company profile found</p>
+                  <p className="mt-1 text-sm text-slate-400">
+                    We couldn&apos;t load your company profile. Try signing in again.
+                  </p>
+                </>
+              )}
+            </div>
+          ) : loading ? (
             <div className="space-y-6 animate-pulse">
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 {[0, 1, 2, 3].map((i) => (

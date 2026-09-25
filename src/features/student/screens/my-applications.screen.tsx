@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
 import { applicationService, Application } from '@/features/student/services/application.service';
 import type { RatingData } from '@/features/student/services/application.service';
-import Spinner from '@/components/ui/Spinner';
 import Badge from '@/components/ui/Badge';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
@@ -114,7 +113,18 @@ export default function MyApplicationsScreen() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-20"><Spinner /></div>
+        <div className="space-y-3 animate-pulse">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="rounded-3xl border border-slate-100 bg-white p-5">
+              <div className="h-5 w-2/3 rounded-lg bg-slate-100" />
+              <div className="mt-2 h-4 w-1/3 rounded-full bg-slate-100" />
+              <div className="mt-3 flex gap-2">
+                <div className="h-8 w-24 rounded-xl bg-slate-100" />
+                <div className="h-8 w-24 rounded-xl bg-slate-100" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : applications.length === 0 ? (
         <div className="bg-white border border-slate-100 rounded-3xl p-16 text-center shadow-sm">
           <i className="fas fa-file-alt text-4xl text-slate-300 mb-4 block" />
@@ -217,3 +227,4 @@ export default function MyApplicationsScreen() {
     </div>
   );
 }
+

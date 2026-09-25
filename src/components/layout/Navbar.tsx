@@ -13,7 +13,7 @@ import Avatar from '@/components/ui/Avatar';
 import { getCompanyImgUrl } from '@/features/company/types';
 import { getUserImgUrl } from '@/features/student/types';
 import NotificationBell from '@/features/notifications/components/NotificationBell';
-import { LS_PENDING_ONBOARDING } from '@/lib/constants';
+import { LS_PENDING_ONBOARDING, LS_COMPANY_ID } from '@/lib/constants';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -45,11 +45,20 @@ export default function Navbar() {
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
-  // Company user stuck in onboarding â†’ lock all navigation
+  // Company user stuck in onboarding → lock all navigation.
+  // Students never see this, even with a stale flag: only the company role
+  // (real backend role or derived company account) can be pending.
   const pendingOnboarding =
     mounted &&
+    role === 'company' &&
     typeof window !== 'undefined' &&
     localStorage.getItem(LS_PENDING_ONBOARDING) === 'true';
+  // Submitted before on this browser (id saved) but still no company back
+  // from the server → the profile is under admin review, not missing.
+  const companyUnderReview =
+    pendingOnboarding &&
+    typeof window !== 'undefined' &&
+    !!localStorage.getItem(LS_COMPANY_ID);
 
   // Close user menu on outside click
   useEffect(() => {
@@ -157,9 +166,15 @@ export default function Navbar() {
         {/* Right side */}
         <div className="hidden md:flex items-center gap-3">
           {pendingOnboarding ? (
-            <span className="flex items-center gap-2 text-sm font-semibold text-amber-600">
-              <i className="fas fa-circle-exclamation" /> Complete your company profile
-            </span>
+            companyUnderReview ? (
+              <span className="flex items-center gap-2 text-sm font-semibold text-amber-600">
+                <i className="fas fa-hourglass-half" /> Under review
+              </span>
+            ) : (
+              <span className="flex items-center gap-2 text-sm font-semibold text-amber-600">
+                <i className="fas fa-circle-exclamation" /> Complete your company profile
+              </span>
+            )
           ) : !mounted ? (
             <span className="flex items-center gap-3 px-2" aria-hidden="true">
               <span className="h-9 w-9 rounded-full bg-gray-100 animate-pulse" />
@@ -312,9 +327,15 @@ export default function Navbar() {
         {/* Mobile right side */}
         <div className="md:hidden flex items-center gap-2">
           {pendingOnboarding ? (
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-600">
-              <i className="fas fa-circle-exclamation" /> Complete profile
-            </span>
+            companyUnderReview ? (
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+                <i className="fas fa-hourglass-half" /> Under review
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+                <i className="fas fa-circle-exclamation" /> Complete profile
+              </span>
+            )
           ) : !mounted ? (
             <span className="h-9 w-9 rounded-full bg-gray-100 animate-pulse" aria-hidden="true" />
           ) : isAuthenticated && mounted && (

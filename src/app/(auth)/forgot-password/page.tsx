@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
 
   if (socialAccount) {
     return (
-      <div className="w-full max-w-md text-center">
+      <div className="mx-auto flex min-h-[60vh] w-full max-w-md flex-col justify-center px-4 py-12 text-center">
         <div className="w-20 h-20 bg-sky-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
           <i className="fas fa-google text-3xl text-sky-500" />
         </div>
@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <div className="w-full max-w-md text-center">
+      <div className="mx-auto flex min-h-[60vh] w-full max-w-md flex-col justify-center px-4 py-12 text-center">
         <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
           <i className="fas fa-paper-plane text-3xl text-primary" />
         </div>
@@ -88,7 +88,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="w-full max-w-md">
+    <div className="mx-auto flex min-h-[60vh] w-full max-w-md flex-col justify-center px-4 py-12">
       <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mb-6">
         <i className="fas fa-key text-2xl text-amber-500" />
       </div>

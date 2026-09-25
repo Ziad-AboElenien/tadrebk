@@ -8,7 +8,6 @@ import { internshipService } from '@/features/internship/services/internship.ser
 import InternshipCard from '@/features/company/components/InternshipCard';
 import MediaImage from '@/components/ui/MediaImage';
 import { getCompanyImgUrl } from '@/features/company/types';
-import Spinner from '@/components/ui/Spinner';
 import Button from '@/components/ui/Button';
 import { scaleIn } from './animations';
 
@@ -88,7 +87,7 @@ export default function FeaturedInternshipsSection({
       <div className="max-w-7xl mx-auto px-4 relative">
         <div className="text-center mb-14">
           <div>
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 tracking-tight">
               {title}
             </h2>
             <p className="text-slate-400 text-sm mt-3 max-w-md mx-auto">
@@ -98,7 +97,15 @@ export default function FeaturedInternshipsSection({
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-20"><Spinner /></div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 animate-pulse">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="rounded-2xl border border-slate-100 bg-white p-4">
+                <div className="h-36 rounded-xl bg-slate-100" />
+                <div className="mt-3 h-5 w-3/4 rounded bg-slate-100" />
+                <div className="mt-2 h-4 w-1/2 rounded bg-slate-100" />
+              </div>
+            ))}
+          </div>
         ) : internships.length === 0 ? (
           <div className="text-center py-20 animate-fade-in">
             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -147,3 +154,4 @@ export default function FeaturedInternshipsSection({
     </section>
   );
 }
+

@@ -26,6 +26,9 @@ export default function ImageMenu({ onEdit, onDelete, loading }: Props) {
       <button
         onClick={() => setOpen((o) => !o)}
         disabled={loading}
+        aria-label="Edit image"
+        aria-haspopup="menu"
+        aria-expanded={open}
         className="bg-white/90 backdrop-blur-sm hover:bg-white text-gray-700 w-9 h-9 rounded-full shadow-md border border-gray-200 flex items-center justify-center transition-all"
         title="Edit image"
       >
@@ -40,8 +43,9 @@ export default function ImageMenu({ onEdit, onDelete, loading }: Props) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 min-w-[160px] animate-scale-in">
+        <div role="menu" aria-label="Image options" className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 min-w-[160px] animate-scale-in">
           <button
+            role="menuitem"
             onClick={() => { setOpen(false); onEdit(); }}
             className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
@@ -50,6 +54,7 @@ export default function ImageMenu({ onEdit, onDelete, loading }: Props) {
           </button>
           {onDelete && (
             <button
+              role="menuitem"
               onClick={() => { setOpen(false); onDelete(); }}
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100"
             >

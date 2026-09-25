@@ -22,6 +22,8 @@ export interface Company {
   createdBy: string;           // API uses "createdBy" not "ownerId"
   logo?: string | CloudinaryResource;
   coverPicture?: string | CloudinaryResource;
+  /** Legal verification document (sent by the backend for admin review). */
+  legalAttachment?: string | CloudinaryResource;
   approvedByAdmin: boolean;
   bannedAt?: string;
   deletedAt?: string;

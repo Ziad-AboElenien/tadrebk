@@ -154,24 +154,29 @@ function InternshipsContent() {
       .catch(() => {});
   }, [isAuthenticated]);
 
-  // Fetch real category counts
-  const CATEGORIES = ['Software', 'Design', 'Marketing', 'Finance', 'Data', 'HR'];
-  useEffect(() => {
-    Promise.all(
-      CATEGORIES.map((cat) =>
-        internshipService.listInternships({ title: cat, limit: 1 }).catch(() => null)
-      )
-    ).then((results) => {
-      const counts: Record<string, number> = {};
-      results.forEach((res, i) => {
-        if (res) counts[CATEGORIES[i]] = res.pagination.total;
-      });
-      setCategoryCounts(counts);
-    });
-  }, []);
-
   const [cityFilter, setCityFilter] = useState('');
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  // Single aggregated request instead of one search per category.
+  useEffect(() => {
+    internshipService
+      .getStatsByCategory()
+      .then((counts) => {
+        const lower: Record<string, number> = {};
+        Object.entries(counts).forEach(([k, v]) => {
+          lower[k.toLowerCase()] = (lower[k.toLowerCase()] ?? 0) + v;
+        });
+        const sum = (...keys: string[]) => keys.reduce((s, k) => s + (lower[k] ?? 0), 0);
+        setCategoryCounts({
+          Software: sum('software', 'frontend', 'backend', 'fullstack', 'mobile', 'devops'),
+          Design: sum('design', 'uiux'),
+          Marketing: sum('marketing', 'sales', 'digital', 'content_writing'),
+          Finance: sum('finance'),
+          Data: sum('data', 'data_science', 'ai_ml'),
+          HR: sum('hr'),
+        });
+      })
+      .catch(() => {});
+  }, []);
   const [filters, setFilters] = useState({
     title: searchParams.get('title') || '',
     type: (searchParams.get('type') || '') as '' | 'full-time' | 'part-time',

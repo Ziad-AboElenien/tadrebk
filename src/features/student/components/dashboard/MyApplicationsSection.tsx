@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Award, Check, Filter, Loader2 } from 'lucide-react';
 import type { Application } from '@/features/student/services/application.service';
@@ -66,8 +66,10 @@ export default function MyApplicationsSection({
   const [active, setActive] = useState<AppTab>('All');
   const [filterOpen, setFilterOpen] = useState(false);
   const user = useAppSelector((s) => s.user.currentUser);
-  const visible =
-    active === 'All' ? applications : applications.filter((a) => statusOf(a) === active);
+  const visible = useMemo(
+    () => (active === 'All' ? applications : applications.filter((a) => statusOf(a) === active)),
+    [applications, active],
+  );
   const activeLabel = TABS.find((t) => t.key === active)?.label ?? 'All';
 
   return (

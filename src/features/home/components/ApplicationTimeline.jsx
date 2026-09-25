@@ -66,7 +66,7 @@ export default function ApplicationTimeline() {
             </span>
 
             <div className="space-y-5">
-              <h2 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 md:text-4xl">
                 From apply to offer, fully transparent
               </h2>
               <p className="max-w-xl text-base leading-relaxed text-slate-500 md:text-lg">

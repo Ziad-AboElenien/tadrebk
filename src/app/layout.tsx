@@ -38,11 +38,20 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: '/images/favicon2.png',
     shortcut: '/images/favicon2.png',
     apple: '/images/favicon2.png',
   },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#10b981',
 };
 
 export default function RootLayout({

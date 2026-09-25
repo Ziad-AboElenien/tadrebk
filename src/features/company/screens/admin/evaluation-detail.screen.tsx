@@ -183,7 +183,7 @@ export default function EvaluationDetailScreen() {
                   )}
                 </div>
 
-                <div className="mt-6 grid grid-cols-3 gap-3">
+                <div className="mt-6 grid grid-cols-1 gap-3 min-[480px]:grid-cols-3">
                   {[
                     { label: 'Overall', value: String(evaluation.overallScore) },
                     { label: 'Attendance', value: `${evaluation.attendanceRate}%` },
@@ -233,8 +233,9 @@ export default function EvaluationDetailScreen() {
                   <div className="mt-6 space-y-4">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
-                        <label className="text-sm font-medium text-slate-700">Skill (0–5)</label>
+                        <label htmlFor="eval-edit-skill" className="text-sm font-medium text-slate-700">Skill (0–5)</label>
                         <input
+                          id="eval-edit-skill"
                           type="number"
                           min={0}
                           max={5}
@@ -248,8 +249,9 @@ export default function EvaluationDetailScreen() {
                         {errors.skill && <p className="mt-1 text-xs font-medium text-rose-500">{errors.skill}</p>}
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-slate-700">Teamwork (0–5)</label>
+                        <label htmlFor="eval-edit-teamwork" className="text-sm font-medium text-slate-700">Teamwork (0–5)</label>
                         <input
+                          id="eval-edit-teamwork"
                           type="number"
                           min={0}
                           max={5}
@@ -264,16 +266,16 @@ export default function EvaluationDetailScreen() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-slate-700">Strengths</label>
-                      <textarea rows={3} value={strengths} onChange={(e) => setStrengths(e.target.value)} className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
+                      <label htmlFor="eval-edit-strengths" className="text-sm font-medium text-slate-700">Strengths</label>
+                      <textarea id="eval-edit-strengths" rows={3} value={strengths} onChange={(e) => setStrengths(e.target.value)} className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-slate-700">Areas to improve</label>
-                      <textarea rows={3} value={improvements} onChange={(e) => setImprovements(e.target.value)} className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
+                      <label htmlFor="eval-edit-improvements" className="text-sm font-medium text-slate-700">Areas to improve</label>
+                      <textarea id="eval-edit-improvements" rows={3} value={improvements} onChange={(e) => setImprovements(e.target.value)} className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-slate-700">Private notes</label>
-                      <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
+                      <label htmlFor="eval-edit-notes" className="text-sm font-medium text-slate-700">Private notes</label>
+                      <textarea id="eval-edit-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
                     </div>
                   </div>
                 )}

@@ -65,8 +65,11 @@ export default function PerformanceReportsScreen() {
 
   const skillStats = useMemo(() => {
     if (evaluations.length === 0) return null;
-    const avg = (f: (e: Evaluation) => number) =>
-      evaluations.reduce((s, e) => s + f(e), 0) / evaluations.length;
+    const avg = (f: (e: Evaluation) => number) => {
+      const vals = evaluations.map(f).filter((v) => typeof v === 'number' && Number.isFinite(v));
+      if (vals.length === 0) return NaN;
+      return vals.reduce((s, v) => s + v, 0) / vals.length;
+    };
     return {
       skill: avg((e) => e.skillRating),
       teamwork: avg((e) => e.teamworkRating),
@@ -217,20 +220,24 @@ export default function PerformanceReportsScreen() {
                   </p>
                 ) : (
                   [
-                    { label: 'Skill Rating (/5)', pct: Math.round((skillStats.skill / 5) * 100), val: skillStats.skill.toFixed(1) },
-                    { label: 'Teamwork (/5)', pct: Math.round((skillStats.teamwork / 5) * 100), val: skillStats.teamwork.toFixed(1) },
-                    { label: 'Overall Score (/100)', pct: Math.round(skillStats.overall), val: skillStats.overall.toFixed(0) },
-                  ].map((s) => (
-                    <div key={s.label}>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-600">{s.label}</span>
-                        <span className="font-medium text-slate-900">{s.val}</span>
+                    { label: 'Skill Rating (/5)', pct: skillStats.skill, scale: 5, digits: 1 },
+                    { label: 'Teamwork (/5)', pct: skillStats.teamwork, scale: 5, digits: 1 },
+                    { label: 'Overall Score (/100)', pct: skillStats.overall, scale: 100, digits: 0 },
+                  ].map((s) => {
+                    const valid = Number.isFinite(s.pct);
+                    const width = valid ? Math.min(100, Math.max(0, Math.round((s.pct / s.scale) * 100))) : 0;
+                    return (
+                      <div key={s.label}>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">{s.label}</span>
+                          <span className="font-medium text-slate-900">{valid ? s.pct.toFixed(s.digits) : '—'}</span>
+                        </div>
+                        <div className="mt-1.5 h-2 rounded-full bg-slate-100">
+                          <div className="h-2 rounded-full bg-emerald-500" style={{ width: `${width}%` }} />
+                        </div>
                       </div>
-                      <div className="mt-1.5 h-2 rounded-full bg-slate-100">
-                        <div className="h-2 rounded-full bg-emerald-500" style={{ width: `${s.pct}%` }} />
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>

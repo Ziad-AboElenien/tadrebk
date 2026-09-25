@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Check, Filter, Loader2, Play, Send } from 'lucide-react';
 import type { Task } from '@/features/company/types/management';
@@ -34,8 +34,11 @@ export default function MyTasksSection({ tasks, loading = false, actingId = null
   const [filterOpen, setFilterOpen] = useState(false);
   const [submitTask, setSubmitTask] = useState<Task | null>(null);
   // Students only ever see outstanding work, submitted work and reviewed work.
-  const studentTasks = tasks.filter((t) => studentBucket(t) !== null);
-  const visible = active === 'All' ? studentTasks : studentTasks.filter((t) => studentBucket(t) === active);
+  const studentTasks = useMemo(() => tasks.filter((t) => studentBucket(t) !== null), [tasks]);
+  const visible = useMemo(
+    () => (active === 'All' ? studentTasks : studentTasks.filter((t) => studentBucket(t) === active)),
+    [studentTasks, active],
+  );
   const activeLabel = TABS.find((t) => t.key === active)?.label ?? 'All';
 
   const openSubmit = (task: Task) => {

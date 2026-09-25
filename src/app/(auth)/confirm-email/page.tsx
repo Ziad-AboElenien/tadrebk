@@ -23,6 +23,13 @@ function ConfirmEmailInner() {
   const [isResending, setIsResending] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [otpError, setOtpError] = useState('');
+  const [confirmedTo, setConfirmedTo] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!confirmedTo) return;
+    const t = setTimeout(() => router.push(confirmedTo), 6000);
+    return () => clearTimeout(t);
+  }, [confirmedTo, router]);
 
   useEffect(() => {
     const stored = localStorage.getItem(LS_PENDING_EMAIL) || '';
@@ -78,7 +85,8 @@ function ConfirmEmailInner() {
             return;
           }
           toastHelper.success('Email confirmed! Welcome to Tadrebk!');
-          router.push(redirect);
+          // Show the success state for 3 seconds, then continue automatically.
+          setConfirmedTo(redirect);
           return;
         } catch {
           // Auto-login failed (e.g. page refreshed) — fall back to manual login.
@@ -119,8 +127,26 @@ function ConfirmEmailInner() {
     }
   }
 
+  if (confirmedTo) {
+    return (
+      <div className="mx-auto flex min-h-[60vh] w-full max-w-md flex-col items-center justify-center px-4 py-12 text-center">
+        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-200">
+          <i className="fas fa-check text-3xl" />
+        </div>
+        <h1 className="mb-3 text-3xl font-black text-dark">Email confirmed!</h1>
+        <p className="mb-2 text-sm text-gray-400">
+          Your account is verified. Taking you to the next step…
+        </p>
+        <div className="mx-auto mt-6 h-1.5 w-40 overflow-hidden rounded-full bg-slate-100">
+          <div className="h-full origin-left animate-[confirm-progress_6s_linear_forwards] rounded-full bg-emerald-500" />
+        </div>
+        <style>{`@keyframes confirm-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }`}</style>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full max-w-md text-center">
+    <div className="mx-auto flex min-h-[60vh] w-full max-w-md flex-col justify-center px-4 py-12 text-center">
       {/* Icon */}
       <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
         <i className="fas fa-envelope-open-text text-3xl text-primary" />

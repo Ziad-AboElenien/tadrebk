@@ -58,8 +58,20 @@ const groups = [
 ];
 
 export default function FaqPage() {
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: groups.flatMap((g) =>
+      g.items.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    ),
+  };
   return (
     <div className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       {/* ─── HERO ─────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#f0fdf4] via-white to-[#ecfdf5] py-20 md:py-28">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -70,7 +82,7 @@ export default function FaqPage() {
           <span className="inline-block bg-green-50 text-green-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider border border-green-200 mb-6">
             FAQ
           </span>
-          <h1 className="text-5xl md:text-6xl font-bold text-[#1a2e35] tracking-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#1a2e35] tracking-tight mb-6">
             Frequently Asked Questions
           </h1>
           <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
@@ -88,23 +100,36 @@ export default function FaqPage() {
                 <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white">
                   <i className={`fas ${group.icon} text-base`} />
                 </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-[#1a2e35] tracking-tight">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#1a2e35] tracking-tight">
                   {group.title}
                 </h2>
               </div>
 
               <div className="space-y-4">
-                {group.items.map((item) => (
-                  <details key={item.q} className="group bg-white rounded-2xl border border-gray-50 shadow-sm open:shadow-md transition-all">
-                    <summary className="flex items-center justify-between px-6 py-5 cursor-pointer list-none text-[#1a2e35] font-bold text-sm">
-                      {item.q}
-                      <i className="fas fa-chevron-down text-slate-300 group-open:rotate-180 transition-transform" />
+                {group.items.map((item, qi) => {
+                  const anchor = `faq-${group.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${qi}`;
+                  return (
+                  <details key={item.q} id={anchor} className="group scroll-mt-28 bg-white rounded-2xl border border-gray-50 shadow-sm open:shadow-md transition-all">
+                    <summary className="flex items-center justify-between gap-3 px-6 py-5 cursor-pointer list-none text-[#1a2e35] font-bold text-sm">
+                      <span>{item.q}</span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <a
+                          href={`#${anchor}`}
+                          aria-label={`Link to: ${item.q}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-slate-300 opacity-0 transition-opacity hover:text-emerald-500 group-hover:opacity-100"
+                        >
+                          <i className="fas fa-link text-xs" />
+                        </a>
+                        <i className="fas fa-chevron-down text-slate-300 group-open:rotate-180 transition-transform" />
+                      </span>
                     </summary>
                     <div className="px-6 pb-5 pt-0 text-slate-500 text-sm leading-relaxed border-t border-gray-50 mt-0">
                       {item.a}
                     </div>
                   </details>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -124,3 +149,4 @@ export default function FaqPage() {
     </div>
   );
 }
+

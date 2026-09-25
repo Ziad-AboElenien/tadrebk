@@ -576,6 +576,9 @@ export default function InternshipManagementScreen() {
                                   setMenuOpenId(app._id);
                                 }}
                                 aria-label={`Actions for ${name}`}
+                                aria-haspopup="menu"
+                                aria-expanded={menuOpenId === app._id}
+                                onKeyDown={(e) => { if (e.key === 'Escape') { setMenuOpenId(null); setMenuRect(null); } }}
                                 className="inline-flex items-center rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                               >
                                 <MoreHorizontal size={16} />
@@ -585,6 +588,8 @@ export default function InternshipManagementScreen() {
                                 <>
                                   <div className="fixed inset-0 z-30" onClick={() => { setMenuOpenId(null); setMenuRect(null); }} />
                                   <div
+                                    role="menu"
+                                    aria-label={`Actions for ${name}`}
                                     className="fixed z-40 w-56 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-xl"
                                     style={{
                                       top: menuRect.top,

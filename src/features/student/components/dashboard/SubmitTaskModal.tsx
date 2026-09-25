@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FileText, Loader2, Paperclip, X } from 'lucide-react';
+import { useFocusTrap } from '@/components/ui/use-focus-trap';
 import type { Task } from '@/features/company/types/management';
 
 interface SubmitTaskModalProps {
@@ -11,13 +12,28 @@ interface SubmitTaskModalProps {
   onConfirm: (note?: string) => void;
 }
 
+// Flip to true the moment the backend supports intern task attachments
+// (POST /intern/me/:companyId/tasks/:taskId/attachments). Until then the
+// picker stays hidden so students aren't misled into thinking a file was sent.
+const ATTACHMENTS_SUPPORTED = false;
+
 /** Submit modal — note + attachment (attachment optional until the API supports uploads). */
 export default function SubmitTaskModal({ task, actingId = null, onClose, onConfirm }: SubmitTaskModalProps) {
   const [note, setNote] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  const trapRef = useFocusTrap<HTMLDivElement>(true);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+    <div ref={trapRef} className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center" role="dialog" aria-modal="true" aria-label="Submit task for review">
       <div className="absolute inset-0 bg-slate-900/40" onClick={onClose} />
       <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
         <div className="flex items-center justify-between bg-slate-50/80 px-5 py-4">
@@ -47,6 +63,7 @@ export default function SubmitTaskModal({ task, actingId = null, onClose, onConf
               className="mt-2 w-full resize-none rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
             />
           </div>
+          {ATTACHMENTS_SUPPORTED && (
           <div>
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
               Attachment <span className="font-normal normal-case text-slate-300">(optional for now)</span>
@@ -89,6 +106,7 @@ export default function SubmitTaskModal({ task, actingId = null, onClose, onConf
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
           </div>
+          )}
           <div className="flex items-center justify-end gap-2 pt-1">
             <button
               type="button"

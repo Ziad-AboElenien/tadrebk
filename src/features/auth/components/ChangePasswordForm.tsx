@@ -49,7 +49,7 @@ export default function ChangePasswordForm() {
         type={showCurrent ? 'text' : 'password'}
         error={errors.currentPassword?.message}
         rightElement={
-          <button type="button" onClick={() => setShowCurrent((o) => !o)} className="text-slate-400 hover:text-slate-600 text-sm">
+          <button type="button" onClick={() => setShowCurrent((o) => !o)} aria-label={showCurrent ? 'Hide password' : 'Show password'} className="text-slate-400 hover:text-slate-600 text-sm">
             <i className={`fas fa-eye${showCurrent ? '' : '-slash'}`} />
           </button>
         }
@@ -62,7 +62,7 @@ export default function ChangePasswordForm() {
         error={errors.newPassword?.message}
         hint="At least 8 characters, 1 uppercase letter, 1 number"
         rightElement={
-          <button type="button" onClick={() => setShowNew((o) => !o)} className="text-slate-400 hover:text-slate-600 text-sm">
+          <button type="button" onClick={() => setShowNew((o) => !o)} aria-label={showNew ? 'Hide password' : 'Show password'} className="text-slate-400 hover:text-slate-600 text-sm">
             <i className={`fas fa-eye${showNew ? '' : '-slash'}`} />
           </button>
         }
@@ -74,7 +74,7 @@ export default function ChangePasswordForm() {
         type={showConfirm ? 'text' : 'password'}
         error={errors.confirmPassword?.message}
         rightElement={
-          <button type="button" onClick={() => setShowConfirm((o) => !o)} className="text-slate-400 hover:text-slate-600 text-sm">
+          <button type="button" onClick={() => setShowConfirm((o) => !o)} aria-label={showConfirm ? 'Hide password' : 'Show password'} className="text-slate-400 hover:text-slate-600 text-sm">
             <i className={`fas fa-eye${showConfirm ? '' : '-slash'}`} />
           </button>
         }
