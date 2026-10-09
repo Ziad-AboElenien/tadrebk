@@ -16,6 +16,7 @@ import { useAppDispatch, useAppSelector } from '@/store/store';
 import { setCompany } from '@/store/companySlice';
 import { setRole } from '@/store/authSlice';
 import { LS_PENDING_ONBOARDING, LS_COMPANY_ID, COMPANY_INDUSTRIES } from '@/lib/constants';
+import { markCompanyProfileCompleted } from '@/features/auth/lib/complete-login';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
@@ -26,6 +27,7 @@ export default function CompanyOnboardingScreen() {
   const dispatch = useAppDispatch();
   const company = useAppSelector((s) => s.company.currentCompany);
   const role = useAppSelector((s) => s.auth.role);
+  const userId = useAppSelector((s) => s.auth.userId);
   const currentUser = useAppSelector((s) => s.user.currentUser);
   const [legalFile, setLegalFile] = useState<File | null>(null);
 
@@ -102,6 +104,7 @@ export default function CompanyOnboardingScreen() {
       dispatch(setCompany(company));
       dispatch(setRole('company'));
       localStorage.setItem(LS_COMPANY_ID, company._id);
+      if (userId) markCompanyProfileCompleted(userId);
       await refreshAuthTokens();
       localStorage.removeItem(LS_PENDING_ONBOARDING);
       toastHelper.success('Company profile created successfully!');
@@ -112,6 +115,7 @@ export default function CompanyOnboardingScreen() {
       // — don't trap the user on this form; the account is under review.
       if (/already exists|duplicate|already registered|taken/i.test(msg)) {
         localStorage.removeItem(LS_PENDING_ONBOARDING);
+        if (userId) markCompanyProfileCompleted(userId);
         toastHelper.info('This company profile was already submitted and is under review.');
         router.push('/company/admin');
         return;

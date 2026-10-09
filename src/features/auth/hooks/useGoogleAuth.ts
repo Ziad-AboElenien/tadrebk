@@ -12,6 +12,7 @@ import { setCompany } from '@/store/companySlice';
 import { companyService } from '@/features/company/services/company.service';
 import { userService } from '@/features/student/services/user.service';
 import { LS_PENDING_ONBOARDING, LS_PENDING_EMAIL, LS_INTENDED_ROLE, LS_COMPANY_ID } from '@/lib/constants';
+import { markCompanyProfileCompleted, isCompanyProfileCompleted } from '@/features/auth/lib/complete-login';
 
 function parseJwt(token: string) {
   try {
@@ -81,9 +82,26 @@ export function useGoogleAuth() {
 
         const backendRole = (user as { role?: string }).role || '';
         const isCompanyByRole = /company/i.test(backendRole);
+        const isStaff = /instructor/i.test(backendRole);
 
         let role: 'student' | 'company' = isCompanyByRole ? 'company' : 'student';
         let companyLoaded = false;
+        // Staff resolve their company from the membership, never the owned search.
+        if (isStaff) {
+          const membershipCompanyId = (
+            user as { staffMembership?: { companyId?: string; status?: string }[] }
+          ).staffMembership?.find((m) => !m.status || m.status === 'active')?.companyId;
+          if (membershipCompanyId) {
+            try {
+              const staffCompany = await companyService.getCompanyById(membershipCompanyId);
+              dispatch(setCompany(staffCompany));
+              localStorage.setItem(LS_COMPANY_ID, staffCompany._id);
+              companyLoaded = true;
+            } catch {
+              /* dashboard surfaces the empty state */
+            }
+          }
+        }
         const owned = companies.find((c) => {
           const createdBy =
             typeof c.createdBy === 'object' && c.createdBy !== null
@@ -126,10 +144,21 @@ export function useGoogleAuth() {
         }
 
         if (role === 'company' && companyLoaded) {
+          markCompanyProfileCompleted(userId);
+          localStorage.removeItem(LS_PENDING_ONBOARDING);
+          router.push('/company/admin');
+        } else if (isStaff) {
+          // Staff never onboard — straight to the dashboard, no flag.
           router.push('/company/admin');
         } else if (role === 'company' || companyIntent) {
-          localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
-          router.push('/company/onboarding');
+          if (role === 'company' && isCompanyProfileCompleted(userId)) {
+            localStorage.removeItem(LS_PENDING_ONBOARDING);
+            toastHelper.info('Your company profile is submitted and waiting for admin review.');
+            router.push('/company/admin');
+          } else {
+            localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
+            router.push('/company/onboarding');
+          }
         } else {
           // Student account — a pending flag here belongs to another account.
           localStorage.removeItem(LS_PENDING_ONBOARDING);

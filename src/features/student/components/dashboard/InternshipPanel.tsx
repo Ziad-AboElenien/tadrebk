@@ -15,6 +15,7 @@ export interface PanelInternship {
   department: string;
   supervisor: string;
   supervisorRole: string;
+  supervisorTeam?: string[];
   status: string;
   companyLogo?: string | null;
   supervisorAvatar?: string | null;
@@ -64,6 +65,8 @@ export default function InternshipPanel({
   initialTab = 'Overview',
 }: InternshipPanelProps) {
   const [active, setActive] = useState<InternshipTab>(initialTab);
+  const [teamOpen, setTeamOpen] = useState(false);
+  const team = internship.supervisorTeam ?? [];
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6">
@@ -114,18 +117,47 @@ export default function InternshipPanel({
       </div>
 
       {active === 'Overview' && (
-        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-          {[
-            { label: 'COMPANY', value: internship.company },
-            { label: 'SUPERVISOR', value: internship.supervisor },
-            { label: 'DEPARTMENT', value: internship.department },
-            { label: 'INTERNSHIP PERIOD', value: internship.period },
-          ].map((f) => (
-            <div key={f.label}>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{f.label}</p>
-              <p className="mt-1 break-words text-sm font-semibold text-slate-900">{f.value}</p>
+        <div className="mt-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            {[
+              { label: 'COMPANY', value: internship.company },
+              { label: 'SUPERVISOR', value: internship.supervisor },
+              { label: 'DEPARTMENT', value: internship.department },
+              { label: 'INTERNSHIP PERIOD', value: internship.period },
+            ].map((f) => (
+              <div key={f.label}>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{f.label}</p>
+                <p className="mt-1 break-words text-sm font-semibold text-slate-900">{f.value}</p>
+              </div>
+            ))}
+          </div>
+          {team.length > 0 && (
+            <div className="mt-4 rounded-xl bg-slate-50 px-4 py-3">
+              <button
+                type="button"
+                onClick={() => setTeamOpen((o) => !o)}
+                aria-expanded={teamOpen}
+                className="flex w-full items-center justify-between gap-2 text-left"
+              >
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  Team · {internship.supervisor} + {team.length} staff member{team.length > 1 ? 's' : ''}
+                </span>
+                <span className="shrink-0 text-xs font-semibold text-emerald-600">{teamOpen ? 'Hide' : 'Show'}</span>
+              </button>
+              {teamOpen ? (
+                <ul className="mt-2 space-y-1.5">
+                  {team.map((name) => (
+                    <li key={name} className="truncate text-sm text-slate-700">· {name}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-1 truncate text-sm text-slate-700">
+                  {team.slice(0, 2).join(' · ')}
+                  {team.length > 2 ? ` · +${team.length - 2} more` : ''}
+                </p>
+              )}
             </div>
-          ))}
+          )}
         </div>
       )}
 

@@ -14,6 +14,14 @@ import {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000/api/v1';
 
+// Direct backend URL — used ONLY as a last-resort fallback when the
+// same-origin proxy is unreachable from this machine (e.g. local DNS or
+// routing issues to the backend host). The browser often resolves hosts
+// on its own (Secure DNS) even when Node's resolver hangs, and the backend
+// already allows the localhost origin (the original pre-proxy setup).
+const DIRECT_BACKEND_URL =
+  process.env.NEXT_PUBLIC_API_FALLBACK_URL || 'https://tadreebak-e285.onbelmo.uk/api/v1';
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 0,
@@ -60,6 +68,7 @@ api.interceptors.request.use(
 interface RetryConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
   _retry403?: boolean;
+  _fallbackRetried?: boolean;
 }
 
 /** Shared in-flight refresh — concurrent 401s must not each rotate the token. */
@@ -129,6 +138,30 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as RetryConfig;
+
+    // No response at all (DNS hang, TCP timeout, connection refused) on a
+    // proxied call → retry once straight against the backend. Same when the
+    // dev/proxy server itself converts the upstream failure into a 500 page:
+    // real backend errors always come back as JSON ({ errMsg }), so a
+    // non-JSON 500/502/503/504 on a proxied call means the proxy failed,
+    // not the backend. Harmless when the proxy is healthy (never runs).
+    const isProxyHtmlFailure =
+      !!error.response &&
+      (error.response.status === 500 ||
+        error.response.status === 502 ||
+        error.response.status === 503 ||
+        error.response.status === 504) &&
+      !String(error.response.headers?.['content-type'] || '').includes('application/json');
+    if (
+      (!error.response || isProxyHtmlFailure) &&
+      !originalRequest?._fallbackRetried &&
+      typeof window !== 'undefined' &&
+      (originalRequest?.baseURL || '').includes('/api/backend')
+    ) {
+      originalRequest._fallbackRetried = true;
+      originalRequest.baseURL = DIRECT_BACKEND_URL;
+      return api(originalRequest);
+    }
 
     if (error.response?.status === 401 && !originalRequest?._retry) {
       originalRequest._retry = true;

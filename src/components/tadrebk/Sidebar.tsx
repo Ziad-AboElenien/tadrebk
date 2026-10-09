@@ -12,6 +12,7 @@ import {
   Trophy,
   Coins,
   ChevronDown,
+  UserRound,
   MessageSquare,
   BarChart3,
   Settings,
@@ -21,6 +22,8 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAdminShell } from '@/components/tadrebk/admin-shell';
+import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
 
 interface NavChild {
   label: string;
@@ -40,6 +43,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Programs', icon: Layers, href: '/company/admin/programs' },
   { label: 'Projects', icon: FolderKanban, href: '/company/admin/projects' },
   { label: 'Tasks', icon: CheckSquare, href: '/company/admin/tasks' },
+  { label: 'Team', icon: UserRound, href: '/company/admin/team' },
   {
     label: 'Leaderboard',
     icon: Trophy,
@@ -50,6 +54,10 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Reports', icon: BarChart3, href: '/company/admin/reports' },
   { label: 'Settings', icon: Settings, href: '/company/settings' },
 ];
+
+// Modules that stayed owner-only on the backend (billing/points/programs/
+// profile). Staff never see them; the backend would 403 anyway.
+const OWNER_ONLY_LABELS = new Set(['Points', 'Programs', 'Settings']);
 
 function subscribeMq(callback: () => void) {
   const mq = window.matchMedia('(max-width: 1023.5px)');
@@ -77,6 +85,8 @@ export default function Sidebar({ active, adminName, adminRole }: SidebarProps) 
   const { sidebarOpen, setSidebarOpen, collapsed, toggleCollapsed } = useAdminShell();
   const isMobile = useIsMobile();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const currentCompany = useAppSelector((s) => s.company.currentCompany);
+  const teamPerms = useCompanyPermissions(currentCompany?._id);
 
   // Icon-only rail on desktop when collapsed; on mobile/tablet the rail is
   // always visible and the toggle opens the full drawer overlay instead.
@@ -264,7 +274,37 @@ export default function Sidebar({ active, adminName, adminRole }: SidebarProps) 
         </div>
 
         <nav className={`flex-1 space-y-1 overflow-y-auto pb-4 ${iconOnly && !drawer ? 'px-2' : 'px-3'}`}>
-          {NAV_ITEMS.map(renderItem)}
+          {NAV_ITEMS.filter((item) => {
+            // Owner-only modules stay hidden from staff entirely.
+            if (!teamPerms.isOwner && (OWNER_ONLY_LABELS.has(item.label) || item.children?.some((c) => OWNER_ONLY_LABELS.has(c.label)))) {
+              if (item.label === 'Leaderboard') return true; // keep parent, drop the child below
+              return false;
+            }
+            // Team needs at least one staff/roles permission.
+            if (
+              item.label === 'Team' &&
+              !teamPerms.isOwner &&
+              !teamPerms.canAny([
+                'staff.invite',
+                'staff.update',
+                'staff.remove',
+                'staff.resend_invite',
+                'roles.read',
+                'roles.create',
+                'roles.update',
+                'roles.delete',
+              ])
+            ) {
+              return false;
+            }
+            return true;
+          }).map((item) => {
+            // Staff see Leaderboard without its owner-only Points child.
+            if (item.label === 'Leaderboard' && !teamPerms.isOwner) {
+              return renderItem({ ...item, children: [] });
+            }
+            return renderItem(item);
+          })}
         </nav>
 
         <div className={`border-t border-slate-100 py-4 ${iconOnly && !drawer ? 'px-2' : 'px-4'}`}>

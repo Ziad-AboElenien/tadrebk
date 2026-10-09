@@ -58,6 +58,24 @@ export default function SessionLoader({ children }: { children: React.ReactNode 
         const { companies } = await companyService.listCompanies({ limit: 50 });
         const backendRole = (user as { role?: string }).role || '';
         const isCompanyByRole = /company/i.test(backendRole);
+        const isStaff = /instructor/i.test(backendRole);
+        // Staff resolve their company from the membership, never the owned search.
+        if (isStaff) {
+          const membershipCompanyId = (
+            user as { staffMembership?: { companyId?: string; status?: string }[] }
+          ).staffMembership?.find((m) => !m.status || m.status === 'active')?.companyId;
+          dispatch(setRole('company'));
+          if (membershipCompanyId) {
+            try {
+              const staffCompany = await companyService.getCompanyById(membershipCompanyId);
+              dispatch(setCompany(staffCompany));
+              localStorage.setItem(LS_COMPANY_ID, staffCompany._id);
+            } catch {
+              /* dashboard surfaces the empty state */
+            }
+          }
+          return;
+        }
         const owned = companies.find((c) => {
           const createdBy =
             typeof c.createdBy === 'object' && c.createdBy !== null

@@ -78,6 +78,7 @@ export const LS_REFRESH_TOKEN = 'tadrebk_refresh_token';
 export const LS_USER_ROLE = 'tadrebk_user_role';   // 'student' | 'company'
 export const LS_USER_ID = 'tadrebk_user_id';
 export const LS_COMPANY_ID = 'tadrebk_company_id';
+export const LS_COMPANY_PROFILE_COMPLETED = 'tadrebk_company_profile_completed';
 export const LS_TOKEN_TIMESTAMP = 'tadrebk_token_timestamp';
 // Stored temporarily during signup to route user to correct onboarding
 export const LS_PENDING_EMAIL = 'tadrebk_pending_email';

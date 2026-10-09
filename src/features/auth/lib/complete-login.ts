@@ -1,8 +1,9 @@
 'use client';
 
-import { LS_COMPANY_ID, LS_PENDING_ONBOARDING, LS_PENDING_EMAIL } from '@/lib/constants';
+import { LS_COMPANY_ID, LS_COMPANY_PROFILE_COMPLETED, LS_PENDING_ONBOARDING, LS_PENDING_EMAIL } from '@/lib/constants';
 import type { AppDispatch } from '@/store/store';
 import type { AuthTokens } from '@/features/auth/types';
+import { toastHelper } from '@/lib/toast';
 import { setTokens, setRole } from '@/store/authSlice';
 import { setUser } from '@/store/userSlice';
 import { setCompany } from '@/store/companySlice';
@@ -21,6 +22,23 @@ export interface CompleteLoginInput {
 export interface CompleteLoginResult {
   redirect: string;
   needsConfirmation: boolean;
+}
+
+/** Per-account flag: this browser completed the company profile at least once. */
+export function markCompanyProfileCompleted(userId: string) {
+  try {
+    localStorage.setItem(`${LS_COMPANY_PROFILE_COMPLETED}_${userId}`, 'true');
+  } catch {
+    /* ignore */
+  }
+}
+
+export function isCompanyProfileCompleted(userId: string): boolean {
+  try {
+    return localStorage.getItem(`${LS_COMPANY_PROFILE_COMPLETED}_${userId}`) === 'true';
+  } catch {
+    return false;
+  }
 }
 
 function parseJwt(token: string): { id?: string; role?: string } | null {
@@ -72,6 +90,9 @@ export async function completeLogin(
   // from those alone misclassifies it as a student (and breaks both flows).
   const backendRole = (user as { role?: string }).role || '';
   const isCompanyByRole = /company/i.test(backendRole);
+  // Staff (instructors & custom roles) go straight to the dashboard: they
+  // never create a company profile and must never see onboarding.
+  const isStaff = /instructor/i.test(backendRole);
 
   // Remember a previously-saved company id: the owned search below is a
   // best-effort match and must not be the only path to the company object.
@@ -81,6 +102,23 @@ export async function completeLogin(
 
   let userRole: 'student' | 'company' = isCompanyByRole ? 'company' : 'student';
   let companyLoaded = false;
+  let loadedApproved: boolean | null = null;
+  // Staff membership carries its own company — resolve it directly instead
+  // of the owned-company search (staff own nothing).
+  const membershipCompanyId =
+    (user as { staffMembership?: { companyId?: string; status?: string }[] }).staffMembership?.find(
+      (m) => !m.status || m.status === 'active',
+    )?.companyId || null;
+  if (isStaff && membershipCompanyId) {
+    try {
+      const staffCompany = await companyService.getCompanyById(membershipCompanyId);
+      dispatch(setCompany(staffCompany));
+      localStorage.setItem(LS_COMPANY_ID, staffCompany._id);
+      companyLoaded = true;
+    } catch {
+      /* fall through to the searches below */
+    }
+  }
   const owned = companies.find((c) => {
     const createdBy =
       typeof c.createdBy === 'object' && c.createdBy !== null
@@ -94,11 +132,13 @@ export async function completeLogin(
       const full = await companyService.getCompanyById(owned._id);
       dispatch(setCompany(full));
       localStorage.setItem(LS_COMPANY_ID, full._id);
+      loadedApproved = (full as { approvedByAdmin?: boolean }).approvedByAdmin ?? null;
     } catch {
       // LIST sees the company but GET 404s (backend inconsistency) — the
       // list object itself is usable, don't leave the store empty.
       dispatch(setCompany(owned as Company));
       localStorage.setItem(LS_COMPANY_ID, owned._id);
+      loadedApproved = (owned as unknown as { approvedByAdmin?: boolean }).approvedByAdmin ?? null;
     }
     companyLoaded = true;
   } else if (savedCompanyId) {
@@ -109,6 +149,7 @@ export async function completeLogin(
         userRole = 'company';
         dispatch(setCompany(savedCompany));
         companyLoaded = true;
+        loadedApproved = (savedCompany as { approvedByAdmin?: boolean }).approvedByAdmin ?? null;
       }
     } catch {
       // Stale id (e.g. backend DB was reset) — drop it so we stop retrying it.
@@ -142,13 +183,31 @@ export async function completeLogin(
   }
 
   if (userRole === 'company') {
-    // Company account: with a profile → admin; without one yet → the
-    // company onboarding (never the student track).
-    if (!companyLoaded) {
-      localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
-      return { redirect: '/company/onboarding', needsConfirmation: false };
+    // Staff always land on the dashboard — no profile, no onboarding, no flag.
+    if (isStaff) {
+      return { redirect: '/company/admin', needsConfirmation: false };
     }
-    return { redirect: '/company/admin', needsConfirmation: false };
+    // Profile resolved from the server — verified or not, the dashboard
+    // (and its under-review states) is home. Remember the completion.
+    if (companyLoaded) {
+      markCompanyProfileCompleted(userId);
+      localStorage.removeItem(LS_PENDING_ONBOARDING);
+      if (loadedApproved === false) {
+        toastHelper.info('Your company profile is submitted and waiting for admin review.');
+      }
+      return { redirect: '/company/admin', needsConfirmation: false };
+    }
+    // No profile resolvable: a previous submit on this browser means the
+    // company exists but is hidden (pending) — dashboard with a review
+    // notice, NOT the onboarding form (it would just fail on duplicates).
+    if (isCompanyProfileCompleted(userId)) {
+      localStorage.removeItem(LS_PENDING_ONBOARDING);
+      toastHelper.info('Your company profile is submitted and waiting for admin review.');
+      return { redirect: '/company/admin', needsConfirmation: false };
+    }
+    // Truly fresh company account → the ONLY case that sees the form.
+    localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
+    return { redirect: '/company/onboarding', needsConfirmation: false };
   }
   if (formRole === 'company') {
     localStorage.setItem(LS_PENDING_ONBOARDING, 'true');

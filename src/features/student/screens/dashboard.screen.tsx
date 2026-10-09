@@ -79,6 +79,7 @@ export default function StudentDashboardScreen() {
   const [program, setProgram] = useState<Program | null>(null);
   const [supervisorName, setSupervisorName] = useState('');
   const [supervisorRole, setSupervisorRole] = useState('');
+  const [supervisorTeam, setSupervisorTeam] = useState<string[]>([]);
 
   const [savedInternships, setSavedInternships] = useState<Internship[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -232,10 +233,30 @@ export default function StudentDashboardScreen() {
         internMeService.getEvaluations(first.companyId, { limit: 50 }).catch(() => ({})),
       ]);
       if (prog) setProgram(prog);
-      const s = sup as Record<string, string>;
-      const sName = [s.firstName, s.lastName].filter(Boolean).join(' ') || (s.name as string) || '';
+      const s = sup as Record<string, unknown>;
+      // New shape: { owner, staffMembers[] }; legacy: flat supervisor object.
+      const supObj = (s.supervisor && typeof s.supervisor === 'object'
+        ? (s.supervisor as Record<string, unknown>)
+        : null) as { owner?: Record<string, unknown>; staffMembers?: Record<string, unknown>[] } | null;
+      const ownerObj = supObj?.owner ?? s;
+      const staffList = Array.isArray(supObj?.staffMembers) ? supObj!.staffMembers! : [];
+      const personName = (p: Record<string, unknown>): string =>
+        ([p.firstName, p.lastName].filter(Boolean).join(' ') || (p.name as string) || '');
+      const sName = personName(ownerObj as Record<string, unknown>);
       setSupervisorName(sName);
-      setSupervisorRole((s.role as string) || (s.title as string) || 'Supervisor');
+      setSupervisorRole(
+        ((ownerObj.role || ownerObj.title) as string) ||
+          (s.role as string) ||
+          (s.title as string) ||
+          'Supervisor',
+      );
+      setSupervisorTeam(
+        staffList.map((m) => {
+          const nm = personName(m);
+          const role = (m.role as { name?: string })?.name || (m.roleName as string) || '';
+          return role ? `${nm} (${role})` : nm;
+        }).filter(Boolean) as string[],
+      );
       setCompanyName((prog as unknown as { companyName?: string })?.companyName || '');
       const list = ((evals as Record<string, unknown>).evaluations as unknown[]) || [];
       setFeedbacks(
@@ -475,6 +496,7 @@ export default function StudentDashboardScreen() {
               department: program?.description?.slice(0, 60) || '—',
               supervisor: supervisorName || '—',
               supervisorRole,
+              supervisorTeam,
               status: 'Active',
             }}
             requirements={requirements}
