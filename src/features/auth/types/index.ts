@@ -23,6 +23,8 @@ export interface SignupRequest {
   password: string;
   confirmPassword: string;
   phone?: string;
+  /** One-time UX hint picked at signup. Never used for access control. */
+  pendingRole?: 'student' | 'company';
   education?: {
     institution: string;
     degree: string;

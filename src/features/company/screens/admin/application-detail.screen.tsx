@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, CheckCircle2, Eye, FileText, Loader2, Mail, XCircle } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import InternAvatar from '@/components/ui/InternAvatar';
@@ -31,6 +33,9 @@ export default function ApplicationDetailScreen() {
   const internshipId = params.internshipId as string;
   const applicationId = params.applicationId as string;
   const companyId = useAppSelector((s) => s.company.currentCompany?._id);
+  const gate = useCompanyPermissions(companyId);
+  const canReview = gate.can('applicants.review');
+  const canEmail = gate.can('applicants.send_acceptance_email');
 
   const [app, setApp] = useState<Application | null>(null);
   const [internship, setInternship] = useState<Internship | null>(null);
@@ -106,6 +111,9 @@ export default function ApplicationDetailScreen() {
   const meta = app ? STATUS_META[app.status] : STATUS_META.pending;
   const cv = app?.resume?.secure_url;
 
+  // v1 backend gates application reads behind applicants.review.
+  if (!gate.loading && !gate.can('applicants.review')) return <StaffBlocked title="Application Details" />;
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Interns" />
@@ -167,7 +175,7 @@ export default function ApplicationDetailScreen() {
                       )}
                     </div>
                   </div>
-                  {app.status === 'pending' && (
+                  {app.status === 'pending' && canReview && (
                     <div className="flex shrink-0 gap-2">
                       <button
                         onClick={() => handleReview('accepted')}
@@ -185,7 +193,7 @@ export default function ApplicationDetailScreen() {
                       </button>
                     </div>
                   )}
-                  {app.status === 'accepted' && (
+                  {app.status === 'accepted' && canEmail && (
                     <button
                       onClick={handleSendEmail}
                       disabled={sendingEmail}

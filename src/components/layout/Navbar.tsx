@@ -124,7 +124,7 @@ export default function Navbar() {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <Image src="/images/logoandfav.png" alt="Tadrebk" width={232} height={193} className="h-12 w-auto" priority />
+          <Image src="/images/logoandfav.png" alt="Tadrebk" width={232} height={193} className="tbk-nav-logo h-12 w-auto" priority />
         </Link>
 
         {/* Desktop Nav */}

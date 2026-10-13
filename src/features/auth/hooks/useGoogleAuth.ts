@@ -13,6 +13,7 @@ import { companyService } from '@/features/company/services/company.service';
 import { userService } from '@/features/student/services/user.service';
 import { LS_PENDING_ONBOARDING, LS_PENDING_EMAIL, LS_INTENDED_ROLE, LS_COMPANY_ID } from '@/lib/constants';
 import { markCompanyProfileCompleted, isCompanyProfileCompleted } from '@/features/auth/lib/complete-login';
+import { warmPermissionsCache } from '@/features/company/hooks/use-company-permissions';
 
 function parseJwt(token: string) {
   try {
@@ -81,7 +82,8 @@ export function useGoogleAuth() {
         const { companies } = await companyService.listCompanies({ limit: 50 });
 
         const backendRole = (user as { role?: string }).role || '';
-        const isCompanyByRole = /company/i.test(backendRole);
+        const pendingCompanyTrack = (user as { pendingRole?: string }).pendingRole === 'company';
+        const isCompanyByRole = /company/i.test(backendRole) || pendingCompanyTrack;
         const isStaff = /instructor/i.test(backendRole);
 
         let role: 'student' | 'company' = isCompanyByRole ? 'company' : 'student';
@@ -123,6 +125,12 @@ export function useGoogleAuth() {
           localStorage.getItem(LS_PENDING_ONBOARDING) === 'true';
         dispatch(setTokens({ tokens, userId, role }));
         dispatch(setUser(user));
+
+        // Warm the hourly permissions cache for staff right at login.
+        if (isStaff) {
+          const warmId = localStorage.getItem(LS_COMPANY_ID);
+          if (warmId) warmPermissionsCache(warmId, userId, user.email);
+        }
 
         if (user.isConfirmed === false) {
           localStorage.setItem(LS_PENDING_EMAIL, user.email);

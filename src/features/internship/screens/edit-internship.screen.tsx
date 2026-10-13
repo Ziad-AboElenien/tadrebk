@@ -18,6 +18,8 @@ import dynamic from 'next/dynamic';
 const UniversityAutocomplete = dynamic(() => import('@/components/ui/UniversityAutocomplete'), { ssr: false });
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import Link from 'next/link';
 import { CATEGORY_LABELS } from '@/features/student/types';
 import { MAX_TRACKS_PER_POST } from '@/lib/constants';
@@ -27,6 +29,7 @@ export default function EditInternshipScreen() {
   const params = useParams();
   const internId = params.internId as string;
   const company = useAppSelector((s) => s.company.currentCompany);
+  const gate = useCompanyPermissions(company?._id);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [technicalSkills, setTechnicalSkills] = useState<string[]>([]);
@@ -208,6 +211,8 @@ export default function EditInternshipScreen() {
       </div>
     );
   }
+
+  if (!gate.loading && !gate.isOwner) return <StaffBlocked title="Edit Internship" />;
 
   if (loading) {
     return (

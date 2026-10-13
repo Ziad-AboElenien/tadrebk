@@ -21,6 +21,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -125,6 +126,9 @@ export default function TaskDetailScreen() {
   const groupId = searchParams.get('groupId') || '';
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
+  const gate = useCompanyPermissions(companyId);
+  const canWriteTasks = gate.can('tasks.create');
+  const canArchiveTasks = gate.can('tasks.archive');
 
   const [task, setTask] = useState<Task | null>(null);
   const [interns, setInterns] = useState<Intern[]>([]);
@@ -335,6 +339,7 @@ export default function TaskDetailScreen() {
                 <span className="truncate">{att.name || 'Attachment'}</span>
                 {att.size ? <span className="shrink-0 text-xs text-slate-400">{formatBytes(att.size)}</span> : null}
               </a>
+              {canWriteTasks && (
               <button
                 onClick={() => handleRemoveAttachment(att.public_id)}
                 disabled={removingId === att.public_id}
@@ -343,11 +348,14 @@ export default function TaskDetailScreen() {
               >
                 <X size={14} />
               </button>
+              )}
             </div>
           ))
         )}
       </div>
 
+      {canWriteTasks && (
+      <>
       <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center">
         <UploadCloud size={24} className="text-emerald-400" />
         <p className="mt-2 text-sm font-medium text-slate-700">Add more files</p>
@@ -372,6 +380,8 @@ export default function TaskDetailScreen() {
             {addingFiles ? 'Uploading...' : `Attach ${files.length} file(s)`}
           </button>
         </div>
+      )}
+      </>
       )}
     </section>
   );
@@ -596,7 +606,7 @@ export default function TaskDetailScreen() {
               </span>
             </div>
             <div className="relative flex flex-wrap items-center gap-3">
-              {nexts.map((n) => (
+              {canWriteTasks && nexts.map((n) => (
                 <button
                   key={n.to}
                   onClick={() => handleTransition(n.to)}
@@ -606,6 +616,7 @@ export default function TaskDetailScreen() {
                   <CheckCircle2 size={16} /> {transitioningTo === n.to ? 'Moving...' : n.label}
                 </button>
               ))}
+              {(canWriteTasks || canArchiveTasks) && (
               <button
                 onClick={() => setActionsOpen((o) => !o)}
                 aria-label="More actions"
@@ -614,11 +625,12 @@ export default function TaskDetailScreen() {
               >
                 <MoreHorizontal size={16} />
               </button>
-              {actionsOpen && (
+              )}
+              {actionsOpen && (canWriteTasks || canArchiveTasks) && (
                 <>
                   <div className="fixed inset-0 z-30" onClick={() => setActionsOpen(false)} />
                   <div className="absolute right-0 top-full z-40 mt-2 w-52 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl">
-                    {isGroup && (
+                    {isGroup && canWriteTasks && (
                       <button
                         onClick={() => {
                           setActionsOpen(false);
@@ -630,6 +642,7 @@ export default function TaskDetailScreen() {
                         <Layers size={14} /> Update Group
                       </button>
                     )}
+                    {canArchiveTasks && (
                     <button
                       onClick={() => {
                         setActionsOpen(false);
@@ -639,6 +652,7 @@ export default function TaskDetailScreen() {
                     >
                       <Trash2 size={14} /> Archive Task
                     </button>
+                    )}
                   </div>
                 </>
               )}
@@ -659,9 +673,11 @@ export default function TaskDetailScreen() {
                           {task.reviewedAt ? ` · Reviewed ${formatDate(task.reviewedAt)}` : ''}
                         </p>
                       </div>
+                      {canWriteTasks && (
                       <button onClick={() => { setEditing(true); setFieldErrors({}); }} className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
                         <Save size={15} /> Edit
                       </button>
+                      )}
                     </div>
                     {task.description && (
 <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-600">
@@ -1128,6 +1144,8 @@ export default function TaskDetailScreen() {
                     “{task.reviewerFeedback}”
                   </blockquote>
                 )}
+                {canWriteTasks && (
+                <>
                 <textarea
                   rows={4}
                   value={feedback}
@@ -1161,6 +1179,8 @@ export default function TaskDetailScreen() {
                 <p className="mt-3 text-xs text-slate-400">
                   Moving to Complete stamps the review — you can add points and notes at that step.
                 </p>
+                </>
+                )}
               </section>
             </div>
           </div>

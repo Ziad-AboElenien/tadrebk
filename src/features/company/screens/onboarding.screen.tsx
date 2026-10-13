@@ -10,6 +10,8 @@ import {
   type CompanyOnboardingFormData,
 } from '@/features/auth/schemas/auth.schemas';
 import { companyService } from '@/features/company/services/company.service';
+import { userService } from '@/features/student/services/user.service';
+import { setUser } from '@/store/userSlice';
 import { parseLocation } from '@/features/company/types';
 import { getErrorMessage, refreshAuthTokens } from '@/lib/axios';
 import { useAppDispatch, useAppSelector } from '@/store/store';
@@ -38,18 +40,28 @@ export default function CompanyOnboardingScreen() {
   // signed up (pending flag set, no complete company yet). Every other case
   // bounces away — students to their dashboard, everyone else to admin
   // (which shows the under-review / empty state, never this form).
+  // pendingRole (UX hint from the user's own signup) also keeps them here.
+  // Server isCompleted decides too: false → show the form even without the
+  // flag; true → the profile is done, go to admin.
+  const userPendingCompany =
+    (currentUser as { pendingRole?: string } | null)?.pendingRole === 'company';
+  const serverIncomplete = company?._id != null && (company as { isCompleted?: boolean }).isCompleted === false;
   useEffect(() => {
-    if (role === 'student') {
+    if (role === 'student' && !userPendingCompany) {
       router.replace('/dashboard');
       return;
     }
     if (isProfileComplete) return; // handled by the effect below
+    if ((company as { isCompleted?: boolean } | null)?.isCompleted === true) {
+      router.replace('/company/admin');
+      return;
+    }
     if (typeof window === 'undefined') return;
-    const fresh = localStorage.getItem(LS_PENDING_ONBOARDING) === 'true';
+    const fresh = localStorage.getItem(LS_PENDING_ONBOARDING) === 'true' || userPendingCompany || serverIncomplete;
     if (role === 'company' && !fresh) {
       router.replace('/company/admin');
     }
-  }, [role, isProfileComplete, router]);
+  }, [role, isProfileComplete, userPendingCompany, serverIncomplete, company, router]);
 
   useEffect(() => {
     if (company?._id && company.name && company.industry && company.address && company.companyEmail && company.numberOfEmployees) {
@@ -105,6 +117,24 @@ export default function CompanyOnboardingScreen() {
       dispatch(setRole('company'));
       localStorage.setItem(LS_COMPANY_ID, company._id);
       if (userId) markCompanyProfileCompleted(userId);
+      // Backend flips user.role to company_owner on creation — refresh so
+      // the store (and /me/permissions) sees the real role immediately.
+      if (userId) {
+        try {
+          const freshUser = await userService.getUserProfile(userId);
+          dispatch(setUser(freshUser));
+        } catch {
+          /* non-blocking */
+        }
+      }
+      // Tell the backend the profile is complete (best-effort — the company
+      // already exists at this point, so a failure here must not block).
+      try {
+        const completed = await companyService.setProfileCompleted(company._id, true);
+        dispatch(setCompany(completed));
+      } catch {
+        /* non-blocking */
+      }
       await refreshAuthTokens();
       localStorage.removeItem(LS_PENDING_ONBOARDING);
       toastHelper.success('Company profile created successfully!');

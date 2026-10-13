@@ -22,7 +22,9 @@ ListTodo,
 Loader2,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
 import Sidebar from '@/components/tadrebk/Sidebar';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import InternAvatar from '@/components/ui/InternAvatar';
@@ -74,6 +76,8 @@ export default function ProjectDetailScreen() {
   const projectId = params.projectId as string;
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
+  const gate = useCompanyPermissions(companyId);
+  const canCrud = gate.can('projects.crud');
 
   const [project, setProject] = useState<Project | null>(null);
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -379,6 +383,9 @@ export default function ProjectDetailScreen() {
     }
   };
 
+  // v1 backend gates project reads behind projects.crud.
+  if (!gate.loading && !gate.can('projects.crud')) return <StaffBlocked title="Project Details" />;
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Projects" />
@@ -429,6 +436,7 @@ export default function ProjectDetailScreen() {
               </Link>
             </div>
             <div className="relative flex flex-wrap items-center gap-3">
+              {canCrud && (
               <div className="relative">
                 <button
                   onClick={() => setMenuOpen((v) => !v)}
@@ -468,6 +476,7 @@ export default function ProjectDetailScreen() {
                   </>
                 )}
               </div>
+              )}
             </div>
           </div>
 
@@ -724,6 +733,7 @@ export default function ProjectDetailScreen() {
                     <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-500">
                       {assignedInterns.length}
                     </span>
+                    {canCrud && (
                     <button
                       onClick={() => {
                         setShowAssign((v) => !v);
@@ -740,6 +750,7 @@ export default function ProjectDetailScreen() {
                         Assign Interns
                       </span>
                     </button>
+                    )}
                   </div>
                 </div>
 
@@ -758,6 +769,7 @@ assignedInterns.map((i) => (
 <p className="truncate text-xs text-slate-400">{i.email}</p>
 </div>
 </Link>
+                        {canCrud && (
                         <button
                           onClick={() => handleRemove(i._id)}
                           disabled={removingId === i._id}
@@ -766,12 +778,13 @@ assignedInterns.map((i) => (
                         >
                           <X size={14} />
                         </button>
+                        )}
                       </div>
                     ))
                   )}
                 </div>
 
-                {showAssign && (
+                {showAssign && canCrud && (
                   <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50/40 p-4">
                     <p className="text-sm font-medium text-slate-700">Add interns to “{project.name}”</p>
                     <p className="mt-0.5 text-xs text-slate-500">
@@ -872,6 +885,7 @@ assignedInterns.map((i) => (
                 ) : (
                   <p className="mt-3 text-sm text-slate-400">No attachment uploaded.</p>
                 )}
+                {canCrud && (
                 <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-6 text-center">
                   <UploadCloud size={22} className="text-emerald-400" />
                   <p className="mt-2 text-sm font-medium text-slate-700">
@@ -885,7 +899,8 @@ assignedInterns.map((i) => (
                     onChange={(e) => setAttachmentFile(e.target.files?.[0] ?? null)}
                   />
                 </label>
-                {attachmentFile && (
+                )}
+                {attachmentFile && canCrud && (
                   <button
                     onClick={handleUploadAttachment}
                     disabled={uploadingAttachment}

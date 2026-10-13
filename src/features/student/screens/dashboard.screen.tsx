@@ -237,9 +237,14 @@ export default function StudentDashboardScreen() {
       // New shape: { owner, staffMembers[] }; legacy: flat supervisor object.
       const supObj = (s.supervisor && typeof s.supervisor === 'object'
         ? (s.supervisor as Record<string, unknown>)
-        : null) as { owner?: Record<string, unknown>; staffMembers?: Record<string, unknown>[] } | null;
+        : null) as { owner?: Record<string, unknown>; staffMembers?: Record<string, unknown>[]; instructors?: Record<string, unknown>[] } | null;
       const ownerObj = supObj?.owner ?? s;
-      const staffList = Array.isArray(supObj?.staffMembers) ? supObj!.staffMembers! : [];
+      // Live spec uses `instructors[]`, the delivery doc says `staffMembers[]` — accept both.
+      const staffList = Array.isArray(supObj?.staffMembers)
+        ? supObj!.staffMembers!
+        : Array.isArray(supObj?.instructors)
+          ? supObj!.instructors!
+          : [];
       const personName = (p: Record<string, unknown>): string =>
         ([p.firstName, p.lastName].filter(Boolean).join(' ') || (p.name as string) || '');
       const sName = personName(ownerObj as Record<string, unknown>);

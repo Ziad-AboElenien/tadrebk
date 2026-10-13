@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, Loader2, PenLine, Save, Share2, Star, X } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
 import Sidebar from '@/components/tadrebk/Sidebar';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import TopBar from '@/components/tadrebk/TopBar';
 import InternAvatar from '@/components/ui/InternAvatar';
 import { evaluationService, Evaluation } from '@/features/company/services/evaluation.service';
@@ -41,6 +43,9 @@ export default function EvaluationDetailScreen() {
   const programId = searchParams.get('programId') || '';
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
+  const gate = useCompanyPermissions(companyId);
+  const canWrite = gate.can('evaluations.create');
+  const canShare = gate.can('evaluations.share');
 
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [intern, setIntern] = useState<Intern | null>(null);
@@ -133,6 +138,8 @@ export default function EvaluationDetailScreen() {
     : evaluation
       ? evaluation.internId.slice(-6).toUpperCase()
       : '—';
+
+  if (!gate.loading && !gate.can('evaluations.create')) return <StaffBlocked title="Evaluation Details" />;
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -281,7 +288,7 @@ export default function EvaluationDetailScreen() {
                 )}
 
                 <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-100 pt-5">
-                  {!evaluation.sharedWithIntern && !editing && (
+                  {!evaluation.sharedWithIntern && !editing && canWrite && (
                     <button
                       onClick={() => setEditing(true)}
                       className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
@@ -306,7 +313,7 @@ export default function EvaluationDetailScreen() {
                       </button>
                     </>
                   )}
-                  {!evaluation.sharedWithIntern && !editing && (
+                  {!evaluation.sharedWithIntern && !editing && canShare && (
                     <button
                       onClick={handleShare}
                       disabled={sharing}
@@ -315,12 +322,14 @@ export default function EvaluationDetailScreen() {
                       <Share2 size={14} /> {sharing ? 'Sharing...' : 'Share with intern'}
                     </button>
                   )}
+                  {canWrite && (
                   <button
                     onClick={() => router.push('/company/admin/evaluations/new')}
                     className="ml-auto text-sm font-medium text-emerald-600 hover:underline"
                   >
                     + New evaluation
                   </button>
+                  )}
                 </div>
               </div>
             </>

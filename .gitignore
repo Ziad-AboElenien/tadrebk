@@ -42,3 +42,6 @@ next-env.d.ts
 
 # temp diagnostics
 live_swagger.json
+
+# reference-only landing project (read-only, deleted after porting)
+tadrebk-landing-page-main/

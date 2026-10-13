@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { applicationService, Application } from '@/features/student/services/application.service';
 import { Internship } from '@/features/internship/types';
@@ -18,6 +20,7 @@ export default function ComposeEmailScreen() {
   const internId = params.internId as string;
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
+  const gate = useCompanyPermissions(companyId);
 
   const target = searchParams.get('target'); // 'all' or applicationId
   const isAll = target === 'all';
@@ -91,6 +94,10 @@ export default function ComposeEmailScreen() {
       setSending(false);
     }
   }, [company, internId, message, isAll, acceptedApps, target, router]);
+
+  if (!gate.loading && !gate.can('applicants.send_acceptance_email')) {
+    return <StaffBlocked title="Compose Email" />;
+  }
 
   if (loading) {
     return (

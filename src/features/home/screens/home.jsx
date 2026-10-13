@@ -10,7 +10,8 @@ const StudentShowcaseIntro = dynamic(
   { ssr: false },
 );
 
-const HeroSection = dynamic(() => import('@/features/home/components/HeroSection'));
+const HeroSection = dynamic(() => import('@/features/home/components/LandingHero'));
+const LandingHeroLoader = dynamic(() => import('@/features/home/components/BrandLoader'), { ssr: false });
 const LaptopShowcase = dynamic(() => import('@/features/home/components/LaptopShowcase'), {
   ssr: false,
   loading: () => (
@@ -31,6 +32,7 @@ const ApplicationStates = dynamic(() => import('@/features/home/components/Appli
 const HowItWorksSection = dynamic(() => import('@/features/home/components/HowItWorksSection'));
 const CategoriesSection = dynamic(() => import('@/features/home/components/CategoriesSection'));
 const ForStudentsSection = dynamic(() => import('@/features/home/components/ForStudentsSection'));
+const LazySection = dynamic(() => import('@/features/home/components/LazySection'));
 
 const DASHBOARD_BY_ROLE = {
   company: '/company/admin',
@@ -67,6 +69,7 @@ export default function HomeComponent() {
 
   return (
     <div className="relative -mt-[80px] bg-white pt-[80px]">
+      <LandingHeroLoader />
       {/* dotted glassy sky */}
       <div
         aria-hidden
@@ -84,21 +87,35 @@ export default function HomeComponent() {
       </div>
       <div className="relative">
       <HeroSection />
-      <LaptopShowcase
-        phoneContent={
-          <div className="flex min-h-[950px] flex-col justify-center bg-gray-900 px-6 py-10">
-            <StudentShowcaseIntro />
-          </div>
-        }
-      >
-        <StudentMiniDashboard />
-      </LaptopShowcase>
-      <HowItWorksSection variant="guest" />
-      <FeaturedInternshipsSection />
-      <ApplicationTimeline />
-      <ApplicationStates />
-      <CategoriesSection />
-      <ForStudentsSection />
+      <LazySection minHeight={700} label="Interactive preview">
+        <LaptopShowcase
+          phoneContent={
+            <div className="flex min-h-[950px] flex-col justify-center bg-gray-900 px-6 py-10">
+              <StudentShowcaseIntro />
+            </div>
+          }
+        >
+          <StudentMiniDashboard />
+        </LaptopShowcase>
+      </LazySection>
+      <LazySection label="How it works">
+        <HowItWorksSection variant="guest" />
+      </LazySection>
+      <LazySection label="Featured internships">
+        <FeaturedInternshipsSection />
+      </LazySection>
+      <LazySection label="Application timeline">
+        <ApplicationTimeline />
+      </LazySection>
+      <LazySection label="Application states">
+        <ApplicationStates />
+      </LazySection>
+      <LazySection label="Categories">
+        <CategoriesSection />
+      </LazySection>
+      <LazySection label="For students">
+        <ForStudentsSection />
+      </LazySection>
       </div>
     </div>
   );

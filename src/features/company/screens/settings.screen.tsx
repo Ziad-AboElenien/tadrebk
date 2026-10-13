@@ -9,6 +9,8 @@ import ChangePasswordForm from '@/features/auth/components/ChangePasswordForm';
 import ChangeEmailForm from '@/features/auth/components/ChangeEmailForm';
 import SettingsShell from '@/features/profiles/components/SettingsShell';
 import CompanyEditProfile from '@/features/profiles/components/CompanyEditProfile';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 
 const TABS = [
   { key: 'edit-profile', label: 'Edit Profile', desc: 'Brand, details & location', icon: Building2 },
@@ -20,6 +22,8 @@ export default function CompanySettingsScreen() {
   const searchParams = useSearchParams();
   const company = useAppSelector((s) => s.company.currentCompany);
   const tab = searchParams.get('tab');
+  const gate = useCompanyPermissions(company?._id);
+  if (!gate.loading && !gate.isOwner) return <StaffBlocked title="Company Settings" />;
 
   return (
     <SettingsShell

@@ -12,7 +12,9 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
 import Sidebar from '@/components/tadrebk/Sidebar';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import TopBar from '@/components/tadrebk/TopBar';
 import {
   attendanceService,
@@ -58,6 +60,9 @@ function todayStr(): string {
 export default function AttendanceScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
+  const gate = useCompanyPermissions(companyId);
+  const canMark = gate.can('attendance.mark');
+  const canSchedule = gate.can('attendance.schedule');
 
   const [date, setDate] = useState(todayStr());
   const [programId, setProgramId] = useState('');
@@ -236,6 +241,12 @@ export default function AttendanceScreen() {
     }
   };
 
+  // Attendance data reads need marking-or-read access; otherwise every
+  // roster call 403s — show the notice instead of firing them.
+  if (!gate.loading && !gate.canAny(['attendance.mark', 'attendance.read'])) {
+    return <StaffBlocked title="Attendance" />;
+  }
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Reports" />
@@ -283,6 +294,8 @@ export default function AttendanceScreen() {
                     <Users size={18} className="text-emerald-500" /> Interns · {visibleInterns.length}
                   </h3>
                   <div className="flex flex-wrap items-center gap-2">
+                    {canMark && (
+                    <>
                     <button
                       onClick={toggleAll}
                       className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
@@ -310,6 +323,8 @@ export default function AttendanceScreen() {
                       {bulking ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
                       Apply to {selected.size}
                     </button>
+                    </>
+                    )}
                   </div>
                   {bulkError && <p className="mt-2 text-xs font-medium text-rose-500">{bulkError}</p>}
                 </div>
@@ -361,35 +376,36 @@ export default function AttendanceScreen() {
                                     </div>
                                   </label>
                                 </td>
-                                <td className="py-2.5">
-                                  {isMarking ? (
-                                    <Loader2 size={15} className="animate-spin text-slate-400" />
-                                  ) : status ? (
-                                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_META[status].chip}`}>
-                                      {STATUS_META[status].label}
-                                      <button onClick={() => handleMark(i._id, 'attended')} aria-label="Re-open" className="text-slate-400 hover:text-slate-600">
-                                        <ChevronDown size={12} />
-                                      </button>
-                                    </span>
-                                  ) : (
-                                    <span className="text-xs text-slate-400">Unmarked</span>
-                                  )}
-                                  <div className="mt-1 flex gap-1">
-                                    {STATUSES.map((s) => (
-                                      <button
-                                        key={s}
-                                        onClick={() => handleMark(i._id, s)}
-                                        className={`rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors ${
-                                          status === s
-                                            ? STATUS_META[s].chip
-                                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                                        }`}
-                                      >
-                                        {STATUS_META[s].label}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </td>
+                                  <td className="py-2.5">
+                                    {isMarking ? (
+                                      <Loader2 size={15} className="animate-spin text-slate-400" />
+                                    ) : status ? (
+                                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_META[status].chip}`}>
+                                        {STATUS_META[status].label}
+                                      </span>
+                                    ) : (
+                                      <span className="text-xs text-slate-400">Unmarked</span>
+                                    )}
+                                    {canMark && (
+                                      <>
+                                        <div className="mt-1 flex gap-1">
+                                          {STATUSES.map((s) => (
+                                            <button
+                                              key={s}
+                                              onClick={() => handleMark(i._id, s)}
+                                              className={`rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors ${
+                                                status === s
+                                                  ? STATUS_META[s].chip
+                                                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                              }`}
+                                            >
+                                              {STATUS_META[s].label}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </>
+                                    )}
+                                  </td>
                               </tr>
                             );
                           })
@@ -407,6 +423,7 @@ export default function AttendanceScreen() {
                   <h3 className="flex items-center gap-2 font-semibold text-slate-900">
                     <CalendarDays size={18} className="text-emerald-500" /> Week Schedule
                   </h3>
+                  {canSchedule && (
                   <button
                     onClick={handleSaveSchedule}
                     disabled={savingSchedule}
@@ -414,6 +431,7 @@ export default function AttendanceScreen() {
                   >
                     <Save size={14} /> {savingSchedule ? 'Saving...' : 'Save'}
                   </button>
+                  )}
                 </div>
                 <Select
                   value={scheduleProgram}

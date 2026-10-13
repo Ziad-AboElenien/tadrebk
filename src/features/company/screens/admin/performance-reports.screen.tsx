@@ -11,6 +11,8 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import StatCard from '@/components/tadrebk/StatCard';
@@ -27,6 +29,7 @@ import { toastHelper } from '@/lib/toast';
 export default function PerformanceReportsScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
+  const gate = useCompanyPermissions(companyId);
   const [interns, setInterns] = useState<Intern[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
@@ -141,6 +144,11 @@ export default function PerformanceReportsScreen() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  // Reports read evaluations + tasks analytics — gate on either source.
+  if (!gate.loading && !gate.canAny(['evaluations.create', 'tasks.create'])) {
+    return <StaffBlocked title="Performance Reports" />;
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-50">

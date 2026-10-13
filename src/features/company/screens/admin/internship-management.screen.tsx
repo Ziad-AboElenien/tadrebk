@@ -27,6 +27,8 @@ import {
 import { useAppSelector } from '@/store/store';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/tadrebk/Sidebar';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import TopBar from '@/components/tadrebk/TopBar';
 import Select from '@/components/ui/Select';
 import GlassFilter from '@/components/ui/GlassFilter';
@@ -98,6 +100,7 @@ export default function InternshipManagementScreen() {
   const router = useRouter();
   const internshipId = params.internshipId as string;
   const companyId = useAppSelector((s) => s.company.currentCompany?._id);
+  const gate = useCompanyPermissions(companyId);
 
   const [internship, setInternship] = useState<Internship | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -279,6 +282,9 @@ export default function InternshipManagementScreen() {
   ];
 
   const filterOuterOpen = filterOpen;
+
+  // v1 backend gates the applications list behind applicants.review.
+  if (!gate.loading && !gate.can('applicants.review')) return <StaffBlocked title="Internship Details" />;
 
   return (
     <div className="flex min-h-screen bg-slate-50">

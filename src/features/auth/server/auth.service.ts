@@ -15,7 +15,7 @@ import type {
   GoogleAuthRequest,
 } from '@/features/auth/types';
 
-// ─── Signup (no role field per API spec) ─────────────────────
+// ─── Signup (UX-only pendingRole hint; access control never reads it) ─────
 export async function signup(data: SignupRequest): Promise<SignupResponse> {
   const res = await api.post<SignupResponse>('/auth/signup', {
     firstName: data.firstName,
@@ -25,6 +25,7 @@ export async function signup(data: SignupRequest): Promise<SignupResponse> {
     confirmPassword: data.confirmPassword,
     ...(data.phone ? { phone: data.phone } : {}),
     ...(data.education ? { education: data.education } : {}),
+    ...(data.pendingRole ? { pendingRole: data.pendingRole } : {}),
   });
   return res.data;
 }

@@ -13,7 +13,9 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
 import Sidebar from '@/components/tadrebk/Sidebar';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import ExpandableSearch from '@/components/ui/ExpandableSearch';
@@ -44,6 +46,8 @@ function formatDate(dateStr?: string | null): string {
 export default function ProjectsScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
+  const gate = useCompanyPermissions(companyId);
+  const canCrud = gate.can('projects.crud');
   const [projects, setProjects] = useState<Project[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
   const [total, setTotal] = useState(0);
@@ -116,6 +120,9 @@ export default function ProjectsScreen() {
   const activeCount = projects.filter((p) => p.status === 'active').length;
   const internCount = projects.reduce((sum, p) => sum + (p.internIds?.length ?? 0), 0);
 
+  // v1 backend gates the projects list behind projects.crud.
+  if (!gate.loading && !gate.can('projects.crud')) return <StaffBlocked title="Projects" />;
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Projects" />
@@ -129,12 +136,14 @@ export default function ProjectsScreen() {
               <h2 className="text-2xl font-semibold text-slate-900">Internship Projects</h2>
               <p className="text-sm text-slate-500">Organize interns around deliverable-based projects.</p>
             </div>
-            <Link
-              href="/company/admin/projects/new"
-              className="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600"
-            >
-              <Plus size={16} /> Create Project
-            </Link>
+            {canCrud && (
+              <Link
+                href="/company/admin/projects/new"
+                className="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600"
+              >
+                <Plus size={16} /> Create Project
+              </Link>
+            )}
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
@@ -193,12 +202,14 @@ export default function ProjectsScreen() {
                 <p className="text-xs text-slate-400">
                   {search || filter !== 'all' ? 'Try adjusting the search or filters.' : 'Create your first project to get started.'}
                 </p>
+                {canCrud && (
                 <Link
                   href="/company/admin/projects/new"
                   className="mt-4 flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600"
                 >
                   <Plus size={16} /> Create Project
                 </Link>
+                )}
               </div>
             ) : (
               <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -241,6 +252,7 @@ export default function ProjectsScreen() {
                               >
                                 <Eye size={14} /> View Details
                               </Link>
+                              {canCrud && (
                               <Link
                                 href={`/company/admin/projects/${p._id}?mode=edit`}
                                 onClick={() => setOpenMenuId(null)}
@@ -248,6 +260,8 @@ export default function ProjectsScreen() {
                               >
                                 <PenLine size={14} /> Edit
                               </Link>
+                              )}
+                              {canCrud && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -258,6 +272,7 @@ export default function ProjectsScreen() {
                               >
                                 <Trash2 size={14} /> Archive
                               </button>
+                              )}
                             </div>
                           )}
                         </div>

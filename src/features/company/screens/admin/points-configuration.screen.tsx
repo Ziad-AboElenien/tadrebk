@@ -33,6 +33,8 @@ import {
 } from '@/features/company/services/points.service';
 import { getErrorMessage } from '@/lib/axios';
 import { toastHelper } from '@/lib/toast';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 
 const TABS = ['Earning Rules', 'Milestones & Levels'];
 
@@ -317,6 +319,9 @@ export default function PointsConfigurationScreen() {
           : 'Add a rule and a milestone',
     },
   ];
+
+  const gate = useCompanyPermissions(companyId);
+  if (!gate.loading && !gate.isOwner) return <StaffBlocked title="Points Configuration" />;
 
   return (
     <div className="flex min-h-screen bg-slate-50">

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Loader2, Plus } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import Select from '@/components/ui/Select';
@@ -21,6 +23,7 @@ export default function EvaluationNewScreen() {
   const programId = searchParams.get('programId') || '';
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
+  const gate = useCompanyPermissions(companyId);
 
   const [interns, setInterns] = useState<Intern[]>([]);
   const [loadingInterns, setLoadingInterns] = useState(true);
@@ -87,6 +90,8 @@ export default function EvaluationNewScreen() {
       setCreating(false);
     }
   };
+
+  if (!gate.loading && !gate.can('evaluations.create')) return <StaffBlocked title="New Evaluation" />;
 
   return (
     <div className="flex min-h-screen bg-slate-50">

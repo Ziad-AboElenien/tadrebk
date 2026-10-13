@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 import Sidebar from '@/components/tadrebk/Sidebar';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import TopBar from '@/components/tadrebk/TopBar';
 import InternAvatar from '@/components/ui/InternAvatar';
 import { internService } from '@/features/company/services/intern.service';
@@ -38,6 +40,7 @@ function idOf(v: unknown): string {
 export default function LeaderboardScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
+  const gate = useCompanyPermissions(companyId);
   const [interns, setInterns] = useState<Intern[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
@@ -137,6 +140,11 @@ export default function LeaderboardScreen() {
   };
 
   const internLabel = (r: RankedIntern) => `${r.intern.firstName} ${r.intern.lastName}`.trim() || r.intern.email;
+
+  // Leaderboard aggregates intern + task sources — needs one of them.
+  if (!gate.loading && !gate.canAny(['interns.read', 'tasks.create'])) {
+    return <StaffBlocked title="Internship Leaderboard" />;
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-50">

@@ -163,6 +163,10 @@ export interface User {
   email: string;
   phoneNumber?: string;
   isConfirmed: boolean;
+  /** Server role when present (company_owner/admin). Absent = student. */
+  role?: string;
+  /** One-time UX hint from signup. Routing-only; never access control. */
+  pendingRole?: 'student' | 'company' | string;
   provider: 'system' | 'google' | 'facebook';
   profilePicture?: string | CloudinaryResource;
   coverPicture?: string | CloudinaryResource;

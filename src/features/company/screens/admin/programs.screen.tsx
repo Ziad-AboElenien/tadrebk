@@ -21,6 +21,8 @@ import GlassFilter from '@/components/ui/GlassFilter';
 import { programService } from '@/features/company/services/program.service';
 import { Program } from '@/features/company/types/management';
 import { getErrorMessage } from '@/lib/axios';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import { toastHelper } from '@/lib/toast';
 
 const STATUS_STYLES: Record<string, string> = {
@@ -111,6 +113,9 @@ export default function ProgramsScreen() {
 
   const activeCount = programs.filter((p) => p.status === 'active').length;
   const upcomingCount = programs.filter((p) => p.status === 'upcoming').length;
+
+  const gate = useCompanyPermissions(companyId);
+  if (!gate.loading && !gate.isOwner) return <StaffBlocked title="Programs" />;
 
   return (
     <div className="flex min-h-screen bg-slate-50">

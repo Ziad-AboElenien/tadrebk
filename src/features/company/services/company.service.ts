@@ -173,6 +173,13 @@ export const companyService = {
     return data.data.company;
   },
 
+  async setProfileCompleted(companyId: string, isCompleted: boolean): Promise<Company> {
+    const { data } = await api.patch<CompanyResponse>(`/company/${companyId}/complete-profile`, {
+      isCompleted,
+    });
+    return data.data.company;
+  },
+
   async uploadLogo(companyId: string, file: File): Promise<string> {
     const formData = new FormData();
     formData.append('file', file);

@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Pencil, Plus, Search, Send, Trash2, UserCheck, UserPlus, UserX, Users } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Loader2, Pencil, Plus, Search, Send, Trash2, UserCheck, UserPlus, UserX, Users } from 'lucide-react';
 import Sidebar from '@/components/tadrebk/Sidebar';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import TopBar from '@/components/tadrebk/TopBar';
 import GlassFilter from '@/components/ui/GlassFilter';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -20,8 +21,7 @@ import { toastHelper } from '@/lib/toast';
 
 type Tab = 'members' | 'roles';
 
-function initialsOf(firstName?: string, lastName?: string, email?: string): string {
-  const n = `${firstName || ''} ${lastName || ''}`.trim();
+function initialsOf(firstName?: string, lastName?: string, email?: string): string {  const n = `${firstName || ''} ${lastName || ''}`.trim();
   if (n) {
     return n
       .split(' ')
@@ -54,6 +54,7 @@ export default function TeamScreen() {
   const [roleModal, setRoleModal] = useState<{ open: boolean; role?: CompanyRole }>({ open: false });
   const [deleteRole, setDeleteRole] = useState<CompanyRole | null>(null);
   const [acting, setActing] = useState(false);
+  const [rowActingId, setRowActingId] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
     if (!companyId) return;
@@ -107,12 +108,15 @@ export default function TeamScreen() {
   };
 
   const handleResend = async (m: StaffMember) => {
-    if (!companyId) return;
+    if (!companyId || rowActingId) return;
+    setRowActingId(m._id);
     try {
       await staffService.resendInvite(companyId, m._id);
       toastHelper.success('Invite resent');
     } catch (err) {
       toastHelper.error(getErrorMessage(err));
+    } finally {
+      setRowActingId(null);
     }
   };
 
@@ -144,6 +148,24 @@ export default function TeamScreen() {
         </div>
       </div>
     );
+  }
+
+  // Team area needs at least one staff/roles permission — otherwise every
+  // list and mutation on this page 403s.
+  if (
+    !perms.loading &&
+    !perms.canAny([
+      'staff.invite',
+      'staff.update',
+      'staff.remove',
+      'staff.resend_invite',
+      'roles.read',
+      'roles.create',
+      'roles.update',
+      'roles.delete',
+    ])
+  ) {
+    return <StaffBlocked title="Team" />;
   }
 
   return (
@@ -283,11 +305,16 @@ export default function TeamScreen() {
                             </button>
                             <button
                               onClick={() => handleResend(m)}
+                              disabled={rowActingId === m._id}
                               aria-label={`Resend invite to ${displayName(m)}`}
                               title="Resend invite"
-                              className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                              className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
                             >
-                              <Send size={15} />
+                              {rowActingId === m._id ? (
+                                <Loader2 size={15} className="animate-spin" />
+                              ) : (
+                                <Send size={15} />
+                              )}
                             </button>
                             <button
                               onClick={() => setRemoveTarget(m)}
@@ -449,6 +476,27 @@ function InviteStaffModal({
 
   const selectedRole = roles.find((r) => r._id === roleId);
 
+  // Friendly explanations for the backend's invite conflict errors.
+  const friendlyError = (raw: string): string => {
+    const msg = raw.toLowerCase();
+    if (msg.includes('active student')) {
+      return 'This email belongs to an active student. They must withdraw from their program first.';
+    }
+    if (msg.includes('company owner')) {
+      return 'This email is the company owner — they already have full access.';
+    }
+    if (msg.includes('admin')) {
+      return 'This email belongs to an admin and cannot be invited as staff.';
+    }
+    if (msg.includes('another company')) {
+      return 'This person is already active staff at another company.';
+    }
+    if (msg.includes('already') && msg.includes('instructor')) {
+      return 'This person is already on your team.';
+    }
+    return raw;
+  };
+
   const handleSend = async () => {
     if (!firstName.trim() || !lastName.trim()) {
       setError('First and last name are required.');
@@ -456,6 +504,10 @@ function InviteStaffModal({
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setError('Enter a valid email address.');
+      return;
+    }
+    if (roles.length === 0) {
+      setError("Couldn't load roles. Close and reopen this dialog, then try again.");
       return;
     }
     if (!roleId) {
@@ -475,7 +527,7 @@ function InviteStaffModal({
       toastHelper.success('Invite sent! They will confirm by email, then set a password.');
       onDone();
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(friendlyError(getErrorMessage(err)));
     } finally {
       setSending(false);
     }
@@ -530,14 +582,20 @@ function InviteStaffModal({
           </div>
           <div>
             <label htmlFor="invite-role" className="text-xs font-semibold uppercase tracking-wide text-slate-400">Role</label>
-            <Select
-              id="invite-role"
-              value={roleId}
-              onChange={(e) => setRoleId(e.target.value)}
-              options={roles.map((r) => ({ value: r._id, label: `${r.name} (${r.permissions.length})` }))}
-              placeholder="Select a role"
-              className="mt-2"
-            />
+            {roles.length === 0 ? (
+              <p className="mt-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-700">
+                Roles couldn&apos;t be loaded. Close and reopen this dialog to retry.
+              </p>
+            ) : (
+              <Select
+                id="invite-role"
+                value={roleId}
+                onChange={(e) => setRoleId(e.target.value)}
+                options={roles.map((r) => ({ value: r._id, label: `${r.name} (${r.permissions.length})` }))}
+                placeholder="Select a role"
+                className="mt-2"
+              />
+            )}
             {selectedRole && (
               <p className="mt-1.5 text-xs text-slate-400">
                 {selectedRole.permissions.length} permissions
@@ -666,8 +724,36 @@ function RenameStaffModal({
   );
 }
 
-function RoleModal({
-  companyId,
+const PERMISSION_BRIEFS: Record<string, string> = {
+  'tasks.read': 'Lets them open the task board and read every task and its details. Nothing can be created, moved or edited.',
+  'tasks.create': 'Lets them create new tasks and broadcasts, and move cards between columns.',
+  'tasks.update': 'Lets them edit task titles, descriptions, priorities, tags and due dates.',
+  'tasks.delete': 'Lets them permanently delete tasks. Deleted tasks cannot be recovered.',
+  'tasks.archive': 'Lets them archive tasks off the board. Archived tasks stay recoverable.',
+  'attendance.read': 'Lets them view attendance rosters and history, without marking anything.',
+  'attendance.mark': 'Lets them mark each intern present, late, missed or excused for the day.',
+  'attendance.schedule': 'Lets them change the weekly attendance schedule for the company.',
+  'evaluations.read': 'Lets them read evaluations and evaluation analytics.',
+  'evaluations.create': 'Lets them write and edit evaluations for interns.',
+  'evaluations.share': 'Lets them share evaluations with interns, so interns can read their own reviews.',
+  'applicants.read': 'Lets them open the applicant list and read applicant profiles.',
+  'applicants.review': 'Lets them accept or reject applicants.',
+  'applicants.send_acceptance_email': 'Lets them send acceptance emails to applicants.',
+  'applicants.mark_completed': 'Lets them mark applications complete, which drives certificates.',
+  'interns.read': 'Lets them browse the intern roster and open intern profiles.',
+  'projects.read': 'Lets them view projects, members and attachments.',
+  'projects.crud': 'Lets them create, edit and delete projects, manage members and upload attachments.',
+  'roles.read': 'Lets them view roles and which permissions each role grants.',
+  'roles.create': 'Lets them create new custom roles with any permission set.',
+  'roles.update': 'Lets them edit custom roles (and the Instructor permission set). The Owner role stays locked.',
+  'roles.delete': 'Lets them delete custom roles. Roles still assigned to active staff are protected and refuse.',
+  'staff.invite': 'Lets them invite new staff members by email and assign them a role.',
+  'staff.update': 'Lets them rename staff members.',
+  'staff.remove': 'Lets them revoke staff access immediately. The member is signed out everywhere.',
+  'staff.resend_invite': 'Lets them resend pending invitation emails.',
+};
+
+function RoleModal({  companyId,
   role,
   onClose,
   onDone,
@@ -682,6 +768,7 @@ function RoleModal({
   const [name, setName] = useState(role?.name ?? '');
   const [description, setDescription] = useState(role?.description ?? '');
   const [checked, setChecked] = useState<string[]>(role?.permissions ?? []);
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [registry, setRegistry] = useState<PermissionEntry[]>([]);
   const [loadingRegistry, setLoadingRegistry] = useState(true);
   const [error, setError] = useState('');
@@ -817,32 +904,54 @@ function RoleModal({
                     <div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-100">
                       {perms.map((p) => {
                         const on = checked.includes(p.key);
+                        const brief = PERMISSION_BRIEFS[p.key] ?? `Grants the ${p.label.toLowerCase()} capability.`;
+                        const expanded = expandedKey === p.key;
                         return (
-                          <button
-                            key={p.key}
-                            type="button"
-                            role="checkbox"
-                            aria-checked={on}
-                            aria-label={p.label}
-                            onClick={() => toggle(p.key)}
-                            className={`flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors ${on ? 'bg-emerald-50/60' : 'hover:bg-slate-50'}`}
-                          >
-                            <span
-                              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
-                                on ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 bg-white'
-                              }`}
+                          <div key={p.key} className={on ? 'bg-emerald-50/60' : ''}>
+                            <div className="flex w-full items-center gap-3 px-3 py-2.5 text-left">
+                              <button
+                                type="button"
+                                role="checkbox"
+                                aria-checked={on}
+                                aria-label={p.label}
+                                onClick={() => toggle(p.key)}
+                                className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                              >
+                                <span
+                                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
+                                    on ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 bg-white'
+                                  }`}
+                                >
+                                  {on && (
+                                    <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={3.5}>
+                                      <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  )}
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="block text-sm font-medium text-slate-800">{p.label}</span>
+                                  <span className="block font-mono text-[10px] text-slate-400">{p.key}</span>
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedKey((cur) => (cur === p.key ? null : p.key))}
+                                aria-label={expanded ? `Hide what ${p.label} allows` : `Show what ${p.label} allows`}
+                                aria-expanded={expanded}
+                                title="What does this allow?"
+                                className="shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-white hover:text-emerald-600"
+                              >
+                                <ChevronDown size={15} className={`transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`} />
+                              </button>
+                            </div>
+                            <div
+                              className={`grid transition-all duration-300 ease-out ${expanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
                             >
-                              {on && (
-                                <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={3.5}>
-                                  <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              )}
-                            </span>
-                            <span className="min-w-0 flex-1">
-                              <span className="block text-sm font-medium text-slate-800">{p.label}</span>
-                              <span className="block font-mono text-[10px] text-slate-400">{p.key}</span>
-                            </span>
-                          </button>
+                              <div className="overflow-hidden">
+                                <p className="px-3 pb-3 pl-11 text-xs leading-relaxed text-slate-500">{brief}</p>
+                              </div>
+                            </div>
+                          </div>
                         );
                       })}
                     </div>

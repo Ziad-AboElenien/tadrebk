@@ -25,7 +25,9 @@ import {
   X,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
 import Sidebar from '@/components/tadrebk/Sidebar';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Select from '@/components/ui/Select';
@@ -130,6 +132,9 @@ export default function TaskBoardScreen() {
   const router = useRouter();
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
+  const gate = useCompanyPermissions(companyId);
+  // v1 backend gates every task mutation behind tasks.create.
+  const canMove = gate.can('tasks.create');
   const [broadcasts, setBroadcasts] = useState<BroadcastCard[]>([]);
   const [singles, setSingles] = useState<Task[]>([]);
   const [interns, setInterns] = useState<Intern[]>([]);
@@ -218,7 +223,7 @@ export default function TaskBoardScreen() {
 
   const beginDrag = useCallback(
     (item: DragItem, e: React.PointerEvent) => {
-      if (movingId) return;
+      if (movingId || !canMove) return;
       e.preventDefault();
       suppressClick.current = false;
       dragData.current = { item, startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY, moved: false };
@@ -230,7 +235,7 @@ export default function TaskBoardScreen() {
       window.addEventListener('pointerup', onDragEnd);
       window.addEventListener('pointercancel', onDragEnd);
     },
-    [movingId, moveGhost, onDragMove, onDragEnd],
+    [movingId, moveGhost, onDragMove, onDragEnd, canMove],
   );
 
   const fetchAll = useCallback(async () => {
@@ -565,6 +570,10 @@ export default function TaskBoardScreen() {
     </>
   );
 
+  // v1 backend gates even the task list behind tasks.create — members
+  // without it would only collect 403s, so they never see the board.
+  if (!gate.loading && !gate.can('tasks.create')) return <StaffBlocked title="Tasks" />;
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar active="Tasks" />
@@ -613,13 +622,15 @@ export default function TaskBoardScreen() {
                     className="rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                   />
                 </div>
-                <Link
-                  href="/company/admin/tasks/new"
-                  className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-600 sm:flex"
-                >
-                  <Plus size={16} className="shrink-0" />
-                  <span>New Task</span>
-                </Link>
+                {canMove && (
+                  <Link
+                    href="/company/admin/tasks/new"
+                    className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-600 sm:flex"
+                  >
+                    <Plus size={16} className="shrink-0" />
+                    <span>New Task</span>
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={() => setFilterOpen((o) => !o)}
@@ -1005,6 +1016,7 @@ export default function TaskBoardScreen() {
                       </span>
                     </div>
                     <div className="relative flex items-center gap-1 text-slate-400">
+                      {canMove && (
                       <button
                         aria-label={`More options for ${col.title}`}
                         aria-haspopup="menu"
@@ -1015,6 +1027,7 @@ export default function TaskBoardScreen() {
                       >
                         <MoreHorizontal size={15} />
                       </button>
+                      )}
                       {colMenu === col.key && (
                         <>
                           <div className="fixed inset-0 z-30" onClick={() => setColMenu(null)} />
@@ -1059,6 +1072,7 @@ export default function TaskBoardScreen() {
                           opening={opening === item.card.taskGroupId}
                           dimmed={movingId === `group-${item.card.taskGroupId}` || (dragItem?.kind === 'group' && dragItem.id === item.card.taskGroupId)}
                           grip={
+                            canMove ? (
                             <span
                               role="button"
                               tabIndex={0}
@@ -1076,6 +1090,7 @@ export default function TaskBoardScreen() {
                             >
                               <GripVertical size={14} />
                             </span>
+                            ) : undefined
                           }
                           onOpen={() => {
                             if (suppressClick.current) return;
@@ -1100,28 +1115,30 @@ export default function TaskBoardScreen() {
                           <div className="p-4">
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-xs font-medium text-slate-400">{item.task._id.slice(-8).toUpperCase()}</span>
-                            <span className="flex shrink-0 items-center gap-1">
-                              {item.task.priority && (
-                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${priorityTheme(item.task.priority).chip}`}>
-                                  {item.task.priority.toUpperCase()}
-                                </span>
-                              )}
-                              <span
-                                role="button"
-                                tabIndex={0}
-                                aria-label={`Drag ${item.task.title}`}
-                                onPointerDown={(e) =>
-                                  beginDrag(
-                                    { kind: 'single', id: item.task._id, title: item.task.title, from: col.key },
-                                    e,
-                                  )
+                              <span className="flex shrink-0 items-center gap-1">
+                                {item.task.priority && (
+                                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${priorityTheme(item.task.priority).chip}`}>
+                                    {item.task.priority.toUpperCase()}
+                                  </span>
+                                )}
+                                {canMove && (
+                                <span
+                                  role="button"
+                                  tabIndex={0}
+                                  aria-label={`Drag ${item.task.title}`}
+                                  onPointerDown={(e) =>
+                                    beginDrag(
+                                      { kind: 'single', id: item.task._id, title: item.task.title, from: col.key },
+                                      e,
+                                    )
                                 }
                                 className="cursor-grab touch-none rounded-md p-2 text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-500 active:cursor-grabbing"
                               >
                                 <GripVertical size={14} />
                               </span>
-                            </span>
-                          </div>
+                              )}
+                              </span>
+                            </div>
                           <p className="mt-2 break-words text-sm font-semibold text-slate-900">{item.task.title}</p>
                           {item.task.description && (
                             <p className="mt-1 break-words text-xs text-slate-400 line-clamp-2">{item.task.description}</p>
@@ -1131,12 +1148,14 @@ export default function TaskBoardScreen() {
                         </Link>
                       ),
                     )}
-                    <Link
-                      href="/company/admin/tasks/new"
-                      className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2.5 text-sm font-medium text-slate-400 hover:bg-white"
-                    >
-                      <Plus size={15} /> Add Task
-                    </Link>
+                    {canMove && (
+                      <Link
+                        href="/company/admin/tasks/new"
+                        className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2.5 text-sm font-medium text-slate-400 hover:bg-white"
+                      >
+                        <Plus size={15} /> Add Task
+                      </Link>
+                    )}
                   </div>
                 </div>
               ))}

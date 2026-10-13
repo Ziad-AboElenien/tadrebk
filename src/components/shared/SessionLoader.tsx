@@ -10,6 +10,7 @@ import { userService } from '@/features/student/services/user.service';
 import { companyService } from '@/features/company/services/company.service';
 import type { Company } from '@/features/company/types';
 import { LS_USER_ROLE, LS_PENDING_ONBOARDING, LS_COMPANY_ID } from '@/lib/constants';
+import { warmPermissionsCache } from '@/features/company/hooks/use-company-permissions';
 
 /**
  * On mount, if auth tokens exist but currentUser / currentCompany are null,
@@ -57,7 +58,8 @@ export default function SessionLoader({ children }: { children: React.ReactNode 
 
         const { companies } = await companyService.listCompanies({ limit: 50 });
         const backendRole = (user as { role?: string }).role || '';
-        const isCompanyByRole = /company/i.test(backendRole);
+        const pendingCompanyTrack = (user as { pendingRole?: string }).pendingRole === 'company';
+        const isCompanyByRole = /company/i.test(backendRole) || pendingCompanyTrack;
         const isStaff = /instructor/i.test(backendRole);
         // Staff resolve their company from the membership, never the owned search.
         if (isStaff) {
@@ -73,6 +75,7 @@ export default function SessionLoader({ children }: { children: React.ReactNode 
             } catch {
               /* dashboard surfaces the empty state */
             }
+            warmPermissionsCache(membershipCompanyId, id, user.email);
           }
           return;
         }

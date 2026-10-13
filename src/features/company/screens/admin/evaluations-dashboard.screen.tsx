@@ -17,7 +17,9 @@ Trophy,
 Users2,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
 import Sidebar from '@/components/tadrebk/Sidebar';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import TopBar from '@/components/tadrebk/TopBar';
 import GroupedBarChart from '@/features/company/components/GroupedBarChart';
 import InternAvatar from '@/components/ui/InternAvatar';
@@ -63,6 +65,8 @@ export default function EvaluationsDashboardScreen() {
   const programId = searchParams.get('programId') || '';
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
+  const gate = useCompanyPermissions(companyId);
+  const canCreate = gate.can('evaluations.create');
 
   const [dashboard, setDashboard] = useState<EvaluationDashboard | null>(null);
   const [alerts, setAlerts] = useState<EvaluationAlerts>({ lowAttendance: [], evaluationOverdue: [] });
@@ -138,6 +142,9 @@ export default function EvaluationsDashboardScreen() {
   ];
 
   const trends = (dashboard?.chart || []).map((c) => ({ label: c.month, values: { attendance: c.rate } }));
+
+  // v1 backend gates the whole evaluations module behind evaluations.create.
+  if (!gate.loading && !gate.can('evaluations.create')) return <StaffBlocked title="Evaluations Dashboard" />;
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -250,6 +257,7 @@ export default function EvaluationsDashboardScreen() {
                     className="rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                   />
                 </div>
+                {canCreate && (
                 <button
                   onClick={() => router.push(`/company/admin/evaluations/new${programId ? `?programId=${programId}` : ''}`)}
                   disabled={loading}
@@ -257,6 +265,7 @@ export default function EvaluationsDashboardScreen() {
                 >
                   <Plus size={15} /> New Evaluation
                 </button>
+                )}
               </div>
             </div>
 

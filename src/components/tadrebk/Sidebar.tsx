@@ -280,6 +280,25 @@ export default function Sidebar({ active, adminName, adminRole }: SidebarProps) 
               if (item.label === 'Leaderboard') return true; // keep parent, drop the child below
               return false;
             }
+            // v1 backend gates each list behind its module perm — without it
+            // every fetch on the page 403s, so the section stays hidden.
+            if (item.label === 'Tasks' && !teamPerms.isOwner && !teamPerms.can('tasks.create')) return false;
+            if (item.label === 'Interns' && !teamPerms.isOwner && !teamPerms.can('interns.read')) return false;
+            if (item.label === 'Projects' && !teamPerms.isOwner && !teamPerms.can('projects.crud')) return false;
+            if (
+              item.label === 'Leaderboard' &&
+              !teamPerms.isOwner &&
+              !teamPerms.canAny(['interns.read', 'tasks.create'])
+            ) {
+              return false;
+            }
+            if (
+              item.label === 'Reports' &&
+              !teamPerms.isOwner &&
+              !teamPerms.canAny(['evaluations.create', 'tasks.create'])
+            ) {
+              return false;
+            }
             // Team needs at least one staff/roles permission.
             if (
               item.label === 'Team' &&

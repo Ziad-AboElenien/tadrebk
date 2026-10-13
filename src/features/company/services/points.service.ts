@@ -70,9 +70,12 @@ export const pointsService = {
     params?: { page?: number; limit?: number },
   ): Promise<{ rules: PointsRule[]; pagination: Pagination }> {
     const { data } = await api.get<{
-      data: { rules: PointsRule[]; pagination: Pagination };
+      data: { rules?: PointsRule[]; pagination?: Pagination };
     }>(`/company/${companyId}/points/rules`, { params });
-    return data.data;
+    return {
+      rules: data.data.rules ?? [],
+      pagination: data.data.pagination ?? { page: 1, limit: 0, total: 0, pages: 1 },
+    };
   },
 
   async createRule(companyId: string, payload: CreatePointsRulePayload): Promise<PointsRule> {
@@ -105,9 +108,12 @@ export const pointsService = {
     params?: { page?: number; limit?: number },
   ): Promise<{ milestones: PointsMilestone[]; pagination: Pagination }> {
     const { data } = await api.get<{
-      data: { milestones: PointsMilestone[]; pagination: Pagination };
+      data: { milestones?: PointsMilestone[]; pagination?: Pagination };
     }>(`/company/${companyId}/points/milestones`, { params });
-    return data.data;
+    return {
+      milestones: data.data.milestones ?? [],
+      pagination: data.data.pagination ?? { page: 1, limit: 0, total: 0, pages: 1 },
+    };
   },
 
   async createMilestone(companyId: string, payload: CreatePointsMilestonePayload): Promise<PointsMilestone> {

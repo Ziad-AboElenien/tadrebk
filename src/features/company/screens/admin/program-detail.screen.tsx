@@ -21,6 +21,8 @@ import {
   ListTodo,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -69,6 +71,7 @@ export default function ProgramDetailScreen() {
   const programId = params.programId as string;
   const company = useAppSelector((s) => s.company.currentCompany);
   const companyId = company?._id;
+  const gate = useCompanyPermissions(companyId);
 
   const [program, setProgram] = useState<Program | null>(null);
   const [interns, setInterns] = useState<Intern[]>([]);
@@ -423,6 +426,8 @@ export default function ProgramDetailScreen() {
       setArchiving(false);
     }
   };
+
+  if (!gate.loading && !gate.isOwner) return <StaffBlocked title="Program Details" />;
 
   return (
     <div className="flex min-h-screen bg-slate-50">

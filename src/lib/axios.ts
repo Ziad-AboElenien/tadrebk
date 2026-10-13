@@ -58,11 +58,109 @@ api.interceptors.request.use(
           config.headers.Authorization = `Bearer ${token}`;
         }
       }
+      // Permission firewall: block requests the cached permissions already
+      // rule out, BEFORE they hit the network (no doomed calls, no 403s).
+      const blocked = checkPermissionFirewall(config.method || 'get', url);
+      if (blocked) {
+        return Promise.reject({
+          config,
+          response: {
+            status: 403,
+            data: { errMsg: `This action needs the "${blocked}" permission.` },
+            headers: {},
+          },
+          message: `Blocked locally: missing permission "${blocked}"`,
+          isAxiosError: true,
+        });
+      }
     }
     return config;
   },
   (error) => Promise.reject(error),
 );
+
+type FirewallRule = {
+  methods: string[];
+  pattern: RegExp;
+  /** required permission(s): string = all, { any: [] } = at least one, 'owner' = owner only */
+  require: string | { any: string[] } | 'owner';
+};
+
+// Mirrors the backend v1 permission map. Anything not listed here is left
+// alone (backend decides). Owners bypass everything.
+const PERMISSION_FIREWALL: FirewallRule[] = [
+  // Staff / roles admin
+  { methods: ['get'], pattern: /\/company\/[^/]+\/roles(\/|$|\?)/, require: 'roles.read' },
+  { methods: ['post'], pattern: /\/company\/[^/]+\/roles(\/|$|\?)/, require: 'roles.create' },
+  { methods: ['patch'], pattern: /\/company\/[^/]+\/roles\//, require: 'roles.update' },
+  { methods: ['delete'], pattern: /\/company\/[^/]+\/roles\//, require: 'roles.delete' },
+  { methods: ['get'], pattern: /\/company\/[^/]+\/instructors(\/|$|\?)/, require: { any: ['staff.invite', 'staff.update', 'staff.remove', 'staff.resend_invite'] } },
+  { methods: ['post'], pattern: /\/company\/[^/]+\/instructors\/[^/]+\/resend-invite/, require: 'staff.resend_invite' },
+  { methods: ['post'], pattern: /\/company\/[^/]+\/instructors(\/|$|\?)/, require: 'staff.invite' },
+  { methods: ['patch'], pattern: /\/company\/[^/]+\/instructors\//, require: 'staff.update' },
+  { methods: ['delete'], pattern: /\/company\/[^/]+\/instructors\//, require: 'staff.remove' },
+  // Tasks (v1: everything behind tasks.create)
+  { methods: ['get', 'post', 'patch', 'delete'], pattern: /\/company\/[^/]+\/tasks(\/|$|\?)/, require: 'tasks.create' },
+  // Attendance
+  { methods: ['post'], pattern: /\/company\/[^/]+\/(interns\/[^/]+\/attendance|attendance\/bulk-mark)/, require: 'attendance.mark' },
+  { methods: ['put'], pattern: /\/company\/[^/]+\/attendance\/schedule/, require: 'attendance.schedule' },
+  { methods: ['get'], pattern: /\/company\/[^/]+\/attendance\/dashboard/, require: 'attendance.mark' },
+  // Evaluations
+  { methods: ['get', 'post', 'patch', 'delete'], pattern: /\/company\/[^/]+\/evaluations(\/|$|\?)/, require: 'evaluations.create' },
+  { methods: ['post'], pattern: /\/company\/[^/]+\/interns\/[^/]+\/evaluations/, require: 'evaluations.create' },
+  // Projects
+  { methods: ['get', 'post', 'patch', 'delete', 'put'], pattern: /\/company\/[^/]+\/projects(\/|$|\?)/, require: 'projects.crud' },
+  // Applicants
+  { methods: ['get'], pattern: /\/company\/[^/]+\/internships\/[^/]+\/applications(\/|$|\?)/, require: 'applicants.review' },
+  { methods: ['patch'], pattern: /\/company\/[^/]+\/internships\/[^/]+\/applications\/[^/]+$/, require: 'applicants.review' },
+  { methods: ['patch'], pattern: /\/company\/[^/]+\/internships\/[^/]+\/applications\/[^/]+\/complete/, require: 'applicants.mark_completed' },
+  { methods: ['post'], pattern: /send-acceptance-email/, require: 'applicants.send_acceptance_email' },
+  // Interns roster
+  { methods: ['get'], pattern: /\/company\/[^/]+\/interns(\/|$|\?)/, require: 'interns.read' },
+  // Owner-only modules (no staff perm exists for these)
+  { methods: ['get', 'post', 'patch', 'delete', 'put'], pattern: /\/company\/[^/]+\/points\//, require: 'owner' },
+  { methods: ['get', 'post', 'patch', 'delete', 'put'], pattern: /\/company\/[^/]+\/programs(\/|$|\?)/, require: 'owner' },
+  { methods: ['post', 'put', 'patch', 'delete'], pattern: /\/company\/[^/]+\/internships(\/|$|\?)/, require: 'owner' },
+  { methods: ['patch'], pattern: /\/company\/[^/]+$/, require: 'owner' },
+  { methods: ['post'], pattern: /\/company\/[^/]+\/(logo|coverPicture)/, require: 'owner' },
+  { methods: ['get', 'post'], pattern: /\/company\/[^/]+\/billing\//, require: 'owner' },
+];
+
+/**
+ * Returns the missing permission key when a request must not be sent,
+ * or null when it may proceed. Reads the hourly permissions cache only —
+ * no cache (or an owner) means "allow": the backend stays the enforcer.
+ */
+function checkPermissionFirewall(method: string, url: string): string | null {
+  const path = url.split('?')[0];
+  if (!path.includes('/company/')) return null;
+  const companyMatch = path.match(/\/company\/([^/]+)/);
+  if (!companyMatch) return null;
+  let cached: { permissions?: string[]; isOwner?: boolean } | null = null;
+  try {
+    const raw = localStorage.getItem(`tadrebk_perms_v2_${companyMatch[1]}`);
+    cached = raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+  if (!cached || !Array.isArray(cached.permissions)) return null;
+  if (cached.isOwner) return null;
+  const m = method.toLowerCase();
+  const held = new Set(cached.permissions);
+  for (const rule of PERMISSION_FIREWALL) {
+    if (!rule.methods.includes(m)) continue;
+    if (!rule.pattern.test(path)) continue;
+    if (rule.require === 'owner') return 'owner access';
+    if (typeof rule.require === 'string') {
+      if (!held.has(rule.require)) return rule.require;
+      return null;
+    }
+    const ok = rule.require.any.some((p) => held.has(p));
+    if (!ok) return rule.require.any[0];
+    return null;
+  }
+  return null;
+}
 
 // ─── Response interceptor — auto-refresh on 401 / role-promotion 403 ────────
 interface RetryConfig extends InternalAxiosRequestConfig {
@@ -249,6 +347,11 @@ export function getErrorStatus(error: unknown): number | null {
 
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
+    // 403s never surface raw ("Forbidden" / "You don't have permission") —
+    // they always render as a neutral access notice instead.
+    if (error.response?.status === 403) {
+      return 'This action is not available for your account.';
+    }
     const data = error.response?.data as
       | { message?: unknown; errMsg?: unknown; msg?: unknown }
       | undefined;

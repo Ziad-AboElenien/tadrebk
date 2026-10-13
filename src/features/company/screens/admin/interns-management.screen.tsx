@@ -17,7 +17,9 @@ import {
   Pause,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
 import Sidebar from '@/components/tadrebk/Sidebar';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import TopBar from '@/components/tadrebk/TopBar';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import GlassFilter from '@/components/ui/GlassFilter';
@@ -48,6 +50,8 @@ function formatDate(iso?: string): string {
 export default function InternsManagementScreen() {
   const router = useRouter();
   const companyId = useAppSelector((s) => s.company.currentCompany?._id);
+  // Posting internships (close/reopen/delete) stayed owner-only on the backend.
+  const gate = useCompanyPermissions(companyId);
   const [internships, setInternships] = useState<Internship[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -143,6 +147,9 @@ export default function InternsManagementScreen() {
     { label: 'Active', value: String(counts.active), icon: CheckCircle2, iconColor: 'text-emerald-600 bg-emerald-50' },
     { label: 'Closed', value: String(counts.closed), icon: Ban, iconColor: 'text-slate-500 bg-slate-100' },
   ];
+
+  // Intern roster reads need interns.read — otherwise every row call 403s.
+  if (!gate.loading && !gate.can('interns.read')) return <StaffBlocked title="Interns" />;
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -312,6 +319,7 @@ export default function InternsManagementScreen() {
                               </span>
                             </td>
                             <td className="relative py-3.5 text-right">
+                              {gate.isOwner && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -325,6 +333,7 @@ export default function InternsManagementScreen() {
                               >
                                 <MoreHorizontal size={16} />
                               </button>
+                              )}
 
                               {menuOpenId === i._id && (
                                 <>

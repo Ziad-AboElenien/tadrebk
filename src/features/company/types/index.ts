@@ -24,6 +24,8 @@ export interface Company {
   coverPicture?: string | CloudinaryResource;
   /** Legal verification document (sent by the backend for admin review). */
   legalAttachment?: string | CloudinaryResource;
+  /** Owner-set "ready for review" signal. Admin can only approve when true. */
+  isCompleted?: boolean;
   approvedByAdmin: boolean;
   bannedAt?: string;
   deletedAt?: string;

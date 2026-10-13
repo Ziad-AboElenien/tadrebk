@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { applicationService, Application } from '@/features/student/services/application.service';
 import type { RatingData } from '@/features/student/services/application.service';
@@ -38,6 +40,10 @@ export default function InternshipApplicationsScreen() {
   const router = useRouter();
   const internId = params.internId as string;
   const company = useAppSelector((s) => s.company.currentCompany);
+  const gate = useCompanyPermissions(company?._id);
+  const canReview = gate.can('applicants.review');
+  const canEmail = gate.can('applicants.send_acceptance_email');
+  const canComplete = gate.can('applicants.mark_completed');
 
   const [internship, setInternship] = useState<Internship | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -210,6 +216,9 @@ const [ratings, setRatings] = useState<Record<string, RatingData | null>>({});
     );
   }
 
+  // v1 backend gates the applications list behind applicants.review.
+  if (!gate.loading && !gate.can('applicants.review')) return <StaffBlocked title="Applications" />;
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       {/* Back + title */}
@@ -335,7 +344,7 @@ const [ratings, setRatings] = useState<Record<string, RatingData | null>>({});
       </div>
 
       {/* Send all button */}
-      {filter === 'accepted' && statusCounts.accepted > 0 && (
+      {filter === 'accepted' && statusCounts.accepted > 0 && canEmail && (
         <div className="mb-6 flex justify-end">
           <Button
             variant="primary"
@@ -407,7 +416,7 @@ const [ratings, setRatings] = useState<Record<string, RatingData | null>>({});
                           {app.status}
                         </Badge>
 
-                        {app.status === 'pending' && (
+                        {app.status === 'pending' && canReview && (
                           <>
                             <Button
                               variant="primary"
@@ -460,6 +469,7 @@ className="rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-white shad
                                 ))}
                               </div>
                             )}
+                            {canEmail && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -468,6 +478,7 @@ className="rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-white shad
                             >
                               <i className="fas fa-envelope text-xs mr-1" /> Send Email
                             </Button>
+                            )}
                           </>
                         )}
 

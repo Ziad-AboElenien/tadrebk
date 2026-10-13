@@ -4,6 +4,7 @@ import { LS_COMPANY_ID, LS_COMPANY_PROFILE_COMPLETED, LS_PENDING_ONBOARDING, LS_
 import type { AppDispatch } from '@/store/store';
 import type { AuthTokens } from '@/features/auth/types';
 import { toastHelper } from '@/lib/toast';
+import { warmPermissionsCache } from '@/features/company/hooks/use-company-permissions';
 import { setTokens, setRole } from '@/store/authSlice';
 import { setUser } from '@/store/userSlice';
 import { setCompany } from '@/store/companySlice';
@@ -88,8 +89,12 @@ export async function completeLogin(
   // The backend is the source of truth for the account kind — a fresh company
   // account has no company object and no categories yet, so deriving the role
   // from those alone misclassifies it as a student (and breaks both flows).
+  // pendingRole (UX-only, picked once at signup) routes fresh company
+  // accounts straight to Step 2 of 2. It NEVER grants access — all gates
+  // below still require the real role / owned company / fresh flag.
   const backendRole = (user as { role?: string }).role || '';
-  const isCompanyByRole = /company/i.test(backendRole);
+  const pendingCompanyTrack = (user as { pendingRole?: string }).pendingRole === 'company';
+  const isCompanyByRole = /company/i.test(backendRole) || pendingCompanyTrack;
   // Staff (instructors & custom roles) go straight to the dashboard: they
   // never create a company profile and must never see onboarding.
   const isStaff = /instructor/i.test(backendRole);
@@ -103,6 +108,7 @@ export async function completeLogin(
   let userRole: 'student' | 'company' = isCompanyByRole ? 'company' : 'student';
   let companyLoaded = false;
   let loadedApproved: boolean | null = null;
+  let loadedCompleted: boolean | null = null;
   // Staff membership carries its own company — resolve it directly instead
   // of the owned-company search (staff own nothing).
   const membershipCompanyId =
@@ -133,12 +139,14 @@ export async function completeLogin(
       dispatch(setCompany(full));
       localStorage.setItem(LS_COMPANY_ID, full._id);
       loadedApproved = (full as { approvedByAdmin?: boolean }).approvedByAdmin ?? null;
+      loadedCompleted = (full as { isCompleted?: boolean }).isCompleted ?? null;
     } catch {
       // LIST sees the company but GET 404s (backend inconsistency) — the
       // list object itself is usable, don't leave the store empty.
       dispatch(setCompany(owned as Company));
       localStorage.setItem(LS_COMPANY_ID, owned._id);
       loadedApproved = (owned as unknown as { approvedByAdmin?: boolean }).approvedByAdmin ?? null;
+      loadedCompleted = (owned as unknown as { isCompleted?: boolean }).isCompleted ?? null;
     }
     companyLoaded = true;
   } else if (savedCompanyId) {
@@ -150,6 +158,7 @@ export async function completeLogin(
         dispatch(setCompany(savedCompany));
         companyLoaded = true;
         loadedApproved = (savedCompany as { approvedByAdmin?: boolean }).approvedByAdmin ?? null;
+        loadedCompleted = (savedCompany as { isCompleted?: boolean }).isCompleted ?? null;
       }
     } catch {
       // Stale id (e.g. backend DB was reset) — drop it so we stop retrying it.
@@ -163,6 +172,15 @@ export async function completeLogin(
 
   dispatch(setRole(userRole));
   dispatch(setUser(user));
+
+  // Warm the hourly permissions cache for staff right at login (fire and
+  // forget) — the first admin screen then renders from known permissions.
+  // Owners bypass everything and need no warm-up.
+  if (userRole === 'company' && isStaff) {
+    const warmId =
+      localStorage.getItem(LS_COMPANY_ID) || membershipCompanyId || savedCompanyId;
+    if (warmId) warmPermissionsCache(warmId, userId, user.email);
+  }
 
   if (user.isConfirmed === false) {
     localStorage.setItem(LS_PENDING_EMAIL, user.email);
@@ -187,13 +205,17 @@ export async function completeLogin(
     if (isStaff) {
       return { redirect: '/company/admin', needsConfirmation: false };
     }
-    // Profile resolved from the server — verified or not, the dashboard
-    // (and its under-review states) is home. Remember the completion.
+    // Server isCompleted drives the complete-profile form:
+    // false → show the form; true (or unknown) → dashboard.
     if (companyLoaded) {
       markCompanyProfileCompleted(userId);
       localStorage.removeItem(LS_PENDING_ONBOARDING);
+      if (loadedCompleted === false) {
+        localStorage.setItem(LS_PENDING_ONBOARDING, 'true');
+        return { redirect: '/company/onboarding', needsConfirmation: false };
+      }
       if (loadedApproved === false) {
-        toastHelper.info('Your company profile is submitted and waiting for admin review.');
+        toastHelper.info('Your request is under review by the admin.');
       }
       return { redirect: '/company/admin', needsConfirmation: false };
     }
@@ -202,7 +224,7 @@ export async function completeLogin(
     // notice, NOT the onboarding form (it would just fail on duplicates).
     if (isCompanyProfileCompleted(userId)) {
       localStorage.removeItem(LS_PENDING_ONBOARDING);
-      toastHelper.info('Your company profile is submitted and waiting for admin review.');
+      toastHelper.info('Your request is under review by the admin.');
       return { redirect: '/company/admin', needsConfirmation: false };
     }
     // Truly fresh company account → the ONLY case that sees the form.

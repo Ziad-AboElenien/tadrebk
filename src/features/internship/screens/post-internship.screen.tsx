@@ -22,6 +22,8 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import { internshipService } from '@/features/internship/services/internship.service';
 import { internshipSchema } from '@/features/auth/schemas/auth.schemas';
 import type { InternshipQuestion } from '@/features/internship/types';
@@ -327,6 +329,9 @@ export default function PostInternshipScreen() {
   }
 
   const progress = ((step + 1) / STEPS.length) * 100;
+
+  const gate = useCompanyPermissions(company?._id);
+  if (!gate.loading && !gate.isOwner) return <StaffBlocked title="Post Internship" />;
 
   return (
     <div className="min-h-screen bg-slate-50">

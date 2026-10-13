@@ -112,6 +112,7 @@ export default function SignupForm({ role }: SignupFormProps) {
         password: data.password,
         confirmPassword: data.confirmPassword,
         phone: data.phone || undefined,
+        pendingRole: role,
         education: !isCompany && data.university
           ? [{
               institution: data.university,

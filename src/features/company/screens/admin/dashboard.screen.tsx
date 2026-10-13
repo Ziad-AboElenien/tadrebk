@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
 import { LS_PENDING_ONBOARDING } from '@/lib/constants';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
@@ -49,6 +50,7 @@ function timeAgo(dateStr?: string | null): string {
 export default function AdminDashboardScreen() {
   const router = useRouter();
   const company = useAppSelector((s) => s.company.currentCompany);
+  const gate = useCompanyPermissions(company?._id);
   const authStatus = useAppSelector((s) => s.auth.status);
   const backendRole = useAppSelector((s) => s.user.currentUser as { role?: string } | null)?.role || '';
   const isPendingCompany = /company/i.test(backendRole);
@@ -70,16 +72,24 @@ export default function AdminDashboardScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!company?._id) return;
+    if (!company?._id || gate.loading) return;
+    // Only fire the calls this account may use — anything else 403s.
+    const canInterns = gate.can('interns.read');
+    const canTasks = gate.can('tasks.create');
+    const canEvals = gate.can('evaluations.create');
     (async () => {
       try {
         const [postingsRes, internList, tasksRes, progRes, evalRes, bcRes] = await Promise.all([
           internshipService.listInternships({ companyId: company._id, limit: 50 }),
-          internService.listAllInterns(company._id),
-          taskService.listTasks(company._id, { limit: 100 }),
-          programService.listPrograms(company._id, { limit: 100 }),
-          evaluationService.listEvaluations(company._id, { page: 1, limit: 100 }).catch(() => ({ evaluations: [] })),
-          taskService.listBroadcasts(company._id, { limit: 100 }).catch(() => ({ broadcasts: [] })),
+          canInterns ? internService.listAllInterns(company._id) : [],
+          canTasks ? taskService.listTasks(company._id, { limit: 100 }) : { tasks: [] },
+          gate.isOwner ? programService.listPrograms(company._id, { limit: 100 }) : { data: [] },
+          canEvals
+            ? evaluationService.listEvaluations(company._id, { page: 1, limit: 100 }).catch(() => ({ evaluations: [] }))
+            : { evaluations: [] },
+          canTasks
+            ? taskService.listBroadcasts(company._id, { limit: 100 }).catch(() => ({ broadcasts: [] }))
+            : { broadcasts: [] },
         ]);
         const tasks = tasksRes.tasks.filter((t) => t.status !== 'archived');
         setInternsCount(syncInternshipsClosedState(postingsRes.internships).filter((i) => !i.closed).length);
@@ -124,7 +134,7 @@ export default function AdminDashboardScreen() {
         setLoading(false);
       }
     })();
-  }, [company?._id]);
+  }, [company?._id, gate.loading]);
 
   const stats = [
     { label: 'Active Internships', value: String(internsCount), icon: Users, delta: `${internsCount} open`, deltaLabel: 'active postings' },
@@ -204,13 +214,15 @@ export default function AdminDashboardScreen() {
           title="Dashboard Overview"
           actions={
             <>
-              {/* Desktop / tablet: full button */}
+              {/* Desktop / tablet: full button (posting is owner-only) */}
+              {gate.isOwner && (
               <Link
                 href="/company/post-internship"
                 className="hidden items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 sm:inline-flex"
               >
                 <Plus size={16} /> New Internship
               </Link>
+              )}
             </>
           }
         />
@@ -220,6 +232,16 @@ export default function AdminDashboardScreen() {
             <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">Welcome back, Admin</h2>
             <p className="mt-0.5 text-xs text-slate-500 sm:mt-0 sm:text-sm">Here&apos;s what&apos;s happening with your internship programs today.</p>
           </div>
+
+          {company?._id != null &&
+            (company as { approvedByAdmin?: boolean }).approvedByAdmin === false && (
+              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
+                <i className="fas fa-hourglass-half text-amber-500" />
+                <p className="flex-1 text-sm text-amber-800">
+                  Your request is under review by the admin. You&apos;ll get full access once approved.
+                </p>
+              </div>
+            )}
 
           {!company?._id && authStatus === 'succeeded' ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center">

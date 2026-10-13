@@ -15,6 +15,8 @@ import {
   UploadCloud,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { useCompanyPermissions } from '@/features/company/hooks/use-company-permissions';
+import { StaffBlocked } from '@/features/company/components/StaffGate';
 import Sidebar from '@/components/tadrebk/Sidebar';
 import TopBar from '@/components/tadrebk/TopBar';
 import { taskService, CreateTaskPayload } from '@/features/company/services/task.service';
@@ -30,6 +32,7 @@ const SUGGESTED_TAGS = ['Programming', 'Design', 'Documentation', 'Research', 'Q
 
 export default function AddNewTaskScreen() {
   const company = useAppSelector((s) => s.company.currentCompany);
+  const gate = useCompanyPermissions(company?._id);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -115,6 +118,8 @@ export default function AddNewTaskScreen() {
       setSubmitting(false);
     }
   };
+
+  if (!gate.loading && !gate.can('tasks.create')) return <StaffBlocked title="New Task" />;
 
   return (
     <div className="flex min-h-screen bg-slate-50">
