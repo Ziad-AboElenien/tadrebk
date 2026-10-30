@@ -193,13 +193,21 @@ export default function UniversityAutocomplete({  label,
           aria-controls={open ? `${id}-listbox` : undefined}
           aria-activedescendant={highlight >= 0 ? `${id}-opt-${highlight}` : undefined}
           aria-label={label || placeholder}
-          value={focused ? query : multiple ? '' : selected[0] || ''}
+          value={focused && query !== '' ? query : multiple ? '' : selected[0] || ''}
           placeholder={multiple && selected.length > 0 ? '' : placeholder}
           onFocus={() => {
             setFocused(true);
             setQuery('');
             setCustomMode(false);
             setOpen(true);
+          }}
+          onBlur={(e) => {
+            setFocused(false);
+            // Keep the listbox open when focus moves to an option inside the
+            // container (its click handler still needs to fire).
+            if (ref.current && !ref.current.contains(e.relatedTarget as Node)) {
+              setOpen(false);
+            }
           }}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -271,6 +279,12 @@ export default function UniversityAutocomplete({  label,
                 id={`${id}-opt-${i}`}
                 role="option"
                 aria-selected={selected.includes(name) || highlight === i}
+                // Commit on mousedown (before the input blurs) so the click
+                // isn't lost to focus change; onClick stays for keyboard use.
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  commit(name);
+                }}
                 onClick={() => commit(name)}
                 onMouseEnter={() => setHighlight(i)}
                 className={[
@@ -289,6 +303,10 @@ export default function UniversityAutocomplete({  label,
             {showCustom && (
               <button
                 type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  commit(query);
+                }}
                 onClick={() => commit(query)}
                 className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2"
               >
@@ -302,6 +320,10 @@ export default function UniversityAutocomplete({  label,
             <div className="border-t border-gray-100">
               <button
                 type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  openCustom();
+                }}
                 onClick={openCustom}
                 className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2"
               >

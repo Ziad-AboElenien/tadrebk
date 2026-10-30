@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
 import {
   Award,
   Briefcase,
@@ -40,6 +39,9 @@ import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import ImageMenu from '@/components/ui/ImageMenu';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+// Static import: a failed dynamic chunk here used to swallow the whole
+// change-photo flow (BUG_006) — file picked, cropper never appeared.
+import ImageCropperModal from '@/components/ui/ImageCropperModal';
 import SkillModal, { type SkillFormValue } from '@/features/profiles/components/SkillModal';
 import CourseModal, { type CourseFormValue } from '@/features/profiles/components/CourseModal';
 import EducationModal, { type EducationFormValue } from '@/features/profiles/components/EducationModal';
@@ -56,8 +58,6 @@ import {
   useProfileMeta,
 } from '@/features/profiles/services/profile-meta.store';
 import { Pill, formatMonthYear } from '@/features/profiles/components/ProfilePrimitives';
-
-const ImageCropperModal = dynamic(() => import('@/components/ui/ImageCropperModal'), { ssr: false });
 
 interface StudentEditProfileProps {
   user: User;
@@ -547,6 +547,7 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
             label="Headline"
             placeholder="e.g. Frontend Developer | CS student"
             value={headline}
+            maxLength={100}
             onChange={(e) => setHeadline(e.target.value)}
           />
         </div>
@@ -556,9 +557,11 @@ export default function StudentEditProfile({ user: initialUser }: StudentEditPro
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={4}
+            maxLength={500}
             placeholder="Tell companies who you are..."
             className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
           />
+          <span className="text-right text-xs text-slate-300">{bio.length}/500</span>
         </div>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+20 ..." />

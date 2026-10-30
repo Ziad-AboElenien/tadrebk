@@ -552,6 +552,7 @@ export default function StudentProfileOwn({ user }: { user: User }) {
           open
           saving={modalSaving}
           initial={null}
+          mode="certificate"
           existingNames={(user.courses || []).map((c) => c.name)}
           onClose={() => setCourseOpen(false)}
           onSave={handleAddCourse}

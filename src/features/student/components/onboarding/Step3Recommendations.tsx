@@ -44,6 +44,8 @@ interface Props {
   onFinish: () => void;
   saving: boolean;
   userName: string;
+  // BUG_004: the typed track behind the "Other" chip, if any.
+  customTrack?: string;
 }
 
 export default function Step3Recommendations({
@@ -52,6 +54,7 @@ export default function Step3Recommendations({
   onFinish,
   saving,
   userName,
+  customTrack,
 }: Props) {
   const [internships, setInternships] = useState<Internship[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,7 +120,9 @@ export default function Step3Recommendations({
                   className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[11px] font-bold text-white backdrop-blur"
                 >
                   <i className={`fas ${TRACK_ICONS[cat] || 'fa-tag'} text-[9px]`} />
-                  {CATEGORY_LABELS[cat] || cat}
+                  {cat === 'other' && customTrack?.trim()
+                    ? customTrack.trim()
+                    : CATEGORY_LABELS[cat] || cat}
                 </motion.span>
               ))}
             </div>

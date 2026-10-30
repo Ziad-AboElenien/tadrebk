@@ -13,6 +13,7 @@ import { companyService } from '@/features/company/services/company.service';
 import { useAppSelector } from '@/store/store';
 import { CATEGORY_LABELS, type Category } from '@/features/student/types';
 import { toastHelper } from '@/lib/toast';
+import { getErrorMessage } from '@/lib/axios';
 
 // Map each user category to keywords that may appear in internship title or skills
 const CATEGORY_KEYWORDS: Record<Category, string[]> = {
@@ -322,6 +323,13 @@ function InternshipsContent() {
   }, []);
 
   const handleSave = useCallback(async (id: string) => {
+    // The listing is public — a guest tapping Save should be sent to sign in
+    // instead of getting a generic failure toast (BUG_011).
+    if (!isAuthenticated) {
+      toastHelper.info('Sign in to save internships.');
+      router.push('/login/student');
+      return;
+    }
     const wasSaved = savedIds.has(id);
     // Optimistic update
     setSavedIds((prev) => {
@@ -337,16 +345,16 @@ function InternshipsContent() {
         await internshipService.saveInternship(id);
         toastHelper.success('Saved!');
       }
-    } catch {
+    } catch (err) {
       // Revert on error
       setSavedIds((prev) => {
         const next = new Set(prev);
         if (wasSaved) next.add(id); else next.delete(id);
         return next;
       });
-      toastHelper.error('Failed to update saved status');
+      toastHelper.error(getErrorMessage(err) || 'Failed to update saved status');
     }
-  }, [savedIds]);
+  }, [savedIds, isAuthenticated, router]);
 
   const hasActiveFilters = filters.title || filters.type || filters.location;
 

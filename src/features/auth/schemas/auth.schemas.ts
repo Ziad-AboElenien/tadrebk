@@ -8,11 +8,19 @@ const passwordSchema = z
   .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
   .regex(/[0-9]/, 'Must contain at least one number');
 
+// Name fields reject digits (BUG_001/002) but allow Latin + Arabic letters,
+// spaces, hyphens and apostrophes (e.g. "Ahmed Hassan", "عمر السيد", "Al-Sayyid").
+const nameField = (label: string) =>
+  z
+    .string()
+    .min(2, `${label} must be at least 2 characters`)
+    .regex(/^[^\d]+$/, `${label} should only contain letters`);
+
 // ─── Signup (no role field per API) ──────────────────────────
 export const signupSchema = z
   .object({
-    firstName: z.string().min(2, 'First name must be at least 2 characters'),
-    lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+    firstName: nameField('First name'),
+    lastName: nameField('Last name'),
     email: z.string().email('Invalid email address'),
     phone: z
       .string()

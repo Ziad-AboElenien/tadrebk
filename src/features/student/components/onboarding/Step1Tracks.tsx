@@ -31,9 +31,12 @@ interface Props {
   selected: Category[];
   onToggle: (cat: Category) => void;
   onNext: () => void;
+  // BUG_004: "Other" must let the student name their custom track.
+  otherValue: string;
+  onOtherChange: (value: string) => void;
 }
 
-export default function Step1Tracks({ selected, onToggle, onNext }: Props) {
+export default function Step1Tracks({ selected, onToggle, onNext, otherValue, onOtherChange }: Props) {
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const cats = (Object.keys(CATEGORY_LABELS) as Category[]).filter(
@@ -114,6 +117,23 @@ export default function Step1Tracks({ selected, onToggle, onNext }: Props) {
           </div>
         )}
       </div>
+
+      {/* Custom track input — required when "Other" is picked (BUG_004) */}
+      {selected.includes('other') && (
+        <div className="mx-4 mt-4 rounded-2xl bg-amber-50 p-3.5 sm:mx-5">
+          <label htmlFor="custom-track" className="block text-xs font-bold text-amber-800">
+            Tell us what you&apos;d like to explore
+          </label>
+          <input
+            id="custom-track"
+            value={otherValue}
+            onChange={(e) => onOtherChange(e.target.value)}
+            placeholder="e.g. Game Development, Cloud Engineering…"
+            maxLength={60}
+            className="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+          />
+        </div>
+      )}
 
       {/* Footer */}
       <div className="flex items-center gap-3 border-t border-slate-100 bg-white/90 px-4 py-3.5 backdrop-blur sm:px-5">

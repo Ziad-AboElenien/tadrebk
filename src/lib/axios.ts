@@ -345,6 +345,70 @@ export function getErrorStatus(error: unknown): number | null {
   return null;
 }
 
+// Backend validation errors arrive as raw Zod strings, e.g.
+// "bio⇒Too big: expected string to have <=500 characters,headline⇒…".
+// Translate them into one human sentence instead of dumping schema code (BUG_007).
+const FIELD_LABELS: Record<string, string> = {
+  bio: 'Bio',
+  headline: 'Headline',
+  firstName: 'First name',
+  lastName: 'Last name',
+  email: 'Email',
+  phone: 'Phone number',
+  phoneNumber: 'Phone number',
+  password: 'Password',
+  name: 'Name',
+  description: 'Description',
+  address: 'Address',
+  companyName: 'Company name',
+  companyEmail: 'Company email',
+  industry: 'Industry',
+  numberOfEmployees: 'Number of employees',
+  legalAttachment: 'Legal document',
+  location: 'Location',
+  website: 'Website',
+  linkedin: 'LinkedIn URL',
+  foundedYear: 'Founded year',
+  dateOfBirth: 'Date of birth',
+  gender: 'Gender',
+  skills: 'Skills',
+  categories: 'Tracks',
+  education: 'Education',
+  courses: 'Courses',
+  title: 'Title',
+  salary: 'Salary',
+  track: 'Track',
+};
+
+function humanizeZodIssue(issue: string): string {
+  return issue
+    .replace(/Too big: expected string to have <=\s*(\d+)\s*characters?/i, 'must not exceed $1 characters')
+    .replace(/Too small: expected string to have >=\s*(\d+)\s*characters?/i, 'must be at least $1 characters')
+    .replace(/String must contain at least (\d+) character\(s\)/i, 'must be at least $1 characters')
+    .replace(/Too big: expected number to be <=\s*(\d+)/i, 'must not be greater than $1')
+    .replace(/Too small: expected number to be >=\s*(\d+)/i, 'must be at least $1')
+    .replace(/^Required$/i, 'is required')
+    .replace(/^Invalid email$/i, 'is not a valid email')
+    .replace(/expected one of .*/i, 'has an invalid value')
+    .trim();
+}
+
+function humanizeValidationMessage(raw: string): string {
+  if (!raw.includes('⇒')) return raw;
+  const parts = raw
+    .split(/,/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const m = part.match(/^([A-Za-z0-9_.]+)\s*⇒\s*(.+)$/);
+      if (!m) return part;
+      const label = FIELD_LABELS[m[1]] ?? m[1].replace(/([a-z])([A-Z])/g, '$1 $2');
+      return `${label} ${humanizeZodIssue(m[2])}`;
+    });
+  const sentence = parts.join(' · ');
+  return sentence.charAt(0).toUpperCase() + sentence.slice(1);
+}
+
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     // 403s never surface raw ("Forbidden" / "You don't have permission") —
@@ -356,8 +420,8 @@ export function getErrorMessage(error: unknown): string {
       | { message?: unknown; errMsg?: unknown; msg?: unknown }
       | undefined;
     const msg = data?.message || data?.errMsg || data?.msg;
-    if (Array.isArray(msg)) return msg.join(', ');
-    if (typeof msg === 'string') return msg;
+    if (Array.isArray(msg)) return msg.map(String).map(humanizeValidationMessage).join(', ');
+    if (typeof msg === 'string') return humanizeValidationMessage(msg);
     return error.message;
   }
   if (error instanceof Error) return error.message;

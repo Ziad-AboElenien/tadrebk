@@ -91,6 +91,7 @@ export default function SignupForm({ role }: SignupFormProps) {
     formState: { errors, isSubmitting },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
+    mode: 'onBlur',
   });
 
   async function onSubmit(data: SignupFormData) {

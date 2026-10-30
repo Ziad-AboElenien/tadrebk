@@ -19,6 +19,9 @@ interface CourseModalProps {
   existingNames: string[];
   onClose: () => void;
   onSave: (value: CourseFormValue) => void;
+  // BUG_010: the profile page triggers this modal from an "Add certificate"
+  // button — mirror that wording instead of always saying "course".
+  mode?: 'course' | 'certificate';
 }
 
 export default function CourseModal({
@@ -28,7 +31,9 @@ export default function CourseModal({
   existingNames,
   onClose,
   onSave,
+  mode = 'course',
 }: CourseModalProps) {
+  const noun = mode === 'certificate' ? 'certificate' : 'course';
   // NOTE: the parent mounts this modal fresh on every open, so useState
   // initializers (no syncing effect) always reflect the latest `initial`.
   const [name, setName] = useState(initial?.name || '');
@@ -38,11 +43,19 @@ export default function CourseModal({
   const [description, setDescription] = useState(initial?.meta?.description || '');
   const [certificate, setCertificate] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [descError, setDescError] = useState<string | null>(null);
+
+  // BUG_008/009: names/descriptions made purely of digits are not valid text.
+  const hasLetter = /[a-zA-Z\u0600-\u06FF]/;
 
   function handleSubmit() {
     const trimmed = name.trim();
     if (!trimmed) {
-      setError('Give the course a name.');
+      setError(`Give the ${noun} a name.`);
+      return;
+    }
+    if (!hasLetter.test(trimmed)) {
+      setError(`${mode === 'certificate' ? 'Certificate' : 'Course name'} must contain valid text, not only numbers.`);
       return;
     }
     if (!initial && existingNames.some((n) => n.toLowerCase() === trimmed.toLowerCase())) {
@@ -53,7 +66,12 @@ export default function CourseModal({
       setError('End date can’t be before the start date.');
       return;
     }
+    if (description.trim() && !hasLetter.test(description)) {
+      setDescError('Description must contain meaningful text, not only numbers.');
+      return;
+    }
     setError(null);
+    setDescError(null);
     // Backend expects full datetimes — month inputs only carry YYYY-MM.
     const toISO = (m: string) => (m ? `${m}-01T00:00:00.000Z` : undefined);
     onSave({
@@ -71,14 +89,14 @@ export default function CourseModal({
   return (
     <FormModal
       open={open}
-      title={initial ? 'Edit course' : 'Add course'}
-      subtitle="Track what you learned, when — and attach proof."
+      title={initial ? `Edit ${noun}` : `Add ${noun}`}
+      subtitle={mode === 'certificate' ? 'Name the course you certified in and attach proof.' : 'Track what you learned, when — and attach proof.'}
       icon={Award}
       iconBg="bg-amber-50"
       iconColor="text-amber-600"
       onClose={onClose}
       onSubmit={handleSubmit}
-      submitLabel={initial ? 'Save changes' : 'Add course'}
+      submitLabel={initial ? 'Save changes' : `Add ${noun}`}
       saving={saving}
       wide
     >
@@ -149,6 +167,7 @@ export default function CourseModal({
           placeholder="What did you learn? Any grade, project, or key topics..."
           className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
         />
+        {descError && <p className="text-sm font-medium text-red-500">{descError}</p>}
       </div>
 
       <div>

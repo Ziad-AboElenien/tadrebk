@@ -33,6 +33,8 @@ export default function StudentOnboardingScreen() {
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
   const [selectedTracks, setSelectedTracks] = useState<Category[]>([]);
+  // BUG_004: free-text track when the student picks "Other".
+  const [customTrack, setCustomTrack] = useState('');
   const [preferences, setPreferences] = useState<{
     location?: 'on-site' | 'remote' | 'hybrid';
     type?: 'full-time' | 'part-time';
@@ -53,9 +55,21 @@ export default function StudentOnboardingScreen() {
     if (!userId) return;
     setSaving(true);
     try {
-      await userService.updateProfile(userId, {
+      // "Other" + a typed custom track → keep the wording as a self-reported
+      // skill so it survives on the profile (categories are a fixed enum).
+      const trimmedCustom = customTrack.trim();
+      const payload: Parameters<typeof userService.updateProfile>[1] = {
         categories: selectedTracks,
-      });
+      };
+      if (selectedTracks.includes('other') && trimmedCustom) {
+        payload.skills = [
+          ...((currentUser?.skills ?? []).filter(
+            (s) => typeof s === 'string' || s.name.toLowerCase() !== trimmedCustom.toLowerCase(),
+          ) as never[]),
+          { name: trimmedCustom, source: 'self' },
+        ] as never;
+      }
+      await userService.updateProfile(userId, payload);
       const fresh = await userService.getUserProfile(userId);
       dispatch(setUser(fresh));
       toastHelper.success('Profile updated! Welcome to Tadrebk.');
@@ -65,7 +79,7 @@ export default function StudentOnboardingScreen() {
     } finally {
       setSaving(false);
     }
-  }, [userId, selectedTracks, dispatch, router]);
+  }, [userId, selectedTracks, customTrack, currentUser, dispatch, router]);
 
   const slideVariants = {
     enter: (dir: number) => ({
@@ -181,6 +195,8 @@ export default function StudentOnboardingScreen() {
                         : [...prev, cat]
                     )
                   }
+                  otherValue={customTrack}
+                  onOtherChange={setCustomTrack}
                   onNext={goNext}
                 />
               )}
@@ -199,6 +215,7 @@ export default function StudentOnboardingScreen() {
                   onFinish={handleFinish}
                   saving={saving}
                   userName={currentUser?.firstName || 'there'}
+                  customTrack={customTrack}
                 />
               )}
             </motion.div>

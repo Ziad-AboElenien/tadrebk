@@ -107,6 +107,12 @@ export default function InternshipDetailsScreen() {
   }, [isAuthenticated, internship, internId, alreadyApplied, router]);
 
   const handleSave = useCallback(async () => {
+    // Guest users get a sign-in nudge instead of a generic failure (BUG_011).
+    if (!isAuthenticated) {
+      toastHelper.info('Sign in to save internships.');
+      router.push(`/login/student?next=/internships/${internId}`);
+      return;
+    }
     const wasSaved = saved;
     setSaved(!wasSaved);
     try {
@@ -117,11 +123,11 @@ export default function InternshipDetailsScreen() {
         await internshipService.saveInternship(internId);
         toastHelper.success('Saved!');
       }
-    } catch {
+    } catch (err) {
       setSaved(wasSaved);
-      toastHelper.error('Failed to update saved status');
+      toastHelper.error(getErrorMessage(err) || 'Failed to update saved status');
     }
-  }, [internId, saved]);
+  }, [internId, saved, isAuthenticated, router]);
 
   if (loading) {
     return (
