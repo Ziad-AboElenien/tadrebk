@@ -2,14 +2,13 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { CheckCircle2, Loader2, MailX } from 'lucide-react';
 import { instructorAuthService } from '@/features/company/services/permission.service';
 import { getErrorMessage } from '@/lib/axios';
 import { ArticleSkeleton } from '@/components/ui/PageSkeletons';
 
 function ConfirmInner() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
   const inviteId = searchParams.get('invite') || '';
@@ -32,13 +31,7 @@ function ConfirmInner() {
       });
   }, [token, inviteId]);
 
-  useEffect(() => {
-    if (state !== 'done') return;
-    const t = setTimeout(() => {
-      router.push(`/instructor-setup?token=${encodeURIComponent(token)}&invite=${encodeURIComponent(inviteId)}`);
-    }, 2500);
-    return () => clearTimeout(t);
-  }, [state, router, token, inviteId]);
+
 
   return (
     <div className="mx-auto flex min-h-[60vh] w-full max-w-md flex-col items-center justify-center px-4 py-12 text-center">
@@ -56,8 +49,14 @@ function ConfirmInner() {
           </span>
           <h1 className="mt-4 text-2xl font-bold text-slate-900">Invitation confirmed!</h1>
           <p className="mt-2 text-sm text-slate-500">
-            Check your email for the password-setup link — taking you there now…
+            Your invitation has been confirmed successfully.
           </p>
+          <Link
+            href="/"
+            className="mt-6 rounded-xl bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600"
+          >
+            Back to Home
+          </Link>
         </>
       )}
       {state === 'error' && (
